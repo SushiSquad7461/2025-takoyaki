@@ -16,8 +16,23 @@ import edu.wpi.first.units.measure.Distance;
 import frc.util.control.PIDConfig;
 import frc.util.motor.MotorConfig;
 
+import com.ctre.phoenix6.CANBus;
+
 public class Constants {
     public static boolean TUNING_MODE;
+
+    public static class Ports
+    {
+        public static final CANBus CANIVORE_NAME = null;
+
+    }
+
+    public static class Swerve
+    {
+        public static final boolean REDUCE_SPEED = false;
+        public static final double LOW_SPEED = 0;
+        public static final double LOW_ROT = 0;
+    }
 
     public static class CustomUnits {
         public static final AngleUnit TalonEncoderCounts = derive(Rotations).splitInto(2048).named("Talon Encoder Counts").symbol("TEC").make();
