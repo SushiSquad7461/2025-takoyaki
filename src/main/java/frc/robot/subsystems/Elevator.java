@@ -49,10 +49,11 @@ public class Elevator extends SubsystemBase {
     ff = Constants.Elevator.feedforward;
     
     limitSwitch = new DigitalInput(Constants.Elevator.LIMIT_SWITCH_PORT);
+    
     leftMotor = Constants.Elevator.ELEVATOR_LEFT.createTalon();
     rightMotor = Constants.Elevator.ELEVATOR_RIGHT.createTalon();
 
-    leftMotor.setControl(new Follower(rightMotor.getDeviceID(), true));
+    leftMotor.setControl(new Follower(rightMotor.getDeviceID(), Constants.Elevator.ELEVATOR_LEFT.inversion != Constants.Elevator.ELEVATOR_RIGHT.inversion));
     
     //creating config for software limit switch bec sushi lib doesnt handle
     var config = new TalonFXConfiguration();

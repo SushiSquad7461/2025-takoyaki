@@ -36,7 +36,7 @@ public class Constants {
         public static final MotorConfig ELEVATOR_RIGHT = new MotorConfig(
             0,
             0,
-            true,
+            false,
             PIDConfig.getPid(0.0, 0.0, 0.0),
             MotorConfig.Mode.BRAKE);
 
