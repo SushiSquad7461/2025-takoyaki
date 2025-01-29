@@ -6,6 +6,7 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -13,8 +14,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants;
-import SushiFrcLib.SmartDashboard.PIDTuning;
-import SushiFrcLib.SmartDashboard.TunableNumber;
+import frc.util.Control.SmartDashboard.PIDTuning;
+import frc.util.Control.SmartDashboard.TunableNumber;
 
 public class Elevator extends SubsystemBase {
   private static Elevator instance;
@@ -25,19 +26,17 @@ public class Elevator extends SubsystemBase {
   
   private PIDTuning pid;
   private final TunableNumber setpoint;
-  private final ElevatorFeedforward ffd; // Down direction feedforward
-  private final ElevatorFeedforward ffu; // Up direction feedforward
+  private final ElevatorFeedforward ff; // Down direction feedforward
   
   // State tracking
-  private boolean up;
+  //private boolean up;
   private boolean resetElevator;
   private boolean openLoop;
   private boolean inSecondStage;
   
   // Set proper constants later
   private static final double STAGE_TRANSITION_HEIGHT = 25.0;
-  private static final double STAGE_1_CURRENT_LIMIT = 30.0;
-  private static final double STAGE_2_CURRENT_LIMIT = 35.0;
+  private static final double CURRENT_LIMIT = 35.0;
   private static final double SLOW_ZONE_THRESHOLD = 2.0;
   
   public static Elevator getInstance() {
@@ -47,13 +46,12 @@ public class Elevator extends SubsystemBase {
   }
 
   private Elevator() {
-    ffd = new ElevatorFeedforward(0.0, Constants.Elevator.G_DOWN, 0.0);
-    ffu = new ElevatorFeedforward(0.0, Constants.Elevator.G_UP, 0.0);
+    ff = Constants.Elevator.feedforward;
     
     limitSwitch = new DigitalInput(Constants.Elevator.LIMIT_SWITCH_PORT);
     leftMotor = Constants.Elevator.ELEVATOR_LEFT.createTalon();
     rightMotor = Constants.Elevator.ELEVATOR_RIGHT.createTalon();
-    
+
     leftMotor.setControl(new Follower(rightMotor.getDeviceID(), true));
     
     //creating config for software limit switch bec sushi lib doesnt handle
@@ -67,7 +65,6 @@ public class Elevator extends SubsystemBase {
     resetElevator = false;
     openLoop = false;
     inSecondStage = false;
-    up = true;
     
     if (Constants.TUNING_MODE) {
       pid = new PIDTuning("Elevator PID", Constants.Elevator.ELEVATOR_RIGHT.pid, Constants.TUNING_MODE);
@@ -80,7 +77,6 @@ public class Elevator extends SubsystemBase {
   public Command changeState(ElevatorState state) {
     return runOnce(() -> {
       openLoop = false;
-      up = state.getPos() > rightMotor.getPosition().getValueAsDouble();
       setpoint.setDefault(state.getPos());
     }).andThen(new WaitUntilCommand(elevatorInPosition(state.getPos())))
       .andThen(state == ElevatorState.IDLE ? resetElevator() : Commands.none());
@@ -89,7 +85,7 @@ public class Elevator extends SubsystemBase {
   // checks if elevator has reached target position
   private BooleanSupplier elevatorInPosition(double targetPos) {
     return () -> Math.abs(rightMotor.getPosition().getValueAsDouble() - targetPos) 
-      < Constants.Elevator.MAX_ERROR; // TODO: need to set max error properly
+      < Constants.Elevator.MAX_ERROR.in(Units.Rotations); // TODO: need to set max error properly
   }
 
   // uses limit switch to zero elevator
@@ -106,21 +102,14 @@ public class Elevator extends SubsystemBase {
   }
 
   // if pid isnt working
-  public Command runOpenLoopUp() {
+  public Command runOpenLoop(double setSpeed) {
     return runOnce(() -> {
-      double speed = inSecondStage ? 0.15 : 0.2; // slows down second stage
+      double speed = setSpeed; // slows down second stage
       rightMotor.set(speed);
       openLoop = true;
     });
   }
 
-  public Command runOpenLoopDown() {
-    return runOnce(() -> {
-      double speed = inSecondStage ? -0.15 : -0.2;
-      rightMotor.set(speed);
-      openLoop = true;
-    });
-  }
 
   public Command stopElevator() {
     return runOnce(() -> {
@@ -134,10 +123,9 @@ public class Elevator extends SubsystemBase {
   }
 
   private boolean currentSpike() {
-    double currentLimit = inSecondStage ? STAGE_2_CURRENT_LIMIT : STAGE_1_CURRENT_LIMIT;
+    double currentLimit = CURRENT_LIMIT;
     return (rightMotor.getPosition().getValueAsDouble() < 5 && 
-      rightMotor.getSupplyCurrent().getValueAsDouble() > currentLimit 
-      && !up);
+      rightMotor.getSupplyCurrent().getValueAsDouble() > currentLimit);
   }
 
   @Override
@@ -162,7 +150,7 @@ public class Elevator extends SubsystemBase {
     if (!resetElevator && !openLoop) {
       // calculate feedforward with target pos
       double targetPosition = setpoint.get();
-      double feedforward = up ? ffu.calculate(0.1) : ffd.calculate(0.1); //set velocity after testing
+      double feedforward = ff.calculate(0.1); //set velocity after testing
       
       if (Math.abs(currentPosition - STAGE_TRANSITION_HEIGHT) < SLOW_ZONE_THRESHOLD) {
           feedforward *= 0.5; // reduce speed when switching stages
