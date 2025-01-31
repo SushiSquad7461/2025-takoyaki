@@ -1,28 +1,21 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Rotations;
 
 import com.ctre.phoenix6.CANBus;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Dimensionless;
+import edu.wpi.first.units.measure.Distance;
 import frc.util.Motor.MotorConfig;
 import frc.util.Control.PIDConfig;
 
 public class Constants {
     public static boolean TUNING_MODE;
-
-    public static class Ports {
-        public static final CANBus CANIVORE_NAME = null;
-
-    }
-
-    public static class Swerve {
-        public static final boolean REDUCE_SPEED = false;
-        public static final double LOW_SPEED = 0;
-        public static final double LOW_ROT = 0;
-    }
 
     public static class Elevator {
         public static final ElevatorFeedforward feedforward = new ElevatorFeedforward(0.0, 0.0, 0.0);
@@ -47,11 +40,11 @@ public class Constants {
 
         public static final int LIMIT_SWITCH_PORT = 0; 
 
-        public static final double MAX_HEIGHT_INCHES = 45.0; 
-        public static final double INCHES_PER_ROTATION = 1.0; 
+        public static final Distance MAX_HEIGHT_INCHES = Inches.of(45.0); 
+        public static final Distance INCHES_PER_ROTATION = Inches.of(1.0); ; 
         public static final double GEAR_RATIO = 1.0; 
         
         // calc max height in motor rotations
-        public static final double MAX_HEIGHT = (MAX_HEIGHT_INCHES / INCHES_PER_ROTATION) * GEAR_RATIO * 2048; //TODO: krakens r 2048 right?
+        public static final Dimensionless MAX_HEIGHT = MAX_HEIGHT_INCHES.div(INCHES_PER_ROTATION).times(GEAR_RATIO).times(2048); //TODO: krakens r 2048 right?
     }
 }
