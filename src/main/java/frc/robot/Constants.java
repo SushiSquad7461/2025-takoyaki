@@ -2,17 +2,13 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Rotations;
-
-import com.ctre.phoenix6.CANBus;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
-import frc.util.Motor.MotorConfig;
-import frc.util.Control.PIDConfig;
+import frc.util.control.PIDConfig;
+import frc.util.motor.MotorConfig;
 
 public class Constants {
     public static boolean TUNING_MODE;
