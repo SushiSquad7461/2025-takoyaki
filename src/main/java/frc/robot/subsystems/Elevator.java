@@ -65,7 +65,7 @@ public class Elevator extends SubsystemBase {
     //creating config for software limit switch bec sushi lib doesnt handle
     var config = new TalonFXConfiguration();
     config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Constants.Elevator.MAX_HEIGHT.magnitude();
+    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Constants.Elevator.MOTOR_MAX_HEIGHT.in(Constants.CustomUnits.TalonEncoderCounts);
     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
     rightMotor.getConfigurator().apply(config);
