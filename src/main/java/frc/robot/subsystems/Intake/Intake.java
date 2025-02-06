@@ -9,6 +9,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Direction;
 
+
+import frc.robot.Direction;
+
+
 abstract public class Intake extends SubsystemBase {
     protected final SparkMax intakeMotor;
 
@@ -32,13 +36,18 @@ abstract public class Intake extends SubsystemBase {
 
     public Command raiseIntake() { return Commands.none(); }
 
-    public Command changeState(IntakeState newState) {
+
+    public Command changeState(Constants.IntakeState newState) {
+
+        //Will check to see if intake is up, if it, lower intake, else, raise intake
         Command pivotCommand = newState.intakeExtended ? lowerIntake() : raiseIntake();
 
+        
         Command intakeCommand = newState.intakeExtended
+                //Checks to see if state reverses intake, if it does then reverse intake, if not run intake
                 ? (newState.direction == Direction.REVERSED ? reverseIntake() : runIntake())
+                //Will stop the intake if not extended
                 : stopIntake();
-
         return pivotCommand.andThen(intakeCommand);
     }
 }
