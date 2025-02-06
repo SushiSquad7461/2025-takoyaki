@@ -14,8 +14,8 @@ import edu.wpi.first.units.PerUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
-import frc.util.control.PIDConfig;
-import frc.util.motor.MotorConfig;
+import frc.util.Control.PIDConfig;
+import frc.util.Motor.MotorConfig;
 
 public class Constants {
     public static boolean TUNING_MODE;

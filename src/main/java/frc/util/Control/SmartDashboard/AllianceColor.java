@@ -1,4 +1,4 @@
-package frc.util.control.SmartDashboard;
+package frc.util.Control.SmartDashboard;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;

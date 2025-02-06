@@ -1,4 +1,4 @@
-package frc.util.control.SmartDashboard;
+package frc.util.Control.SmartDashboard;
 
 import java.util.ArrayList;
 import java.util.Map;

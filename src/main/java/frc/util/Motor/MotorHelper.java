@@ -1,4 +1,4 @@
-package frc.util.motor;
+package frc.util.Motor;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
