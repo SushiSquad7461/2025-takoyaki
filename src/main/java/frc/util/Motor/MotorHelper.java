@@ -2,6 +2,7 @@ package frc.util.Motor;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -27,8 +28,8 @@ public class MotorHelper {
         motor.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
     }
 
-    public static void setDegreeConversionFactor(SparkMax motor, double gearing) {
-        setConversionFactor(motor, 360. / gearing);
+    public static void setDegreeConversionFactor(TalonFX pivotMotor, double gearing) {
+        setConversionFactor(pivotMotor, 360. / gearing);
     }
 
     public static TalonFXConfiguration setConversionFactor(TalonFXConfiguration config, double factor) {
@@ -36,8 +37,8 @@ public class MotorHelper {
         return config;
     }
 
-    public static TalonFXConfiguration setDegreeConversionFactor(TalonFXConfiguration config, double gearing) {
-        return setConversionFactor(config, (360.0 / gearing));
+    public static TalonFXConfiguration setDegreeConversionFactor(TalonFX pivotMotor, double gearing) {
+        return setConversionFactor(pivotMotor, (360.0 / gearing));
     }
 
     public static CurrentLimitsConfigs createSupplyCurrentLimit(int currentLimit) {

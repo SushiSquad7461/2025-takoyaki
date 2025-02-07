@@ -1,8 +1,8 @@
 package frc.robot.subsystems.Intake;
 
-import com.revrobotics.spark.SparkMax;
 
-import edu.wpi.first.wpilibj.motorcontrol.Spark;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.StatusSignal;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -10,14 +10,13 @@ import frc.robot.Constants;
 import frc.robot.Direction;
 
 
-import frc.robot.Direction;
 
 
 abstract public class Intake extends SubsystemBase {
-    protected final SparkMax intakeMotor;
+    protected final TalonFX intakeMotor;
 
     public Intake() {
-        intakeMotor = Constants.Intake.INTAKE_CONFIG.createSparkMax();
+        intakeMotor = new TalonFX( 1);
     }
 
     public Command runIntake() {

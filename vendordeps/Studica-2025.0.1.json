@@ -64,8 +64,8 @@
                 "linuxx86-64",
                 "osxuniversal",
                 "windowsx86-64"
-            ],
-            "version": "2025.0.1"
+            ]
+        
         }
     ]
 }

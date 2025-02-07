@@ -5,7 +5,7 @@ import frc.util.Motor.MotorConfig;
 
 public class Constants {
         //TODO: change constants
-        public enum IntakeENums {
+        public enum IntakeState {
             //All Intake states 
             IDLE(false, Direction.OFF),
             INTAKE(true, Direction.RUNNING),
@@ -16,13 +16,14 @@ public class Constants {
             public boolean intakeExtended;
             public Direction direction;
         
-            private IntakeENums(boolean extended, Direction direction) {
+            private IntakeState(boolean extended, Direction direction) {
                 this.intakeExtended = extended;
                 this.direction = direction;
             }
   }  
         public static final class Intake {
-        public static final double G = 0.0; 
+        public static final double G = 0.0;
+        public static final double armFeedForward = 0.0; 
         public static final int ENCODER_CHANNEL = 0;
         public static final double ENCODER_ANGLE_OFFSET = 0; 
         public static final double INTAKE_GEAR_RATIO = 0.0;

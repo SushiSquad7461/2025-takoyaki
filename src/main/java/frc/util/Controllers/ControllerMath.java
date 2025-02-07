@@ -12,8 +12,5 @@ public class ControllerMath {
         (initalVal - ((initalVal < 0 ? -1 : 1) * deadband)) 
         / (1 - deadband));
   }
-  
-  public static double logistic(double triggerVal, double k) {
-    return 2/(1 + (Math.pow((Math.E), -k * (triggerVal)))) - 1;
-  }
+
 }
