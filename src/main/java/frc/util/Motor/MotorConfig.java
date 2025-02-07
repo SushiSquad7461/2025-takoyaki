@@ -1,4 +1,4 @@
-package frc.util.Motor;
+package frc.util.motor;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -10,8 +10,8 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
-import frc.util.Control.PIDConfig;
-import frc.util.Control.SmartDashboard.PIDTuning;
+import frc.util.control.PIDConfig;
+import frc.util.control.SmartDashboard.PIDTuning;
 
 import com.revrobotics.spark.config.SparkMaxConfig;
 

@@ -1,4 +1,4 @@
-package frc.util.Control.SmartDashboard;
+package frc.util.control.SmartDashboard;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -8,7 +8,7 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import frc.util.Control.PIDConfig;
+import frc.util.control.PIDConfig;
 
 
 public class PIDTuning {
