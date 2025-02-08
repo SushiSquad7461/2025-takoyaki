@@ -82,7 +82,7 @@ public class Elevator extends SubsystemBase {
     slot0Configs.kD = Constants.Elevator.kD;
     
     // Configure Motion Magic settings
-    var motionMagicConfigs = talonFXConfigs.MotionMagic;
+    // var motionMagicConfigs = talonFXConfigs.MotionMagic;
     // motionMagicConfigs.MotionMagicCruiseVelocity = 80; //rps
     // motionMagicConfigs.MotionMagicAcceleration = 160; //rps/s
     // motionMagicConfigs.MotionMagicJerk = 1600; //rps/s/s
