@@ -6,6 +6,9 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.derive;
 
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.DistanceUnit;
@@ -26,7 +29,16 @@ public class Constants {
     }
 
     public static class Elevator {
-        public static final ElevatorFeedforward feedforward = new ElevatorFeedforward(0.0, 0.0, 0.0);
+        //creating config for software limit switch bec sushi lib doesnt handle
+        //TODO: use sysid
+        public static final double kG = 0;
+        public static final double kS = 0;
+        public static final double kV = 0;
+        public static final double kA = 0;
+        public static final double kP = 0;
+        public static final double kI = 0;
+        public static final double kD = 0;
+    
         public static final MotorConfig ELEVATOR_LEFT = new MotorConfig(
             0,
             0,

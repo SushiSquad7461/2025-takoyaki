@@ -64,12 +64,30 @@ public class Elevator extends SubsystemBase {
     leftMotor.setControl(new Follower(rightMotor.getDeviceID(), Constants.Elevator.ELEVATOR_LEFT.inversion != Constants.Elevator.ELEVATOR_RIGHT.inversion));
     
     //creating config for software limit switch bec sushi lib doesnt handle
-    var config = new TalonFXConfiguration();
-    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Constants.Elevator.MOTOR_MAX_HEIGHT.in(Constants.CustomUnits.TalonEncoderCounts);
-    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
-    rightMotor.getConfigurator().apply(config);
+    var talonFXConfigs = new TalonFXConfiguration();
+    
+    talonFXConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    talonFXConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 
+        Constants.Elevator.MOTOR_MAX_HEIGHT.in(Constants.CustomUnits.TalonEncoderCounts);
+    talonFXConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    talonFXConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
+    
+    var slot0Configs = talonFXConfigs.Slot0;
+    slot0Configs.kG = Constants.Elevator.kG;
+    slot0Configs.kS = Constants.Elevator.kS;
+    slot0Configs.kV = Constants.Elevator.kV;
+    slot0Configs.kA = Constants.Elevator.kA;
+    slot0Configs.kP = Constants.Elevator.kP;
+    slot0Configs.kI = Constants.Elevator.kI;
+    slot0Configs.kD = Constants.Elevator.kD;
+    
+    // Configure Motion Magic settings
+    var motionMagicConfigs = talonFXConfigs.MotionMagic;
+    motionMagicConfigs.MotionMagicCruiseVelocity = 80; //rps
+    motionMagicConfigs.MotionMagicAcceleration = 160; //rps/s
+    motionMagicConfigs.MotionMagicJerk = 1600; //rps/s/s
+    
+    rightMotor.getConfigurator().apply(talonFXConfigs);
 
     resetElevator = false;
     openLoop = false;
@@ -120,7 +138,7 @@ public class Elevator extends SubsystemBase {
   }
 
   private boolean elevatorAtBottom() {
-    return !limitSwitch.get() || currentSpike();
+    return limitSwitch.get() || currentSpike();
   }
 
   private boolean currentSpike() {
@@ -141,12 +159,10 @@ public class Elevator extends SubsystemBase {
     if (!resetElevator && !openLoop) {
       // calculate feedforward with target pos
       double targetPosition = setpointSub.get();
-      double feedforward = Constants.Elevator.feedforward.calculate(0.1); //set velocity after testing
       
       rightMotor.setControl(
         motionMagic
             .withPosition(targetPosition)
-            .withFeedForward(feedforward)
       );
     }
   }
