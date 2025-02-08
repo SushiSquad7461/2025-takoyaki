@@ -1,4 +1,3 @@
-
 package frc.util.Motor;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -7,21 +6,28 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.PersistMode;
-import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.math.controller.ArmFeedforward;
 import frc.util.Control.PIDConfig;
-import frc.util.SmartDashboard.PIDTuning;
+import frc.util.Control.SmartDashboard.PIDTuning;
 
-public class MotorConfig {
+
+
+public class MotorConfig{
    public final PIDConfig pid;
    public final int canId;
    public final String canBus;
-   public final int currentLimit; // A currentLimit of bellow zero will not be set on the motor
+   public final int currentLimit;
    public final boolean inversion;
    public final Mode mode;
+
+   private DigitalInput beamBreakSensor;
+@SuppressWarnings("unused")
+private final int beamBreakPort;
+@SuppressWarnings("unused")
+   private ArmFeedforward wristFeedforward = new ArmFeedforward(0.0, 0.0, 0.0); // Needs tuning
 
    public enum Mode {
         COAST(true),
@@ -49,12 +55,13 @@ public class MotorConfig {
         this.inversion = inversion;
         this.pid = pid;
         this.mode = mode;
+        this.beamBreakPort = -1; 
    }
 
-   public MotorConfig(String canBus, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode) { this(-1, canBus, currentLimit, inversion, pid, mode); }
-
-   public MotorConfig(int currentLimit, Boolean inversion, PIDConfig pid, Mode mode) { this(-1, "rio", currentLimit, inversion, pid, mode); }
-
+   public MotorConfig(int canId, String canBus, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode, int beamBreakPort){
+        this(canId, canBus, currentLimit, inversion, pid, mode);
+        this.beamBreakSensor = new DigitalInput(beamBreakPort);
+   }
    public MotorConfig(int canId, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode) { this(canId, "rio", currentLimit, inversion, pid, mode); }
 
    public MotorConfig(int canId) { this(canId, "rio", -1, false, PIDConfig.getZeroPid(), Mode.COAST);}
@@ -69,6 +76,14 @@ public class MotorConfig {
         return new PIDTuning(motorName, pid, tuningMode);
    }
 
+   public boolean isBeamBreakTriggered() {
+        return beamBreakSensor != null && !beamBreakSensor.get(); 
+   }
+
+   public void setWristFeedforward(double ks, double kg, double kv) {
+        this.wristFeedforward = new ArmFeedforward(ks, kg, kv);
+   }
+
    public TalonFXConfiguration getTalonConfig() {
         TalonFXConfiguration talonConfig = new TalonFXConfiguration();
 
@@ -79,13 +94,13 @@ public class MotorConfig {
 
         pid.updatePidConfig(talonConfig);
 
-        return talonConfig;
-   }
+        // Soft Limits for Safety
+        talonConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        talonConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 100; // Set based on  max position
+        talonConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        talonConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0; // Set based on  min position
 
-   public TalonFX createTalon() {
-        TalonFX motor = new TalonFX(canId, canBus);
-        motor.getConfigurator().apply(getTalonConfig());
-        return motor;
+        return talonConfig;
    }
 
    public void setCanSparkMaxConfig(SparkMax motor, MotorType type) {
@@ -94,13 +109,12 @@ public class MotorConfig {
      config.smartCurrentLimit(currentLimit);
      config.idleMode(mode.getSparkMaxMode());
      config.closedLoop.apply(pid.createSparkMaxConfig());
+   }
 
-     motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-     if (type == MotorType.kBrushless) {
-          motor.getEncoder().setPosition(0);
-     }
-
+   public TalonFX createTalon() {
+        TalonFX motor = new TalonFX(canId, canBus);
+        motor.getConfigurator().apply(getTalonConfig());
+        return motor;
    }
 
    public SparkMax createSparkMax() { return createSparkMax(MotorType.kBrushless); }
@@ -111,7 +125,5 @@ public class MotorConfig {
         return motor;
    }
 
-   public MotorConfig withCanId(int canId) {
-     return new MotorConfig(canId, this.canBus, this.currentLimit, this.inversion, this.pid, this.mode);
-   }
+   public MotorConfig withCanId(int canId) {return new MotorConfig(canId, this.canBus, this.currentLimit, this.inversion, this.pid, this.mode);}
 }

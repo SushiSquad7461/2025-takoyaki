@@ -11,7 +11,7 @@ public class AllianceColor {
 
    public static AllianceColor getInstance() {
         if (instance == null) {
-            instance = new AllianceColor();
+          instance = new AllianceColor();
         }
         return instance;
    }
