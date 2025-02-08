@@ -11,7 +11,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import frc.util.control.PIDConfig;
-import frc.util.control.SmartDashboard.PIDTuning;
+import frc.util.control.nt.PIDTuning;
 
 import com.revrobotics.spark.config.SparkMaxConfig;
 

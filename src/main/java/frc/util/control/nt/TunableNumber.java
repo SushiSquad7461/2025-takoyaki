@@ -1,4 +1,4 @@
-package frc.util.control.SmartDashboard;
+package frc.util.control.nt;
 
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
