@@ -1,19 +1,23 @@
 package frc.robot.subsystems;
 
-public enum ElevatorState {
-    IDLE(0),
-    L1(20),
-    L2(35),
-    L3(47),
-    L4(50);         
+import static edu.wpi.first.units.Units.Inches;
 
-    double position;
+import edu.wpi.first.units.measure.Distance;
+
+public enum ElevatorState {
+    IDLE(Inches.of(0)),
+    L1(Inches.of(20)),
+    L2(Inches.of(35)),
+    L3(Inches.of(47)),
+    L4(Inches.of(50));         
+
+    Distance position;
     
-    private ElevatorState(double position) {
+    private ElevatorState(Distance position) {
         this.position = position;
     }
 
-    public double getPos() {
+    public Distance getPos() {
         return position;
     }
 }

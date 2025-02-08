@@ -1,16 +1,17 @@
 package frc.util.control.SmartDashboard;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 
 /**
- * Class for a tunable number. Gets value from dashboard in tuning mode, returns
- * default if not or
- * value not in dashboard.
+ * Class for a tunable number. Gets value from NetworkTables in tuning mode, returns
+ * default if not or value not in NetworkTables.
  */
 public class TunableNumber {
-    private static final String tableKey = "TunableNumbers";
-
-    private final String key;
+    private static final NetworkTable table = NetworkTableInstance.getDefault().getTable("TunableNumbers");
+    
+    private final NetworkTableEntry entry;
     private double defaultValue;
     private double lastHasChangedValue = defaultValue;
     private final boolean tuningMode;
@@ -18,10 +19,12 @@ public class TunableNumber {
     /**
      * Create a new TunableNumber
      * 
-     * @param dashboardKey Key on dashboard
+     * @param key Key in NetworkTables
+     * @param defaultValue Default value to use if not in tuning mode
+     * @param tuningMode Whether to use NetworkTables value (true) or default value (false)
      */
-    public TunableNumber(String dashboardKey, double defaultValue, boolean tuningMode) {
-        this.key = tableKey + "/" + dashboardKey;
+    public TunableNumber(String key, double defaultValue, boolean tuningMode) {
+        this.entry = table.getEntry(key);
         this.tuningMode = tuningMode;
         setDefault(defaultValue);
     }
@@ -44,29 +47,32 @@ public class TunableNumber {
         this.defaultValue = defaultValue;
         if (tuningMode) {
             // This makes sure the data is on NetworkTables but will not change it
-            SmartDashboard.putNumber(key,
-                    SmartDashboard.getNumber(key, defaultValue));
-        } else if (SmartDashboard.containsKey(key) && SmartDashboard.isPersistent(key)) {
-                SmartDashboard.clearPersistent(key);
+            if (!entry.exists()) {
+                entry.setDouble(defaultValue);
+            }
+        } else {
+            // If not in tuning mode and entry exists, clear
+            if (entry.exists()) {
+                entry.unpublish();
+            }
         }
+        this.lastHasChangedValue = defaultValue;
     }
 
     /**
-     * Get the current value, from dashboard if available and in tuning mode
+     * Get the current value, from NetworkTables if available and in tuning mode
      * 
      * @return The current value
      */
     public double get() {
-        return tuningMode ? SmartDashboard.getNumber(key, defaultValue)
-                : defaultValue;
+        return tuningMode ? entry.getDouble(defaultValue) : defaultValue;
     }
 
     /**
      * Checks whether the number has changed since our last check
      * 
      * @return True if the number has changed since the last time this method was
-     *         called, false
-     *         otherwise
+     *         called, false otherwise
      */
     public boolean hasChanged() {
         double currentValue = get();
@@ -74,7 +80,6 @@ public class TunableNumber {
             lastHasChangedValue = currentValue;
             return true;
         }
-
         return false;
     }
 }

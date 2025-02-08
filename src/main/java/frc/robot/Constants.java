@@ -42,8 +42,6 @@ public class Constants {
             MotorConfig.Mode.BRAKE);
 
         // TODO: set all of these values
-        public static final double G_DOWN = 0;
-        public static final double G_UP = 0;
         public static final Angle MAX_ERROR = Degrees.of(1.0);
 
         public static final int LIMIT_SWITCH_PORT = 0; 

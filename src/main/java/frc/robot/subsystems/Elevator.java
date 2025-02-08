@@ -12,6 +12,7 @@ import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -38,6 +39,7 @@ public class Elevator extends SubsystemBase {
   private boolean inSecondStage;
   
   // Set proper constants later
+  private static final double SPIKE_POSITION = 5.0;
   private static final double STAGE_TRANSITION_HEIGHT = 25.0;
   private static final double CURRENT_LIMIT = 35.0;
   private static final double SLOW_ZONE_THRESHOLD = 2.0;
@@ -72,21 +74,20 @@ public class Elevator extends SubsystemBase {
 
     resetElevator = false;
     openLoop = false;
-    inSecondStage = false;    
   }
 
   // moves elevator to defined ElevatorState position *last year specifically checked for elevator idle state
   public Command changeState(ElevatorState state) {
     return runOnce(() -> {
       openLoop = false;
-      elevatorTable.getDoubleTopic("Setpoint").publish().set(state.getPos());
+      elevatorTable.getDoubleTopic("Setpoint").publish().set(state.getPos().magnitude());
     }).andThen(new WaitUntilCommand(elevatorInPosition(state.getPos())))
       .andThen(state == ElevatorState.IDLE ? resetElevator() : Commands.none());
   }
 
   // checks if elevator has reached target position
-  private BooleanSupplier elevatorInPosition(double targetPos) {
-    return () -> Math.abs(rightMotor.getPosition().getValueAsDouble() - targetPos) 
+  private BooleanSupplier elevatorInPosition(Distance targetPos) {
+    return () -> Math.abs(rightMotor.getPosition().getValueAsDouble() - targetPos.magnitude()) 
       < Constants.Elevator.MAX_ERROR.in(Units.Rotations); // TODO: need to set max error properly
   }
 
@@ -124,7 +125,7 @@ public class Elevator extends SubsystemBase {
   }
 
   private boolean currentSpike() {
-    return (rightMotor.getPosition().getValueAsDouble() < 5 && 
+    return (rightMotor.getPosition().getValueAsDouble() < SPIKE_POSITION && 
       rightMotor.getSupplyCurrent().getValueAsDouble() > CURRENT_LIMIT);
   }
 
