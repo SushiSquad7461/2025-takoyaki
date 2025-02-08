@@ -1,5 +1,8 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Rotations;
+
 import java.util.function.BooleanSupplier;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
@@ -11,7 +14,6 @@ import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
@@ -39,8 +41,8 @@ public class Elevator extends SubsystemBase {
   private boolean openLoop;
   
   // Set proper constants later
-  private static final Angle MAX_SPIKE_HEIGHT = Angle.ofBaseUnits(5.0, Units.Degrees);
-  private static final Current CURRENT_LIMIT = Current.ofBaseUnits(35.0, Units.Amps);
+  private static final Angle MAX_SPIKE_HEIGHT = Rotations.of(5);
+  private static final Current CURRENT_LIMIT = Amps.of(35);
   private final MotionMagicVoltage motionMagic;
 
 
@@ -85,7 +87,7 @@ public class Elevator extends SubsystemBase {
   // checks if elevator has reached target position
   private BooleanSupplier elevatorInPosition(Distance targetPos) {
     return () -> Math.abs(rightMotor.getPosition().getValueAsDouble() - targetPos.magnitude()) 
-      < Constants.Elevator.MAX_ERROR.in(Units.Rotations); // TODO: need to set max error properly
+      < Constants.Elevator.MAX_ERROR.in(Rotations); // TODO: need to set max error properly
   }
 
   // uses limit switch to zero elevator
