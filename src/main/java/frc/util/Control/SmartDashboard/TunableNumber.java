@@ -1,7 +1,8 @@
 package frc.util.control.SmartDashboard;
 
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 
 /**
@@ -11,7 +12,8 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 public class TunableNumber {
     private static final NetworkTable table = NetworkTableInstance.getDefault().getTable("TunableNumbers");
     
-    private final NetworkTableEntry entry;
+    private final DoublePublisher publisher;
+    private final DoubleSubscriber subscriber;
     private double defaultValue;
     private double lastHasChangedValue = defaultValue;
     private final boolean tuningMode;
@@ -24,7 +26,8 @@ public class TunableNumber {
      * @param tuningMode Whether to use NetworkTables value (true) or default value (false)
      */
     public TunableNumber(String key, double defaultValue, boolean tuningMode) {
-        this.entry = table.getEntry(key);
+        this.publisher = table.getDoubleTopic(key).publish();
+        this.subscriber = table.getDoubleTopic(key).subscribe(defaultValue);
         this.tuningMode = tuningMode;
         setDefault(defaultValue);
     }
@@ -45,18 +48,17 @@ public class TunableNumber {
      */
     public void setDefault(double defaultValue) {
         this.defaultValue = defaultValue;
+        this.lastHasChangedValue = defaultValue;
+        
         if (tuningMode) {
-            // This makes sure the data is on NetworkTables but will not change it
-            if (!entry.exists()) {
-                entry.setDouble(defaultValue);
+            // Only publish if we're in tuning mode and there's no existing value
+            if (subscriber.get() == this.defaultValue) {
+                publisher.set(defaultValue);
             }
         } else {
-            // If not in tuning mode and entry exists, clear
-            if (entry.exists()) {
-                entry.unpublish();
-            }
+            // If not in tuning mode, close the publisher
+            publisher.close();
         }
-        this.lastHasChangedValue = defaultValue;
     }
 
     /**
@@ -65,7 +67,7 @@ public class TunableNumber {
      * @return The current value
      */
     public double get() {
-        return tuningMode ? entry.getDouble(defaultValue) : defaultValue;
+        return tuningMode ? subscriber.get() : defaultValue;
     }
 
     /**
@@ -81,5 +83,13 @@ public class TunableNumber {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Clean up NetworkTables publishers and subscribers
+     */
+    public void close() {
+        publisher.close();
+        subscriber.close();
     }
 }

@@ -13,6 +13,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -40,10 +41,8 @@ public class Elevator extends SubsystemBase {
   private boolean inSecondStage;
   
   // Set proper constants later
-  private static final Angle MAX_SPIKE_HEIGHT = Angle.ofBaseUnits(5.0, Units.Degree);
-  private static final double STAGE_TRANSITION_HEIGHT = 25.0;
-  private static final double CURRENT_LIMIT = 35.0;
-  private static final double SLOW_ZONE_THRESHOLD = 2.0;
+  private static final Angle MAX_SPIKE_HEIGHT = Angle.ofBaseUnits(5.0, Units.Degrees);
+  private static final Current CURRENT_LIMIT = Current.ofBaseUnits(35.0, Units.Amps);
   private final MotionMagicVoltage motionMagic;
 
 
@@ -127,7 +126,7 @@ public class Elevator extends SubsystemBase {
 
   private boolean currentSpike() {
     return (rightMotor.getPosition().getValue().compareTo(MAX_SPIKE_HEIGHT) < 0 && 
-      rightMotor.getSupplyCurrent().getValueAsDouble() > CURRENT_LIMIT);
+      rightMotor.getSupplyCurrent().getValue().compareTo(CURRENT_LIMIT) > 0);
   }
 
   @Override
@@ -135,12 +134,9 @@ public class Elevator extends SubsystemBase {
     positionPub.set(rightMotor.getPosition().getValueAsDouble());
     currentPub.set(rightMotor.getSupplyCurrent().getValueAsDouble());
     limitSwitchPub.set(elevatorAtBottom());
-    secondStagePub.set(inSecondStage);
-
 
     // tracking stage and position
     double currentPosition = rightMotor.getPosition().getValueAsDouble();
-    inSecondStage = currentPosition > STAGE_TRANSITION_HEIGHT;
 
     if (elevatorAtBottom()) {
       rightMotor.setPosition(0.0);
@@ -150,10 +146,6 @@ public class Elevator extends SubsystemBase {
       // calculate feedforward with target pos
       double targetPosition = setpointSub.get();
       double feedforward = Constants.Elevator.feedforward.calculate(0.1); //set velocity after testing
-      
-      if (Math.abs(currentPosition - STAGE_TRANSITION_HEIGHT) < SLOW_ZONE_THRESHOLD) {
-          feedforward *= 0.5; // reduce speed when switching stages
-      }
       
       rightMotor.setControl(
         motionMagic
