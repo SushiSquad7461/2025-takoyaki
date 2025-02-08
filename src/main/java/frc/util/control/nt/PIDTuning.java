@@ -1,4 +1,4 @@
-package frc.util.control.SmartDashboard;
+package frc.util.control.nt;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.hardware.TalonFX;
