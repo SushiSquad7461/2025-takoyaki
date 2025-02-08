@@ -31,14 +31,12 @@ public class Elevator extends SubsystemBase {
   private final DoublePublisher positionPub;
   private final DoublePublisher currentPub;
   private final BooleanPublisher limitSwitchPub;
-  private final BooleanPublisher secondStagePub;
   private final DoubleSubscriber setpointSub;
 
   
   // State tracking
   private boolean resetElevator;
   private boolean openLoop;
-  private boolean inSecondStage;
   
   // Set proper constants later
   private static final Angle MAX_SPIKE_HEIGHT = Angle.ofBaseUnits(5.0, Units.Degrees);
@@ -58,7 +56,6 @@ public class Elevator extends SubsystemBase {
     positionPub = elevatorTable.getDoubleTopic("Position").publish();
     currentPub = elevatorTable.getDoubleTopic("Current").publish();
     limitSwitchPub = elevatorTable.getBooleanTopic("LimitSwitch").publish();
-    secondStagePub = elevatorTable.getBooleanTopic("SecondStageActive").publish();
     setpointSub = elevatorTable.getDoubleTopic("Setpoint").subscribe(0.0);
 
     //setting follower
@@ -134,9 +131,6 @@ public class Elevator extends SubsystemBase {
     positionPub.set(rightMotor.getPosition().getValueAsDouble());
     currentPub.set(rightMotor.getSupplyCurrent().getValueAsDouble());
     limitSwitchPub.set(elevatorAtBottom());
-
-    // tracking stage and position
-    double currentPosition = rightMotor.getPosition().getValueAsDouble();
 
     if (elevatorAtBottom()) {
       rightMotor.setPosition(0.0);
