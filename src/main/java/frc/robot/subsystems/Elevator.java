@@ -12,6 +12,7 @@ import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -39,7 +40,7 @@ public class Elevator extends SubsystemBase {
   private boolean inSecondStage;
   
   // Set proper constants later
-  private static final double SPIKE_POSITION = 5.0;
+  private static final Angle MAX_SPIKE_HEIGHT = Angle.ofBaseUnits(5.0, Units.Degree);
   private static final double STAGE_TRANSITION_HEIGHT = 25.0;
   private static final double CURRENT_LIMIT = 35.0;
   private static final double SLOW_ZONE_THRESHOLD = 2.0;
@@ -125,7 +126,7 @@ public class Elevator extends SubsystemBase {
   }
 
   private boolean currentSpike() {
-    return (rightMotor.getPosition().getValueAsDouble() < SPIKE_POSITION && 
+    return (rightMotor.getPosition().getValue().compareTo(MAX_SPIKE_HEIGHT) < 0 && 
       rightMotor.getSupplyCurrent().getValueAsDouble() > CURRENT_LIMIT);
   }
 
