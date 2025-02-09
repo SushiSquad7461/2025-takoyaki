@@ -47,27 +47,27 @@ public class CoralManipulator extends SubsystemBase {
     private static final Measure<CurrentUnit> CURRENT_LIMIT = Amps.of(35);
 
     public CoralManipulator() {
-        pivotMotor = new TalonFX(Constants.Pivot.PIVOT_MOTOR_ID);
-        rollerMotor = new TalonFX(Constants.Pivot.ROLLER_MOTOR_ID);
-        beambreak = new DigitalInput(Constants.Pivot.BEAM_BREAK_PORT);
+        pivotMotor = new TalonFX(Constants.Ports.PIVOT_MOTOR_ID);
+        rollerMotor = new TalonFX(Constants.Ports.ROLLER_MOTOR_ID);
+        beambreak = new DigitalInput(Constants.Ports.BEAM_BREAK_PORT);
   
         motionMagic = new MotionMagicVoltage(0);
         
-        kP = new TunableNumber("Manipulator/PID/kP", Constants.Pivot.kP, Constants.TUNING_MODE);
-        kI = new TunableNumber("Manipulator/PID/kI", Constants.Pivot.kI, Constants.TUNING_MODE);
-        kD = new TunableNumber("Manipulator/PID/kD", Constants.Pivot.kD, Constants.TUNING_MODE);
-        pidTuning = Constants.Pivot.PIVOT_CONFIG.genPIDTuning("Manipulator Pivot", Constants.TUNING_MODE);
+        kP = new TunableNumber("Manipulator/PID/kP", Constants.CoralManipulator.kP, Constants.TUNING_MODE);
+        kI = new TunableNumber("Manipulator/PID/kI", Constants.CoralManipulator.kI, Constants.TUNING_MODE);
+        kD = new TunableNumber("Manipulator/PID/kD", Constants.CoralManipulator.kD, Constants.TUNING_MODE);
+        pidTuning = Constants.CoralManipulator.PIVOT_CONFIG.genPIDTuning("Manipulator Pivot", Constants.TUNING_MODE);
 
         // configure pivot motor
         var config = new TalonFXConfiguration();
-        config.Slot0.kP = Constants.Pivot.kP;
-        config.Slot0.kI = Constants.Pivot.kI;
-        config.Slot0.kD = Constants.Pivot.kD;
+        config.Slot0.kP = Constants.CoralManipulator.kP;
+        config.Slot0.kI = Constants.CoralManipulator.kI;
+        config.Slot0.kD = Constants.CoralManipulator.kD;
         
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Constants.Pivot.MAX_ANGLE.in(Radians);
+        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Constants.CoralManipulator.MAX_ANGLE.in(Radians);
         config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Constants.Pivot.MIN_ANGLE.in(Radians);
+        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Constants.CoralManipulator.MIN_ANGLE.in(Radians);
         
         // current and voltage limits
         config.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT.in(Amps);
@@ -111,7 +111,7 @@ public class CoralManipulator extends SubsystemBase {
     
     private BooleanSupplier atTargetPosition() {
         return () -> Math.abs(getPosition().in(Radians) - targetAngle.in(Radians)) 
-            < Constants.Pivot.ANGLE_TOLERANCE.in(Radians);
+            < Constants.CoralManipulator.ANGLE_TOLERANCE.in(Radians);
     }
     
     public Measure<AngleUnit> getPosition() {
