@@ -51,9 +51,11 @@ public class MotorConfig {
         this.mode = mode;
    }
 
-   public MotorConfig(int canId, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode) { this(canId, "rio", currentLimit, inversion, pid, mode); }
 
-public PIDTuning genPIDTuning(String motorName, boolean tuningMode) {
+   public MotorConfig(int canId, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode) { this(canId, "rio", currentLimit, inversion, pid, mode); }
+   public MotorConfig(int canId, int currentLimit, Boolean inversion, Mode mode) { this(canId, "rio", currentLimit, inversion, PIDConfig.getZeroPid(), mode); }
+
+   public PIDTuning genPIDTuning(String motorName, boolean tuningMode) {
         return new PIDTuning(motorName, pid, tuningMode);
    }
 
