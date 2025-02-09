@@ -1,5 +1,9 @@
 package frc.util.motor;
 
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
+
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -15,6 +19,13 @@ import frc.util.control.nt.PIDTuning;
 
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.units.AngularAccelerationUnit;
+import edu.wpi.first.units.AngularVelocityUnit;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.measure.AngularAcceleration;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Per;
+
 public class MotorConfig {
    public final PIDConfig pid;
    public final int canId;
@@ -22,6 +33,9 @@ public class MotorConfig {
    public final int currentLimit; // A currentLimit of bellow zero will not be set on the motor
    public final boolean inversion;
    public final Mode mode;
+
+   private final AngularVelocity velocityLimit;
+   private final AngularAcceleration accelerationLimit;
 
    public enum Mode {
         COAST(true),
@@ -42,18 +56,21 @@ public class MotorConfig {
         }
    };
 
-   public MotorConfig(int canId, String canBus, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode) {
+   public MotorConfig(int canId, String canBus, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode,
+   AngularVelocity velocityLimit, AngularAcceleration accelerationLimit) {
         this.canId = canId;
         this.canBus = canBus;
         this.currentLimit = currentLimit;
         this.inversion = inversion;
         this.pid = pid;
         this.mode = mode;
+        this.velocityLimit = velocityLimit;
+        this.accelerationLimit = accelerationLimit;
    }
 
 
-   public MotorConfig(int canId, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode) { this(canId, "rio", currentLimit, inversion, pid, mode); }
-   public MotorConfig(int canId, int currentLimit, Boolean inversion, Mode mode) { this(canId, "rio", currentLimit, inversion, PIDConfig.getZeroPid(), mode); }
+   public MotorConfig(int canId, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode) { this(canId, "rio", currentLimit, inversion, pid, mode, RadiansPerSecond.zero(), RadiansPerSecondPerSecond.zero()); }
+   public MotorConfig(int canId, int currentLimit, Boolean inversion, Mode mode) { this(canId, "rio", currentLimit, inversion, PIDConfig.getZeroPid(), mode, RadiansPerSecond.zero(), RadiansPerSecondPerSecond.zero()); }
 
    public PIDTuning genPIDTuning(String motorName, boolean tuningMode) {
         return new PIDTuning(motorName, pid, tuningMode);
@@ -102,6 +119,27 @@ public class MotorConfig {
    }
 
    public MotorConfig withCanId(int canId) {
-     return new MotorConfig(canId, this.canBus, this.currentLimit, this.inversion, this.pid, this.mode);
+     return new MotorConfig(canId, this.canBus, this.currentLimit, this.inversion, this.pid, this.mode, this.velocityLimit, this.accelerationLimit);
    }
+   
+   public TalonFX createTalonForMotionMagic() {
+     TalonFX motor = new TalonFX(canId, canBus);
+     TalonFXConfiguration config = getTalonConfig();
+     
+     MotionMagicConfigs motionMagic = new MotionMagicConfigs();
+     motionMagic.MotionMagicCruiseVelocity = velocityLimit.in(RadiansPerSecond);
+     motionMagic.MotionMagicAcceleration = accelerationLimit.in(RadiansPerSecondPerSecond);
+     
+     config.MotionMagic = motionMagic;
+     motor.getConfigurator().apply(config);
+     return motor;
+   }
+   
+   public MotorConfig withMotionMagic(
+     AngularVelocity velocityLimit,
+     AngularAcceleration accelerationLimit) {
+     return new MotorConfig(
+          this.canId, this.canBus, this.currentLimit, this.inversion, 
+          this.pid, this.mode, velocityLimit, accelerationLimit);
+     }
 }

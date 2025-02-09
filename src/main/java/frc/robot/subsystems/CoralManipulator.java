@@ -10,13 +10,9 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.BooleanPublisher;
-import edu.wpi.first.units.AngleUnit;
-import edu.wpi.first.units.CurrentUnit;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.VoltageUnit;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants;
@@ -42,13 +38,12 @@ public class CoralManipulator extends SubsystemBase {
     private final DoublePublisher currentPub;
     
     private boolean openLoop;
-    private Measure<AngleUnit> targetAngle;
+    private Angle targetAngle;
 
-    private static final Measure<CurrentUnit> CURRENT_LIMIT = Amps.of(35);
 
     public CoralManipulator() {
-        pivotMotor = new TalonFX(Constants.Ports.PIVOT_MOTOR_ID);
-        rollerMotor = new TalonFX(Constants.Ports.ROLLER_MOTOR_ID);
+        pivotMotor = Constants.CoralManipulator.PIVOT_CONFIG.createTalonForMotionMagic();
+        rollerMotor = Constants.CoralManipulator.ROLLER_CONFIG.createTalon();
         beambreak = new DigitalInput(Constants.Ports.BEAM_BREAK_PORT);
   
         motionMagic = new MotionMagicVoltage(0);
@@ -70,7 +65,7 @@ public class CoralManipulator extends SubsystemBase {
         config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Constants.CoralManipulator.MIN_ANGLE.in(Radians);
         
         // current and voltage limits
-        config.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT.in(Amps);
+        config.CurrentLimits.SupplyCurrentLimit = Constants.CoralManipulator.CURRENT_LIMIT.in(Amps);
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
         
         pivotMotor.getConfigurator().apply(config);
@@ -89,9 +84,10 @@ public class CoralManipulator extends SubsystemBase {
         return runOnce(() -> {
             openLoop = false;
             targetAngle = state.getAngle();
+            
         })
         .andThen(new WaitUntilCommand(atTargetPosition()))
-        .andThen(state == ManipulatorState.IDLE ? stopRollers() : Commands.none());
+        .andThen(state == ManipulatorState.IDLE ? stopRollers() : runRollers(state.getRollerSpeed().magnitude()));
     }
     
     public Command runRollers(double speed) {
@@ -114,7 +110,7 @@ public class CoralManipulator extends SubsystemBase {
             < Constants.CoralManipulator.ANGLE_TOLERANCE.in(Radians);
     }
     
-    public Measure<AngleUnit> getPosition() {
+    public Angle getPosition() {
         return Radians.of(pivotMotor.getPosition().getValueAsDouble());
     }
     

@@ -47,7 +47,7 @@ public class Elevator extends SubsystemBase {
 
 
   private Elevator() {    
-    limitSwitch = new DigitalInput(Constants.Elevator.LIMIT_SWITCH_PORT);
+    limitSwitch = new DigitalInput(Constants.Ports.LIMIT_SWITCH_PORT);
     motionMagic = new MotionMagicVoltage(0); //TODO: configure motion magic parameters
 
     leftMotor = Constants.Elevator.ELEVATOR_LEFT.createTalon();

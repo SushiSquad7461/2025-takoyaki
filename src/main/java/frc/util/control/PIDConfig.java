@@ -5,6 +5,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
@@ -24,20 +25,22 @@ public class PIDConfig {
    public final double V;
    public final double A;
 
+   //pid
    private final NetworkTable pidTable;
    private final DoublePublisher kPPub;
    private final DoublePublisher kIPub;
    private final DoublePublisher kDPub;
    private final DoublePublisher kFPub;
-   private final DoublePublisher kGPub;
-   private final DoublePublisher kSPub;
-   private final DoublePublisher kVPub;
-   private final DoublePublisher kAPub;
-
    private final DoubleSubscriber kPSub;
    private final DoubleSubscriber kISub;
    private final DoubleSubscriber kDSub;
    private final DoubleSubscriber kFSub;
+
+   //feedforward
+   private final DoublePublisher kGPub;
+   private final DoublePublisher kSPub;
+   private final DoublePublisher kVPub;
+   private final DoublePublisher kAPub;
    private final DoubleSubscriber kGSub;
    private final DoubleSubscriber kSSub;
    private final DoubleSubscriber kVSub;
@@ -96,6 +99,10 @@ public class PIDConfig {
    public static PIDConfig getPid(double p, double f) { return new PIDConfig(p, f); }
 
    public static PIDConfig getPid(double p) { return new PIDConfig(p); }
+
+   public ArmFeedforward getArmFeedforward() {
+      return new ArmFeedforward(getS(), getG(), getV(), getA());    
+   }
 
    public void setPid(TalonFX talon) {
       Slot0Configs slot0Configs = new Slot0Configs();
