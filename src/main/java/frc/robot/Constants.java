@@ -1,7 +1,7 @@
 package frc.robot;
 
-import frc.util.Control.PIDConfig;
-import frc.util.Motor.MotorConfig;
+import frc.util.control.PIDConfig;
+import frc.util.motor.MotorConfig;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.math.controller.ArmFeedforward;
 
