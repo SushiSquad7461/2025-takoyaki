@@ -34,10 +34,9 @@ public class CoralManipulator extends SubsystemBase {
     private final TunableNumber kP;
     private final TunableNumber kI;
     private final TunableNumber kD;
-    private final TunableNumber kG;
     private final PIDTuning pidTuning;
 
-    private final NetworkTable wristTable;
+    private final NetworkTable manipulatorTable;
     private final DoublePublisher anglePub;
     private final BooleanPublisher beambreakPub;
     private final DoublePublisher currentPub;
@@ -55,10 +54,9 @@ public class CoralManipulator extends SubsystemBase {
   
         motionMagic = new MotionMagicVoltage(0);
         
-        kP = new TunableNumber("Wrist/PID/kP", Constants.Pivot.kP, Constants.TUNING_MODE);
-        kI = new TunableNumber("Wrist/PID/kI", Constants.Pivot.kI, Constants.TUNING_MODE);
-        kD = new TunableNumber("Wrist/PID/kD", Constants.Pivot.kD, Constants.TUNING_MODE);
-        kG = new TunableNumber("Wrist/PID/kG", Constants.Pivot.kG, Constants.TUNING_MODE);
+        kP = new TunableNumber("Manipulator/PID/kP", Constants.Pivot.kP, Constants.TUNING_MODE);
+        kI = new TunableNumber("Manipulator/PID/kI", Constants.Pivot.kI, Constants.TUNING_MODE);
+        kD = new TunableNumber("Manipulator/PID/kD", Constants.Pivot.kD, Constants.TUNING_MODE);
         pidTuning = Constants.Pivot.PIVOT_CONFIG.genPIDTuning("Manipulator Pivot", Constants.TUNING_MODE);
 
         // configure pivot motor
@@ -75,16 +73,14 @@ public class CoralManipulator extends SubsystemBase {
         // current and voltage limits
         config.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT.in(Amps);
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
-        config.Voltage.PeakForwardVoltage = VOLTAGE_LIMIT.in(Volts);
-        config.Voltage.PeakReverseVoltage = -VOLTAGE_LIMIT.in(Volts);
         
         pivotMotor.getConfigurator().apply(config);
         
         // network table setup
-        wristTable = NetworkTableInstance.getDefault().getTable("Wrist");
-        anglePub = wristTable.getDoubleTopic("Angle").publish();
-        beambreakPub = wristTable.getBooleanTopic("BeamBreak").publish();
-        currentPub = wristTable.getDoubleTopic("Current").publish();
+        manipulatorTable = NetworkTableInstance.getDefault().getTable("Manipulator");
+        anglePub = manipulatorTable.getDoubleTopic("Angle").publish();
+        beambreakPub = manipulatorTable.getBooleanTopic("BeamBreak").publish();
+        currentPub = manipulatorTable.getDoubleTopic("Current").publish();
         
         openLoop = false;
         targetAngle = Degrees.of(0);
