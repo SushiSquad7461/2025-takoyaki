@@ -75,10 +75,7 @@ public class Constants {
         
         public static final double PIVOT_GEAR_RATIO = 0.0;
         
-        // motion and position control
-        public static final Measure<AngularVelocityUnit> MAX_VELOCITY = RadiansPerSecond.of(0);
-        public static final Measure<AngularAccelerationUnit> MAX_ACCELERATION = RadiansPerSecond.per(Second).of(0.0);
-        
+        // motion and position control TODO: sam pls check im using these correctly        
         public static final Measure<AngleUnit> MIN_ANGLE = Degrees.of(0);
         public static final Measure<AngleUnit> MAX_ANGLE = Degrees.of(0);
         public static final Measure<AngleUnit> ANGLE_TOLERANCE = Degrees.of(0);

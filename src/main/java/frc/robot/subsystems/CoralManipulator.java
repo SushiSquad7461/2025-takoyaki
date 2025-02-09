@@ -45,7 +45,6 @@ public class CoralManipulator extends SubsystemBase {
     private Measure<AngleUnit> targetAngle;
 
     private static final Measure<CurrentUnit> CURRENT_LIMIT = Amps.of(35);
-    private static final Measure<VoltageUnit> VOLTAGE_LIMIT = Volts.of(12);
 
     public CoralManipulator() {
         pivotMotor = new TalonFX(Constants.Pivot.PIVOT_MOTOR_ID);
