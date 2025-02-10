@@ -72,15 +72,6 @@ public class Elevator extends SubsystemBase {
     talonFXConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     talonFXConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
     
-    var slot0Configs = talonFXConfigs.Slot0;
-    slot0Configs.kG = Constants.Elevator.kG;
-    slot0Configs.kS = Constants.Elevator.kS;
-    slot0Configs.kV = Constants.Elevator.kV;
-    slot0Configs.kA = Constants.Elevator.kA;
-    slot0Configs.kP = Constants.Elevator.kP;
-    slot0Configs.kI = Constants.Elevator.kI;
-    slot0Configs.kD = Constants.Elevator.kD;
-    
     // Configure Motion Magic settings
     // var motionMagicConfigs = talonFXConfigs.MotionMagic;
     // motionMagicConfigs.MotionMagicCruiseVelocity = 80; //rps

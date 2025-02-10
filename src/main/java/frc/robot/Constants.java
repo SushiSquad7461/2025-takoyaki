@@ -1,29 +1,23 @@
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.derive;
 
 
-import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.units.AngleUnit;
-import edu.wpi.first.units.CurrentUnit;
 import edu.wpi.first.units.DistanceUnit;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.PerUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearVelocity;
 import frc.util.control.PIDConfig;
 import frc.util.motor.MotorConfig;
 
@@ -37,7 +31,6 @@ public class Constants {
         public static final int ELEVATOR_RIGHT_ID = 0;
         public static final int LIMIT_SWITCH_PORT = 0; 
         public static final int BEAM_BREAK_PORT = 0; 
-
     }
 
     public static class CustomUnits {
@@ -60,14 +53,14 @@ public class Constants {
             Ports.ELEVATOR_LEFT_ID,
             0,
             true,
-            PIDConfig.getPid(0.0),
+            PIDConfig.createElevatorConfig(0.0, 0.0, 0.0, 0, 0, 0, 0, 0),
             MotorConfig.Mode.BRAKE);
 
         public static final MotorConfig ELEVATOR_RIGHT = new MotorConfig(
             0,
             0,
             false,
-            PIDConfig.getPid(0.0, 0.0, 0.0),
+            PIDConfig.createElevatorConfig(0.0, 0.0, 0.0, 0, 0, 0, 0, 0),
             MotorConfig.Mode.BRAKE);
 
         // TODO: set all of these values

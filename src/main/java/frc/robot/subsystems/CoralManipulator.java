@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants;
-import frc.util.control.PIDConfig;
 import frc.util.control.nt.PIDTuning;
 import frc.util.control.nt.TunableNumber;
 
@@ -31,10 +30,6 @@ public class CoralManipulator extends SubsystemBase {
     private final TunableNumber kP;
     private final TunableNumber kI;
     private final TunableNumber kD;
-    private final TunableNumber kG;
-    private final TunableNumber kS;
-    private final TunableNumber kV;
-    private final TunableNumber kA;
 
     private final PIDTuning pidTuning;
 
@@ -44,7 +39,7 @@ public class CoralManipulator extends SubsystemBase {
     private final DoublePublisher currentPub;
     
     private boolean openLoop;
-    private boolean changedPos = false;
+    private boolean changedPos;
     private Angle targetAngle;
 
 
@@ -58,10 +53,6 @@ public class CoralManipulator extends SubsystemBase {
         kP = new TunableNumber("Manipulator/PID/kP", Constants.CoralManipulator.kP, Constants.TUNING_MODE);
         kI = new TunableNumber("Manipulator/PID/kI", Constants.CoralManipulator.kI, Constants.TUNING_MODE);
         kD = new TunableNumber("Manipulator/PID/kD", Constants.CoralManipulator.kD, Constants.TUNING_MODE);
-        kG = new TunableNumber("Manipulator/PID/kG", Constants.CoralManipulator.kG, Constants.TUNING_MODE);
-        kS = new TunableNumber("Manipulator/PID/kS", Constants.CoralManipulator.kS, Constants.TUNING_MODE);
-        kV = new TunableNumber("Manipulator/PID/kV", Constants.CoralManipulator.kV, Constants.TUNING_MODE);
-        kA = new TunableNumber("Manipulator/PID/kA", Constants.CoralManipulator.kA, Constants.TUNING_MODE);
 
         pidTuning = Constants.CoralManipulator.PIVOT_CONFIG.genPIDTuning("Manipulator Pivot", Constants.TUNING_MODE);
 
@@ -81,6 +72,7 @@ public class CoralManipulator extends SubsystemBase {
         currentPub = manipulatorTable.getDoubleTopic("Current").publish();
         
         openLoop = false;
+        changedPos = false;
         targetAngle = Degrees.of(0);
     }
 
@@ -119,7 +111,7 @@ public class CoralManipulator extends SubsystemBase {
     }
     
     public boolean hasCoral() {
-        return !beambreak.get(); //TODO: check how beambreak works (get() returns true when circuit is closed afaik)
+        return !beambreak.get(); //get() returns true when circuit is closed
     }
 
     @Override
