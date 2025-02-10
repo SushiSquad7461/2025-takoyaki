@@ -30,6 +30,11 @@ public class CoralManipulator extends SubsystemBase {
     private final TunableNumber kP;
     private final TunableNumber kI;
     private final TunableNumber kD;
+    private final TunableNumber kG;
+    private final TunableNumber kS;
+    private final TunableNumber kV;
+    private final TunableNumber kA;
+
     private final PIDTuning pidTuning;
 
     private final NetworkTable manipulatorTable;
@@ -38,6 +43,7 @@ public class CoralManipulator extends SubsystemBase {
     private final DoublePublisher currentPub;
     
     private boolean openLoop;
+    private boolean changedPos = false;
     private Angle targetAngle;
 
 
@@ -51,20 +57,19 @@ public class CoralManipulator extends SubsystemBase {
         kP = new TunableNumber("Manipulator/PID/kP", Constants.CoralManipulator.kP, Constants.TUNING_MODE);
         kI = new TunableNumber("Manipulator/PID/kI", Constants.CoralManipulator.kI, Constants.TUNING_MODE);
         kD = new TunableNumber("Manipulator/PID/kD", Constants.CoralManipulator.kD, Constants.TUNING_MODE);
+        kG = new TunableNumber("Manipulator/PID/kP", Constants.CoralManipulator.kG, Constants.TUNING_MODE);
+        kS = new TunableNumber("Manipulator/PID/kI", Constants.CoralManipulator.kS, Constants.TUNING_MODE);
+        kV = new TunableNumber("Manipulator/PID/kD", Constants.CoralManipulator.kV, Constants.TUNING_MODE);
+        kA = new TunableNumber("Manipulator/PID/kD", Constants.CoralManipulator.kA, Constants.TUNING_MODE);
+
         pidTuning = Constants.CoralManipulator.PIVOT_CONFIG.genPIDTuning("Manipulator Pivot", Constants.TUNING_MODE);
 
         // configure pivot motor
-        var config = new TalonFXConfiguration();
-        config.Slot0.kP = Constants.CoralManipulator.kP;
-        config.Slot0.kI = Constants.CoralManipulator.kI;
-        config.Slot0.kD = Constants.CoralManipulator.kD;
-        
+        var config = new TalonFXConfiguration();        
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Constants.CoralManipulator.MAX_ANGLE.in(Radians);
         config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Constants.CoralManipulator.MIN_ANGLE.in(Radians);
-        
-        // current and voltage limits
         config.CurrentLimits.SupplyCurrentLimit = Constants.CoralManipulator.CURRENT_LIMIT.in(Amps);
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
         
@@ -84,7 +89,7 @@ public class CoralManipulator extends SubsystemBase {
         return runOnce(() -> {
             openLoop = false;
             targetAngle = state.getAngle();
-            
+            changedPos = true;
         })
         .andThen(new WaitUntilCommand(atTargetPosition()))
         .andThen(state == ManipulatorState.IDLE ? stopRollers() : runRollers(state.getRollerSpeed().magnitude()));
@@ -127,17 +132,13 @@ public class CoralManipulator extends SubsystemBase {
         if (!openLoop) {
             pidTuning.updatePID(pivotMotor);
             
-            // double ff = Constants.Pivot.PIVOT_FEEDFORWARD.calculate(
-            //     getPosition().in(Radians), 
-            //     0  
-            // );
-            
-            //TODO: sam i wont need to apply feedforward here if alr set in constants right, even if its arm feedforward?
-            pivotMotor.setControl(
-                motionMagic
-                    .withPosition(targetAngle.in(Radians))
-                    // .withFeedForward(ff)
-            );
+            if (changedPos) {
+                pivotMotor.setControl(
+                    motionMagic
+                        .withPosition(targetAngle.in(Radians))
+                );
+                changedPos = false;
+            }
         }
     }
 }

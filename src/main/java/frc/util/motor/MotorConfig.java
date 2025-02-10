@@ -19,12 +19,8 @@ import frc.util.control.nt.PIDTuning;
 
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.units.AngularAccelerationUnit;
-import edu.wpi.first.units.AngularVelocityUnit;
-import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Per;
 
 public class MotorConfig {
    public final PIDConfig pid;

@@ -3,6 +3,7 @@ package frc.util.control;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
@@ -24,6 +25,7 @@ public class PIDConfig {
    public final double S;
    public final double V;
    public final double A;
+   public final GravityTypeValue gravityType;
 
    //pid
    private final NetworkTable pidTable;
@@ -47,7 +49,7 @@ public class PIDConfig {
    private final DoubleSubscriber kASub;
 
 
-   public PIDConfig(double p, double i, double d, double f, double g, double s, double v, double a) {
+   public PIDConfig(double p, double i, double d, double f, double g, double s, double v, double a, GravityTypeValue gravityType) {
       this.P = p;
       this.I = i;
       this.D = d;
@@ -56,6 +58,7 @@ public class PIDConfig {
       this.S = s;
       this.V = v;
       this.A = a;
+      this.gravityType = gravityType;
 
       //network table implementation
       pidTable = NetworkTableInstance.getDefault().getTable("PIDTuning");
@@ -82,17 +85,25 @@ public class PIDConfig {
          publishValues();
    }
 
-   public PIDConfig(double p, double d, double f) { this(p, 0.0, d, f, 0.0, 0.0, 0.0, 0.0); }
+   public static PIDConfig createArmConfig(double p, double i, double d, double f, double g, double s, double v, double a) {
+      return new PIDConfig(p, i, d, f, g, s, v, a, GravityTypeValue.Arm_Cosine);
+   }
 
-   public PIDConfig(double p, double f) { this(p, 0.0, 0.0, f, 0.0, 0.0, 0.0, 0.0); }
+   public static PIDConfig createElevatorConfig(double p, double i, double d, double f, double g, double s, double v, double a) {
+      return new PIDConfig(p, i, d, f, g, s, v, a, GravityTypeValue.Elevator_Static);
+   }
 
-   public PIDConfig(double p) { this(p, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0); }
+   public PIDConfig(double p, double d, double f) { this(p, 0.0, d, f, 0.0, 0.0, 0.0, 0.0, GravityTypeValue.Arm_Cosine); }
 
-   public static PIDConfig getZeroPid() { return new PIDConfig(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0); }
+   public PIDConfig(double p, double f) { this(p, 0.0, 0.0, f, 0.0, 0.0, 0.0, 0.0, GravityTypeValue.Arm_Cosine); }
 
-   public static PIDConfig getPid(double p, double i, double d, double f, double g, double s, double v, double a) { return new PIDConfig(p, i, d, f, g, s, v, a); }
+   public PIDConfig(double p) { this(p, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, GravityTypeValue.Arm_Cosine); }
 
-   public static PIDConfig getPid(double p, double i, double d, double f) { return new PIDConfig(p, i, d, f, 0.0, 0.0, 0.0, 0.0); }
+   public static PIDConfig getZeroPid() { return new PIDConfig(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, GravityTypeValue.Arm_Cosine); }
+
+   public static PIDConfig getPid(double p, double i, double d, double f, double g, double s, double v, double a) { return new PIDConfig(p, i, d, f, g, s, v, a, GravityTypeValue.Arm_Cosine); }
+
+   public static PIDConfig getPid(double p, double i, double d, double f) { return new PIDConfig(p, i, d, f, 0.0, 0.0, 0.0, 0.0, GravityTypeValue.Arm_Cosine); }
 
    public static PIDConfig getPid(double p, double d, double f) { return new PIDConfig(p, d, f); }
 
@@ -114,6 +125,7 @@ public class PIDConfig {
       slot0Configs.kS = getS();
       slot0Configs.kV = getV();
       slot0Configs.kA = getA();
+      slot0Configs.GravityType = gravityType;
 
       talon.getConfigurator().apply(slot0Configs);
    }
@@ -129,6 +141,7 @@ public class PIDConfig {
       slot0Configs.kS = getS();
       slot0Configs.kV = getV();
       slot0Configs.kA = getA();
+      slot0Configs.GravityType = gravityType;
 
       config.withSlot0(slot0Configs);
    }

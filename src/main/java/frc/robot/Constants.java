@@ -107,7 +107,7 @@ public class Constants {
             Ports.PIVOT_MOTOR_ID,
             0,
             false,
-            PIDConfig.getPid(kP, kI, kD, 0, kG, kV, kS, kA),
+            PIDConfig.createArmConfig(kP, kI, kD, 0, kG, kV, kS, kA),
             MotorConfig.Mode.BRAKE
         ).withMotionMagic(
             MOTION_MAGIC_VELOCITY, 
@@ -120,14 +120,6 @@ public class Constants {
             false,
             MotorConfig.Mode.BRAKE
         );
-        
-        public static final ArmFeedforward PIVOT_FEEDFORWARD = new ArmFeedforward(
-            0,
-            0,
-            0, 
-            0
-        );
-        
         
         // roller speeds for diff states
         public static final LinearVelocity INTAKE_SPEED = MetersPerSecond.of(0);
