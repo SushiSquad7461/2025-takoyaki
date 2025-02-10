@@ -76,7 +76,6 @@ public class MotorConfig {
         TalonFXConfiguration talonConfig = new TalonFXConfiguration();
 
         MotorHelper.updateSupplyCurrentLimit(currentLimit, talonConfig);
- 
         talonConfig.MotorOutput.NeutralMode = mode.getTalonMode();
         talonConfig.MotorOutput.Inverted = inversion ? InvertedValue.CounterClockwise_Positive : InvertedValue.Clockwise_Positive;
 

@@ -38,16 +38,6 @@ public class PIDConfig {
    private final DoubleSubscriber kDSub;
    private final DoubleSubscriber kFSub;
 
-   //feedforward
-   private final DoublePublisher kGPub;
-   private final DoublePublisher kSPub;
-   private final DoublePublisher kVPub;
-   private final DoublePublisher kAPub;
-   private final DoubleSubscriber kGSub;
-   private final DoubleSubscriber kSSub;
-   private final DoubleSubscriber kVSub;
-   private final DoubleSubscriber kASub;
-
 
    public PIDConfig(double p, double i, double d, double f, double g, double s, double v, double a, GravityTypeValue gravityType) {
       this.P = p;
@@ -67,19 +57,11 @@ public class PIDConfig {
       kIPub = pidTable.getDoubleTopic("kI").publish();
       kDPub = pidTable.getDoubleTopic("kD").publish();
       kFPub = pidTable.getDoubleTopic("kF").publish();
-      kGPub = pidTable.getDoubleTopic("kG").publish();
-      kSPub = pidTable.getDoubleTopic("kS").publish();
-      kVPub = pidTable.getDoubleTopic("kV").publish();
-      kAPub = pidTable.getDoubleTopic("kA").publish();
 
       kPSub = pidTable.getDoubleTopic("kP").subscribe(p);
       kISub = pidTable.getDoubleTopic("kI").subscribe(i);
       kDSub = pidTable.getDoubleTopic("kD").subscribe(d);
       kFSub = pidTable.getDoubleTopic("kF").subscribe(f);
-      kGSub = pidTable.getDoubleTopic("kG").subscribe(g);
-      kSSub = pidTable.getDoubleTopic("kS").subscribe(s);
-      kVSub = pidTable.getDoubleTopic("kV").subscribe(v);
-      kASub = pidTable.getDoubleTopic("kA").subscribe(a);
 
       if (Constants.TUNING_MODE)
          publishValues();
@@ -112,7 +94,7 @@ public class PIDConfig {
    public static PIDConfig getPid(double p) { return new PIDConfig(p); }
 
    public ArmFeedforward getArmFeedforward() {
-      return new ArmFeedforward(getS(), getG(), getV(), getA());    
+      return new ArmFeedforward(S, G, V, A);    
    }
 
    public void setPid(TalonFX talon) {
@@ -121,10 +103,10 @@ public class PIDConfig {
       slot0Configs.kP = getP();
       slot0Configs.kI = getI();
       slot0Configs.kD = getD();
-      slot0Configs.kG = getG();
-      slot0Configs.kS = getS();
-      slot0Configs.kV = getV();
-      slot0Configs.kA = getA();
+      slot0Configs.kG = G;
+      slot0Configs.kS = S;
+      slot0Configs.kV = V;
+      slot0Configs.kA = A;
       slot0Configs.GravityType = gravityType;
 
       talon.getConfigurator().apply(slot0Configs);
@@ -137,10 +119,10 @@ public class PIDConfig {
       slot0Configs.kP = getP();
       slot0Configs.kI = getI();
       slot0Configs.kD = getD();
-      slot0Configs.kG = getG();
-      slot0Configs.kS = getS();
-      slot0Configs.kV = getV();
-      slot0Configs.kA = getA();
+      slot0Configs.kG = G;
+      slot0Configs.kS = S;
+      slot0Configs.kV = V;
+      slot0Configs.kA = A;
       slot0Configs.GravityType = gravityType;
 
       config.withSlot0(slot0Configs);
@@ -162,31 +144,12 @@ public class PIDConfig {
       return Constants.TUNING_MODE ? kFSub.get() : F;
    }
 
-   public double getG() {
-      return Constants.TUNING_MODE ? kGSub.get() : G;
-   }
-
-   public double getS() {
-      return Constants.TUNING_MODE ? kSSub.get() : S;
-   }
-   public double getV() {
-      return Constants.TUNING_MODE ? kVSub.get() : V;
-   }
-   public double getA() {
-      return Constants.TUNING_MODE ? kASub.get() : A;
-   }
-
 
    private void publishValues() {
       kPPub.set(getP());
       kIPub.set(getI());
       kDPub.set(getD());
       kFPub.set(getF());
-      kGPub.set(getG());
-      kSPub.set(getS());
-      kVPub.set(getV());
-      kAPub.set(getA());
-
    }
   
    public ClosedLoopConfig createSparkMaxConfig(){

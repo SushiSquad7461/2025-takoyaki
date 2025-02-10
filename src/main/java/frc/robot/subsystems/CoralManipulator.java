@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants;
+import frc.util.control.PIDConfig;
 import frc.util.control.nt.PIDTuning;
 import frc.util.control.nt.TunableNumber;
 
@@ -57,21 +58,19 @@ public class CoralManipulator extends SubsystemBase {
         kP = new TunableNumber("Manipulator/PID/kP", Constants.CoralManipulator.kP, Constants.TUNING_MODE);
         kI = new TunableNumber("Manipulator/PID/kI", Constants.CoralManipulator.kI, Constants.TUNING_MODE);
         kD = new TunableNumber("Manipulator/PID/kD", Constants.CoralManipulator.kD, Constants.TUNING_MODE);
-        kG = new TunableNumber("Manipulator/PID/kP", Constants.CoralManipulator.kG, Constants.TUNING_MODE);
-        kS = new TunableNumber("Manipulator/PID/kI", Constants.CoralManipulator.kS, Constants.TUNING_MODE);
-        kV = new TunableNumber("Manipulator/PID/kD", Constants.CoralManipulator.kV, Constants.TUNING_MODE);
-        kA = new TunableNumber("Manipulator/PID/kD", Constants.CoralManipulator.kA, Constants.TUNING_MODE);
+        kG = new TunableNumber("Manipulator/PID/kG", Constants.CoralManipulator.kG, Constants.TUNING_MODE);
+        kS = new TunableNumber("Manipulator/PID/kS", Constants.CoralManipulator.kS, Constants.TUNING_MODE);
+        kV = new TunableNumber("Manipulator/PID/kV", Constants.CoralManipulator.kV, Constants.TUNING_MODE);
+        kA = new TunableNumber("Manipulator/PID/kA", Constants.CoralManipulator.kA, Constants.TUNING_MODE);
 
         pidTuning = Constants.CoralManipulator.PIVOT_CONFIG.genPIDTuning("Manipulator Pivot", Constants.TUNING_MODE);
 
         // configure pivot motor
-        var config = new TalonFXConfiguration();        
+        var config = new TalonFXConfiguration();     
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Constants.CoralManipulator.MAX_ANGLE.in(Radians);
         config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Constants.CoralManipulator.MIN_ANGLE.in(Radians);
-        config.CurrentLimits.SupplyCurrentLimit = Constants.CoralManipulator.CURRENT_LIMIT.in(Amps);
-        config.CurrentLimits.SupplyCurrentLimitEnable = true;
         
         pivotMotor.getConfigurator().apply(config);
         
@@ -92,7 +91,7 @@ public class CoralManipulator extends SubsystemBase {
             changedPos = true;
         })
         .andThen(new WaitUntilCommand(atTargetPosition()))
-        .andThen(state == ManipulatorState.IDLE ? stopRollers() : runRollers(state.getRollerSpeed().magnitude()));
+        .andThen(state == ManipulatorState.IDLE ? stopRollers() : runRollers(state.getRollerSpeed()));
     }
     
     public Command runRollers(double speed) {

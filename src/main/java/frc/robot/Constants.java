@@ -81,7 +81,6 @@ public class Constants {
 
     public static final class CoralManipulator {
         public static final double PIVOT_GEAR_RATIO = 0.0;
-        public static final Current CURRENT_LIMIT = Amps.of(35);
 
         // motion and position control       
         public static final Angle MIN_ANGLE = Degrees.of(0);
@@ -109,10 +108,7 @@ public class Constants {
             false,
             PIDConfig.createArmConfig(kP, kI, kD, 0, kG, kV, kS, kA),
             MotorConfig.Mode.BRAKE
-        ).withMotionMagic(
-            MOTION_MAGIC_VELOCITY, 
-            MOTION_MAGIC_ACCELERATION
-        ); //i wasn't sure about how to add the units for jerk in motor conifg
+        );
         
         public static final MotorConfig ROLLER_CONFIG = new MotorConfig(
             Ports.ROLLER_MOTOR_ID,
@@ -121,10 +117,10 @@ public class Constants {
             MotorConfig.Mode.BRAKE
         );
         
-        // roller speeds for diff states
-        public static final LinearVelocity INTAKE_SPEED = MetersPerSecond.of(0);
-        public static final LinearVelocity SCORE_SPEED = MetersPerSecond.of(0);
-        public static final LinearVelocity HOLD_SPEED = MetersPerSecond.of(0);
+        // roller speeds for diff states (should be in range [-1, 1])
+        public static final double INTAKE_SPEED = 0;
+        public static final double SCORE_SPEED = 0;
+        public static final double HOLD_SPEED = 0;
     }
 
 
