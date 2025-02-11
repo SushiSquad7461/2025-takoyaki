@@ -67,12 +67,12 @@ public class PIDConfig {
          publishValues();
    }
 
-   public static PIDConfig createArmConfig(double p, double i, double d, double f, double g, double s, double v, double a) {
-      return new PIDConfig(p, i, d, f, g, s, v, a, GravityTypeValue.Arm_Cosine);
+   public static PIDConfig getArmPid(double p, double i, double d, double g, double s, double v, double a) {
+      return new PIDConfig(p, i, d, 0, g, s, v, a, GravityTypeValue.Arm_Cosine);
    }
 
-   public static PIDConfig createElevatorConfig(double p, double i, double d, double f, double g, double s, double v, double a) {
-      return new PIDConfig(p, i, d, f, g, s, v, a, GravityTypeValue.Elevator_Static);
+   public static PIDConfig getElevatorPid(double p, double i, double d, double g, double s, double v, double a) {
+      return new PIDConfig(p, i, d, 0, g, s, v, a, GravityTypeValue.Elevator_Static);
    }
 
    public PIDConfig(double p, double d, double f) { this(p, 0.0, d, f, 0.0, 0.0, 0.0, 0.0, GravityTypeValue.Arm_Cosine); }

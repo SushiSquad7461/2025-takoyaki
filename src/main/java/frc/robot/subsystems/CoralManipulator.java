@@ -3,7 +3,6 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 
 import edu.wpi.first.networktables.NetworkTable;
@@ -17,7 +16,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants;
 import frc.util.control.nt.PIDTuning;
-import frc.util.control.nt.TunableNumber;
 
 import java.util.function.BooleanSupplier;
 
@@ -27,10 +25,6 @@ public class CoralManipulator extends SubsystemBase {
     private final DigitalInput beambreak;
     private final MotionMagicVoltage motionMagic;
     
-    private final TunableNumber kP;
-    private final TunableNumber kI;
-    private final TunableNumber kD;
-
     private final PIDTuning pidTuning;
 
     private final NetworkTable manipulatorTable;
@@ -44,26 +38,12 @@ public class CoralManipulator extends SubsystemBase {
 
 
     public CoralManipulator() {
-        pivotMotor = Constants.CoralManipulator.PIVOT_CONFIG.createTalonForMotionMagic();
+        pivotMotor = Constants.CoralManipulator.PIVOT_CONFIG.createTalon();
         rollerMotor = Constants.CoralManipulator.ROLLER_CONFIG.createTalon();
         beambreak = new DigitalInput(Constants.Ports.BEAM_BREAK_PORT);
-  
         motionMagic = new MotionMagicVoltage(0);
-        
-        kP = new TunableNumber("Manipulator/PID/kP", Constants.CoralManipulator.kP, Constants.TUNING_MODE);
-        kI = new TunableNumber("Manipulator/PID/kI", Constants.CoralManipulator.kI, Constants.TUNING_MODE);
-        kD = new TunableNumber("Manipulator/PID/kD", Constants.CoralManipulator.kD, Constants.TUNING_MODE);
-
         pidTuning = Constants.CoralManipulator.PIVOT_CONFIG.genPIDTuning("Manipulator Pivot", Constants.TUNING_MODE);
 
-        // configure pivot motor
-        var config = new TalonFXConfiguration();     
-        config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Constants.CoralManipulator.MAX_ANGLE.in(Radians);
-        config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = Constants.CoralManipulator.MIN_ANGLE.in(Radians);
-        
-        pivotMotor.getConfigurator().apply(config);
         
         // network table setup
         manipulatorTable = NetworkTableInstance.getDefault().getTable("Manipulator");

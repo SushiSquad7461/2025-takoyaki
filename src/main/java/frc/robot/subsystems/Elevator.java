@@ -4,7 +4,6 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Rotations;
 
 import java.util.function.BooleanSupplier;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -62,24 +61,7 @@ public class Elevator extends SubsystemBase {
 
     //setting follower
     leftMotor.setControl(new Follower(rightMotor.getDeviceID(), Constants.Elevator.ELEVATOR_LEFT.inversion != Constants.Elevator.ELEVATOR_RIGHT.inversion));
-    
-    //creating config for software limit switch bec sushi lib doesnt handle
-    var talonFXConfigs = new TalonFXConfiguration();
-    
-    talonFXConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    talonFXConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 
-        Constants.Elevator.MOTOR_MAX_HEIGHT.in(Constants.CustomUnits.TalonEncoderCounts);
-    talonFXConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    talonFXConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
-    
-    // Configure Motion Magic settings
-    // var motionMagicConfigs = talonFXConfigs.MotionMagic;
-    // motionMagicConfigs.MotionMagicCruiseVelocity = 80; //rps
-    // motionMagicConfigs.MotionMagicAcceleration = 160; //rps/s
-    // motionMagicConfigs.MotionMagicJerk = 1600; //rps/s/s
-    
-    rightMotor.getConfigurator().apply(talonFXConfigs);
-
+        
     resetElevator = false;
     openLoop = false;
   }

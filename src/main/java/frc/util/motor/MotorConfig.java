@@ -2,6 +2,7 @@ package frc.util.motor;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
 
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -19,6 +20,7 @@ import frc.util.control.nt.PIDTuning;
 
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 
@@ -32,6 +34,9 @@ public class MotorConfig {
 
    private final AngularVelocity velocityLimit;
    private final AngularAcceleration accelerationLimit;
+
+   private final Angle forwardSoftLimit;
+   private final Angle reverseSoftLimit;
 
    public enum Mode {
         COAST(true),
@@ -53,7 +58,7 @@ public class MotorConfig {
    };
 
    public MotorConfig(int canId, String canBus, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode,
-   AngularVelocity velocityLimit, AngularAcceleration accelerationLimit) {
+   AngularVelocity velocityLimit, AngularAcceleration accelerationLimit, Angle forwardSoftLimit, Angle reverseSoftLimit) {
         this.canId = canId;
         this.canBus = canBus;
         this.currentLimit = currentLimit;
@@ -62,11 +67,12 @@ public class MotorConfig {
         this.mode = mode;
         this.velocityLimit = velocityLimit;
         this.accelerationLimit = accelerationLimit;
+        this.forwardSoftLimit = forwardSoftLimit;
+        this.reverseSoftLimit = reverseSoftLimit;
    }
 
-
-   public MotorConfig(int canId, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode) { this(canId, "rio", currentLimit, inversion, pid, mode, RadiansPerSecond.zero(), RadiansPerSecondPerSecond.zero()); }
-   public MotorConfig(int canId, int currentLimit, Boolean inversion, Mode mode) { this(canId, "rio", currentLimit, inversion, PIDConfig.getZeroPid(), mode, RadiansPerSecond.zero(), RadiansPerSecondPerSecond.zero()); }
+   public MotorConfig(int canId, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode, Angle forwardSoftLimit, Angle reverseSoftLimit) { this(canId, "rio", currentLimit, inversion, pid, mode, RadiansPerSecond.zero(), RadiansPerSecondPerSecond.zero(), forwardSoftLimit, reverseSoftLimit); }
+   public MotorConfig(int canId, int currentLimit, Boolean inversion, Mode mode) { this(canId, "rio", currentLimit, inversion, PIDConfig.getZeroPid(), mode, RadiansPerSecond.zero(), RadiansPerSecondPerSecond.zero(), null, null); }
 
    public PIDTuning genPIDTuning(String motorName, boolean tuningMode) {
         return new PIDTuning(motorName, pid, tuningMode);
@@ -76,6 +82,17 @@ public class MotorConfig {
         TalonFXConfiguration talonConfig = new TalonFXConfiguration();
 
         MotorHelper.updateSupplyCurrentLimit(currentLimit, talonConfig);
+        if (forwardSoftLimit != null){
+          talonConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+          talonConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = forwardSoftLimit.in(Rotations);
+        }
+
+        if (reverseSoftLimit != null) {
+          talonConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+          talonConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = reverseSoftLimit.in(Rotations);  
+        }
+        
+
         talonConfig.MotorOutput.NeutralMode = mode.getTalonMode();
         talonConfig.MotorOutput.Inverted = inversion ? InvertedValue.CounterClockwise_Positive : InvertedValue.Clockwise_Positive;
 
@@ -114,7 +131,7 @@ public class MotorConfig {
    }
 
    public MotorConfig withCanId(int canId) {
-     return new MotorConfig(canId, this.canBus, this.currentLimit, this.inversion, this.pid, this.mode, this.velocityLimit, this.accelerationLimit);
+     return new MotorConfig(canId, this.canBus, this.currentLimit, this.inversion, this.pid, this.mode, this.velocityLimit, this.accelerationLimit, this.forwardSoftLimit, this.reverseSoftLimit);
    }
    
    public TalonFX createTalonForMotionMagic() {
@@ -135,6 +152,6 @@ public class MotorConfig {
      AngularAcceleration accelerationLimit) {
      return new MotorConfig(
           this.canId, this.canBus, this.currentLimit, this.inversion, 
-          this.pid, this.mode, velocityLimit, accelerationLimit);
+          this.pid, this.mode, velocityLimit, accelerationLimit, forwardSoftLimit, reverseSoftLimit);
      }
 }
