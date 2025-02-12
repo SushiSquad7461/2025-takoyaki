@@ -41,9 +41,6 @@ public class Constants {
     public static class Ports {
         public static final int DRIVER_PORT = 0;
         public static final CANBus CANIVORE_NAME = null;
-    }
-
-    public static class Ports {
         public static final int PIVOT_MOTOR_ID = 0;
         public static final int ROLLER_MOTOR_ID = 0;
         public static final int ELEVATOR_LEFT_ID = 0;
@@ -58,7 +55,7 @@ public class Constants {
 
     public static final class Swerve {
         public static final int pigeonID = 13;
-        public static final boolean REDUCE_SPEED = false;
+        public static final boolean REDUCE_SPEED = true;
         public static final double LOW_SPEED = 0.1;
         public static final double LOW_ROT = 0.1;
 
@@ -73,10 +70,10 @@ public class Constants {
         /* Swerve Kinematics 
          * No need to ever change this unless you are not doing a traditional rectangular/square 4 module swerve */
          public static final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
-            new Translation2d(wheelBase / 2.0, trackWidth / 2.0),
-            new Translation2d(wheelBase / 2.0, -trackWidth / 2.0),
-            new Translation2d(-wheelBase / 2.0, trackWidth / 2.0),
-            new Translation2d(-wheelBase / 2.0, -trackWidth / 2.0));
+            new Translation2d(wheelBase / 2.0, trackWidth / 2.0), //front left => Mod 0
+            new Translation2d(wheelBase / 2.0, -trackWidth / 2.0), //front right => Mod 1
+            new Translation2d(-wheelBase / 2.0, trackWidth / 2.0), //back left => Mod 2
+            new Translation2d(-wheelBase / 2.0, -trackWidth / 2.0)); //back right => Mod 3
 
         /* Module Gear Ratios */
         public static final double driveGearRatio = chosenModule.driveGearRatio;
@@ -111,21 +108,21 @@ public class Constants {
         public static final double angleKD = chosenModule.angleKD;
 
         /* Drive Motor PID Values */
-        public static final double driveKP = 0.12; //TODO: This must be tuned to specific robot
+        public static final double driveKP = 0.12;
         public static final double driveKI = 0.0;
         public static final double driveKD = 0.0;
         public static final double driveKF = 0.0;
 
         /* Drive Motor Characterization Values From SYSID */
-        public static final double driveKS = 0.32; //TODO: This must be tuned to specific robot
+        public static final double driveKS = 0.32;
         public static final double driveKV = 1.51;
         public static final double driveKA = 0.27;
 
         /* Swerve Profiling Values */
         /** Meters per Second */
-        public static final double maxSpeed = 4.5; //TODO: This must be tuned to specific robot
+        public static final double maxSpeed = 4.5;
         /** Radians per Second */
-        public static final double maxAngularVelocity = 10.0; //TODO: This must be tuned to specific robot
+        public static final double maxAngularVelocity = 10.0;
 
         /* Neutral Modes */
         public static final NeutralModeValue angleNeutralMode = NeutralModeValue.Coast;
@@ -133,7 +130,7 @@ public class Constants {
 
         /* Module Specific Constants */
         /* Front Left Module - Module 0 */
-        public static final class Mod0 { //TODO: This must be tuned to specific robot
+        public static final class Mod0 {
             public static final int driveMotorID = 1;
             public static final int angleMotorID = 2;
             public static final int canCoderID = 3;
@@ -143,7 +140,7 @@ public class Constants {
         }
 
         /* Front Right Module - Module 1 */
-        public static final class Mod1 { //TODO: This must be tuned to specific robot
+        public static final class Mod1 {
             public static final int driveMotorID = 4;
             public static final int angleMotorID = 5;
             public static final int canCoderID = 6;
@@ -153,7 +150,7 @@ public class Constants {
         }
         
         /* Back Left Module - Module 2 */
-        public static final class Mod2 { //TODO: This must be tuned to specific robot
+        public static final class Mod2 { 
             public static final int driveMotorID = 7;
             public static final int angleMotorID = 8;
             public static final int canCoderID = 9;
@@ -163,7 +160,7 @@ public class Constants {
         }
 
         /* Back Right Module - Module 3 */
-        public static final class Mod3 { //TODO: This must be tuned to specific robot
+        public static final class Mod3 {
             public static final int driveMotorID = 10;
             public static final int angleMotorID = 11;
             public static final int canCoderID = 12;
@@ -174,8 +171,7 @@ public class Constants {
     }
 
     public static class Elevator {
-        //creating config for software limit switch bec sushi lib doesnt handle
-        //TODO: use sysid    
+        //TODO: use sysid and set all of these values
         public static final Distance MAX_HEIGHT = Inches.of(45.0); 
         public static final Measure<? extends PerUnit<DistanceUnit, AngleUnit>> ELEVATOR_EXTENSION_PER_MOTOR_ANGLE = CustomUnits.MetersPerRotation.of(0);
         public static final Dimensionless GEAR_RATIO = Rotations.of(0).div(Rotations.of(1)); // output over input
@@ -197,7 +193,6 @@ public class Constants {
             MOTOR_MAX_HEIGHT, 
             Degrees.of(0));
 
-        // TODO: set all of these values
         public static final Angle MAX_ERROR = Degrees.of(1.0);
 
     }
@@ -213,7 +208,7 @@ public class Constants {
         // for motion magic, TODO: set and add jerk to motor config
         public static final AngularVelocity MOTION_MAGIC_VELOCITY = RotationsPerSecond.of(0);
         public static final AngularAcceleration MOTION_MAGIC_ACCELERATION = RotationsPerSecondPerSecond.of(0);
-        public static final double MOTION_MAGIC_JERK = 0; //not sure about how to add the units for jerk
+        public static final double MOTION_MAGIC_JERK = 0;
         
         public static final MotorConfig PIVOT_CONFIG = new MotorConfig(
             Ports.PIVOT_MOTOR_ID,
@@ -238,7 +233,7 @@ public class Constants {
         public static final double HOLD_SPEED = 0;
     }
 
-    public static final class AutoConstants { //TODO: The below constants are used in the example auto, and must be tuned to specific robot
+    public static final class AutoConstants { //TODO: Need to tune constants
         public static final double kMaxSpeedMetersPerSecond = 3;
         public static final double kMaxAccelerationMetersPerSecondSquared = 3;
         public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;

@@ -5,7 +5,6 @@ import frc.robot.Constants;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
 import org.photonvision.PhotonCamera;
@@ -18,23 +17,34 @@ import com.ctre.phoenix6.hardware.Pigeon2;
 
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Swerve extends SubsystemBase {
-    public SwerveDriveOdometry swerveOdometry;
+    public SwerveDrivePoseEstimator poseEstimator;
     public SwerveModule[] mSwerveMods;
     public Pigeon2 gyro;
 
     private final PhotonCamera camera;
-    private final PhotonPoseEstimator photonPoseEstimator; //don't need the pose estimator for auto alignment right?
+    private final PhotonPoseEstimator photonPoseEstimator;
+
+    private final NetworkTable table;
+    private final DoublePublisher poseXPub;
+    private final DoublePublisher poseYPub;
+    private final DoublePublisher poseRotPub;
+    private final DoublePublisher[] cancoderPubs;
+    private final DoublePublisher[] anglePubs;
+    private final DoublePublisher[] velocityPubs;
 
     private final PIDController xController = new PIDController(0.0, 0, 0);
     private final PIDController yController = new PIDController(0.0, 0, 0);
@@ -54,12 +64,32 @@ public class Swerve extends SubsystemBase {
 
         camera = new PhotonCamera("23");
         photonPoseEstimator = new PhotonPoseEstimator(
-            AprilTagFields.k2024Crescendo.loadAprilTagLayoutField(),
+            AprilTagFields.k2025Reefscape.loadAprilTagLayoutField(),
             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
             new Transform3d() //adjust based on camera mounting
         );
 
-        swerveOdometry = new SwerveDriveOdometry(Constants.Swerve.swerveKinematics, getGyroYaw(), getModulePositions());
+        poseEstimator = new SwerveDrivePoseEstimator(
+            Constants.Swerve.swerveKinematics,
+            getGyroYaw(),
+            getModulePositions(),
+            new Pose2d()
+        );
+
+        table = NetworkTableInstance.getDefault().getTable("Swerve");
+        poseXPub = table.getDoubleTopic("Pose/X").publish();
+        poseYPub = table.getDoubleTopic("Pose/Y").publish();
+        poseRotPub = table.getDoubleTopic("Pose/Rotation").publish();
+        
+        cancoderPubs = new DoublePublisher[4];
+        anglePubs = new DoublePublisher[4];
+        velocityPubs = new DoublePublisher[4];
+        
+        for (int i = 0; i < 4; i++) {
+            cancoderPubs[i] = table.getDoubleTopic("Module " + i + "/CANcoder").publish();
+            anglePubs[i] = table.getDoubleTopic("Module " + i + "/Angle").publish();
+            velocityPubs[i] = table.getDoubleTopic("Module " + i + "/Velocity").publish();
+        }
     }
 
     public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
@@ -109,11 +139,11 @@ public class Swerve extends SubsystemBase {
     }
 
     public Pose2d getPose() {
-        return swerveOdometry.getPoseMeters();
+        return poseEstimator.getEstimatedPosition();
     }
 
     public void setPose(Pose2d pose) {
-        swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(), pose);
+        poseEstimator.resetPosition(getGyroYaw(), getModulePositions(), pose);
     }
 
     public Rotation2d getHeading(){
@@ -121,11 +151,11 @@ public class Swerve extends SubsystemBase {
     }
 
     public void setHeading(Rotation2d heading){
-        swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), heading));
+        poseEstimator.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), heading));
     }
 
     public void zeroHeading(){
-        swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), new Rotation2d()));
+        poseEstimator.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), new Rotation2d()));
     }
 
     public Rotation2d getGyroYaw() {
@@ -169,12 +199,17 @@ public class Swerve extends SubsystemBase {
 
     @Override
     public void periodic(){
-        swerveOdometry.update(getGyroYaw(), getModulePositions());
+        poseEstimator.update(getGyroYaw(), getModulePositions());
+
+        Pose2d currentPose = getPose();
+        table.getEntry("Pose/X").setDouble(currentPose.getX());
+        table.getEntry("Pose/Y").setDouble(currentPose.getY());
+        table.getEntry("Pose/Rotation").setDouble(currentPose.getRotation().getDegrees());
 
         for(SwerveModule mod : mSwerveMods){
-            SmartDashboard.putNumber("Mod " + mod.moduleNumber + " CANcoder", mod.getCANcoder().getDegrees());
-            SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Angle", mod.getPosition().angle.getDegrees());
-            SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Velocity", mod.getState().speedMetersPerSecond);    
+            table.getEntry("Module " + mod.moduleNumber + "/CANcoder").setDouble(mod.getCANcoder().getDegrees());
+            table.getEntry("Module " + mod.moduleNumber + "/Angle").setDouble(mod.getPosition().angle.getDegrees());
+            table.getEntry("Module " + mod.moduleNumber + "/Velocity").setDouble(mod.getState().speedMetersPerSecond);
         }
     }
 }
