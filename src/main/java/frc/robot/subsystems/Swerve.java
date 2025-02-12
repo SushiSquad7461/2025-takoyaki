@@ -202,14 +202,14 @@ public class Swerve extends SubsystemBase {
         poseEstimator.update(getGyroYaw(), getModulePositions());
 
         Pose2d currentPose = getPose();
-        table.getEntry("Pose/X").setDouble(currentPose.getX());
-        table.getEntry("Pose/Y").setDouble(currentPose.getY());
-        table.getEntry("Pose/Rotation").setDouble(currentPose.getRotation().getDegrees());
+        poseXPub.set(currentPose.getX());
+        poseYPub.set(currentPose.getY());
+        poseRotPub.set(currentPose.getRotation().getDegrees());
 
         for(SwerveModule mod : mSwerveMods){
-            table.getEntry("Module " + mod.moduleNumber + "/CANcoder").setDouble(mod.getCANcoder().getDegrees());
-            table.getEntry("Module " + mod.moduleNumber + "/Angle").setDouble(mod.getPosition().angle.getDegrees());
-            table.getEntry("Module " + mod.moduleNumber + "/Velocity").setDouble(mod.getState().speedMetersPerSecond);
+            cancoderPubs[mod.moduleNumber].set(mod.getCANcoder().getDegrees());
+            anglePubs[mod.moduleNumber].set(mod.getPosition().angle.getDegrees());
+            velocityPubs[mod.moduleNumber].set(mod.getState().speedMetersPerSecond);
         }
     }
 }
