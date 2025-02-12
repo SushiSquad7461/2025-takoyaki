@@ -45,15 +45,15 @@ public class Constants {
     public static final class Swerve {
         public static final int pigeonID = 1;
         public static final boolean REDUCE_SPEED = false;
-        public static final double LOW_SPEED = 0;
-        public static final double LOW_ROT = 0;
+        public static final double LOW_SPEED = 0.1;
+        public static final double LOW_ROT = 0.1;
 
         public static final COTSTalonFXSwerveConstants chosenModule =  //TODO: This must be tuned to specific robot
-        COTSTalonFXSwerveConstants.SDS.MK4i.Falcon500(COTSTalonFXSwerveConstants.SDS.MK4i.driveRatios.L3);
+        COTSTalonFXSwerveConstants.SDS.MK4i.KrakenX60(COTSTalonFXSwerveConstants.SDS.MK4i.driveRatios.L3);
 
         /* Drivetrain Constants */
-        public static final double trackWidth = Units.inchesToMeters(21.73); //TODO: This must be tuned to specific robot
-        public static final double wheelBase = Units.inchesToMeters(21.73); //TODO: This must be tuned to specific robot
+        public static final double trackWidth = Units.inchesToMeters(23); //TODO: This must be tuned to specific robot
+        public static final double wheelBase = Units.inchesToMeters(23); //TODO: This must be tuned to specific robot
         public static final double wheelCircumference = chosenModule.wheelCircumference;
 
         /* Swerve Kinematics 
