@@ -236,23 +236,7 @@ public class Constants {
   
     //TODO: change constants
     public static class AlgaeIntake {
-        public enum IntakeState {
-            //All Intake states 
-            IDLE(false, Direction.OFF),
-            INTAKE(true, Direction.RUNNING),
-            REVERSE(true, Direction.REVERSED),
-            CARRYING(true, Direction.REVERSED);
-            //TODO: Add more intake states 
-        
-            public boolean intakeExtended;
-            public Direction direction;
-        
-            private IntakeState(boolean extended, Direction direction) {
-                this.intakeExtended = extended;
-                this.direction = direction;
-            }
-        }  
-        public static final class Intake {
+
         public static final double G = 0.0;
         public static final double armFeedForward = 0.0; 
         public static final int ENCODER_CHANNEL = 0;
@@ -265,7 +249,7 @@ public class Constants {
         public static final double MAX_ERROR = 0.0;
 
         public static final double RAISED_POS = 0;
-        public static final double LOWERED_POS = 0; 
+        public static final double LOWERED_POS = 0.0; 
 
         public static final MotorConfig INTAKE_CONFIG = new MotorConfig(
             0,
@@ -280,7 +264,6 @@ public class Constants {
             true,
             PIDConfig.getPid(0.0, 0.0, 0.0),
             MotorConfig.Mode.BRAKE);
-        };
     }
       public static final class AutoConstants { //TODO: Need to tune constants
         public static final double kMaxSpeedMetersPerSecond = 3;
