@@ -7,10 +7,13 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
+import java.util.List;
+
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.TargetCorner;
 
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
@@ -20,7 +23,6 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -28,10 +30,13 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -41,10 +46,14 @@ public class Swerve extends SubsystemBase {
     public SwerveModule[] mSwerveMods;
     public Pigeon2 gyro;
 
-    private RobotConfig config = null;
     private final PhotonCamera camera;
     private final PhotonPoseEstimator photonPoseEstimator;
-
+    private RobotConfig config = null;
+    private AlignmentPosition currentAlignmentPosition = AlignmentPosition.CENTER;
+    private static final double LEFT_OFFSET = -200;
+    private static final double RIGHT_OFFSET = 200;
+    private static final double ALIGNMENT_TOLERANCE = 50;
+    
     private final NetworkTable table;
     private final DoublePublisher poseXPub;
     private final DoublePublisher poseYPub;
@@ -52,6 +61,10 @@ public class Swerve extends SubsystemBase {
     private final DoublePublisher[] cancoderPubs;
     private final DoublePublisher[] anglePubs;
     private final DoublePublisher[] velocityPubs;
+    private final StringPublisher alignmentPositionPub;
+    private final BooleanPublisher isAlignedPub;
+    private final DoublePublisher targetCenterXPub;
+    private final DoublePublisher desiredXPub;
 
     private final PIDController xController = new PIDController(0.0, 0, 0);
     private final PIDController yController = new PIDController(0.0, 0, 0);
@@ -87,7 +100,11 @@ public class Swerve extends SubsystemBase {
         poseXPub = table.getDoubleTopic("Pose/X").publish();
         poseYPub = table.getDoubleTopic("Pose/Y").publish();
         poseRotPub = table.getDoubleTopic("Pose/Rotation").publish();
-        
+        alignmentPositionPub = table.getStringTopic("Alignment/Position").publish();
+        isAlignedPub = table.getBooleanTopic("Alignment/IsAligned").publish();
+        targetCenterXPub = table.getDoubleTopic("Alignment/TargetCenterX").publish();
+        desiredXPub = table.getDoubleTopic("Alignment/DesiredX").publish();
+
         cancoderPubs = new DoublePublisher[4];
         anglePubs = new DoublePublisher[4];
         velocityPubs = new DoublePublisher[4];
@@ -125,8 +142,14 @@ public class Swerve extends SubsystemBase {
               }
               return false;
             },
-            this // Reference to this subsystem to set requirements
+            this
         );
+    }
+    
+    public static enum AlignmentPosition {
+        LEFT,
+        CENTER,
+        RIGHT
     }
 
     private ChassisSpeeds getRobotRelativeSpeeds() {
@@ -177,6 +200,15 @@ public class Swerve extends SubsystemBase {
         return states;
     }
 
+    public Command resetHeading() {
+        return runOnce(() -> setPose(
+            new Pose2d(
+                getPose().getTranslation(),
+                new Rotation2d()
+            )
+        ));
+    }
+
     public SwerveModulePosition[] getModulePositions(){
         SwerveModulePosition[] positions = new SwerveModulePosition[4];
         for(SwerveModule mod : mSwerveMods){
@@ -214,34 +246,71 @@ public class Swerve extends SubsystemBase {
             mod.resetToAbsolute();
         }
     }
-
-    public Command getAutoAlignCommand() {
+    
+    public Command runAutoAlign(AlignmentPosition position) {
         return new RunCommand(
             () -> {
                 PhotonPipelineResult result = camera.getLatestResult();
+                currentAlignmentPosition = position;
                 
                 if (result.hasTargets()) {
                     var bestTarget = result.getBestTarget();
+                    List<TargetCorner> targets = bestTarget.getDetectedCorners();
+                    double centerX = 0;
+
+                    double idX = getTargetX(position);
+                    for (var target : targets) {
+                        centerX += target.x;
+                    }
                     
-                    // target pose relative to the camera
-                    double x = bestTarget.getBestCameraToTarget().getX();
-                    double y = bestTarget.getBestCameraToTarget().getY();
-                    double yaw = bestTarget.getYaw();
-                    
-                    double xSpeed = xController.calculate(x, 0);
-                    double ySpeed = yController.calculate(y, 0);
-                    double rotationSpeed = rotationController.calculate(yaw, 0);
-                    
-                    // drive with the calculated speeds
-                    drive(
-                        new Translation2d(xSpeed, ySpeed),
-                        rotationSpeed,
-                        true,
-                        false
-                    );
+                    centerX /= targets.size();
+                    targetCenterXPub.set(centerX);
+                    desiredXPub.set(idX);
+    
+                    if (centerX < idX - ALIGNMENT_TOLERANCE) {
+                        drive(
+                            new Translation2d(0, 0.1),
+                            0,
+                            true,
+                            false
+                        );
+                    } else if (centerX > idX + ALIGNMENT_TOLERANCE) {
+                        drive(
+                            new Translation2d(0, -0.1),
+                            0,
+                            true,
+                            false
+                        );
+                    }
                 }
             }
-        );
+        ).until(() -> isAligned(currentAlignmentPosition)).withTimeout(5);
+    }
+
+    private double getTargetX(AlignmentPosition position) {
+        double centerX = Constants.Swerve.CAMERA_RESOLUTIONX / 2;
+        return switch(position) {
+            case LEFT -> centerX + LEFT_OFFSET;
+            case RIGHT -> centerX + RIGHT_OFFSET;
+            case CENTER -> centerX;
+        };
+    }
+
+    private boolean isAligned(AlignmentPosition position) {
+        PhotonPipelineResult result = camera.getLatestResult();
+        if (!result.hasTargets()) return false;
+        
+        var bestTarget = result.getBestTarget();
+        List<TargetCorner> corners = bestTarget.getDetectedCorners();
+        
+        double centerX = 0;
+        for (var corner : corners) {
+            centerX += corner.x;
+        }
+        centerX /= corners.size();
+        
+        double targetX = getTargetX(position);
+        return Math.abs(centerX - targetX) < ALIGNMENT_TOLERANCE;
     }
 
     @Override
@@ -258,5 +327,10 @@ public class Swerve extends SubsystemBase {
             anglePubs[mod.moduleNumber].set(mod.getPosition().angle.getDegrees());
             velocityPubs[mod.moduleNumber].set(mod.getState().speedMetersPerSecond);
         }
+
+        alignmentPositionPub.set(currentAlignmentPosition.toString());
+        isAlignedPub.set(isAligned(currentAlignmentPosition));
     }
+
+    
 }

@@ -58,7 +58,8 @@ public class Constants {
         public static final boolean REDUCE_SPEED = true;
         public static final double LOW_SPEED = 0.1;
         public static final double LOW_ROT = 0.1;
-
+        public static final int CAMERA_RESOLUTIONX = 1280;
+        
         public static final COTSTalonFXSwerveConstants chosenModule =  //TODO: This must be tuned to specific robot
         COTSTalonFXSwerveConstants.SDS.MK4i.KrakenX60(COTSTalonFXSwerveConstants.SDS.MK4i.driveRatios.L3);
 
