@@ -68,7 +68,7 @@ public class Elevator extends SubsystemBase {
     
     talonFXConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     talonFXConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 
-        Constants.Elevator.MOTOR_MAX_HEIGHT.in(Constants.CustomUnits.TalonEncoderCounts);
+        Constants.Elevator.MOTOR_MAX_HEIGHT.in(Rotations);
     talonFXConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     talonFXConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
     

@@ -38,7 +38,6 @@ public class Constants {
     }
 
     public static class CustomUnits {
-        public static final AngleUnit TalonEncoderCounts = derive(Rotations).splitInto(2048).named("Talon Encoder Counts").symbol("TEC").make();
         public static final PerUnit<DistanceUnit, AngleUnit> MetersPerRotation = Meters.per(Rotations);
     }
 
