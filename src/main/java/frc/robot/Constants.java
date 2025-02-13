@@ -248,8 +248,8 @@ public class Constants {
         public static final double ERROR_LIMIT = 0.0;
         public static final double MAX_ERROR = 0.0;
 
-        public static final double RAISED_POS = 0;
-        public static final double LOWERED_POS = 0.0; 
+        public static final Angle RAISED_POS = Degrees.of(0);
+        public static final Angle LOWERED_POS = Degrees.of(0); 
 
         public static final MotorConfig INTAKE_CONFIG = new MotorConfig(
             0,

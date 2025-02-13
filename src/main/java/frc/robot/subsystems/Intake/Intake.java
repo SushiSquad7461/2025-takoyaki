@@ -2,27 +2,24 @@ package frc.robot.subsystems.Intake;
 
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.revrobotics.spark.SparkBase.ControlType;
+
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
+
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Direction;
 
-import java.util.function.BooleanSupplier;
 
-import frc.util.motor.MotorHelper;
+
 import frc.util.control.nt.PIDTuning;
 import frc.util.control.nt.TunableNumber;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.spark.ClosedLoopSlot;
-import com.ctre.phoenix6.CANBus;
-
-import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
-import com.ctre.phoenix6.controls.PositionVoltage;
 
 
 
@@ -43,16 +40,12 @@ abstract public class Intake extends SubsystemBase {
         pivotMotor = Constants.AlgaeIntake.PIVOT_CONFIG.createTalon();
         wheelMotor = Constants.AlgaeIntake.INTAKE_CONFIG.createTalon();
 
-
-  //      MotorHelper.setDegreeConversionFactor(pivotMotor, Constants.AlgaeIntake.INTAKE_GEAR_RATIO);
-
-       pivotPos = new TunableNumber("Intake Pos", Constants.AlgaeIntake.RAISED_POS, Constants.TUNING_MODE);
+      // pivotPos = new TunableNumber("Intake Pos", Constants.AlgaeIntake.RAISED_POS, Constants.TUNING_MODE);
        pivotPID = Constants.AlgaeIntake.PIVOT_CONFIG.genPIDTuning("Pivot Intake", Constants.TUNING_MODE);
     }
 
 
     //retrieving position and other related values
-
     private void resetToAbsolutePosition() {
         pivotMotor.setPosition(getAbsolutePosition());
     }
@@ -62,10 +55,6 @@ abstract public class Intake extends SubsystemBase {
     }
     private double getPosition() {
         return pivotMotor.getPosition().getValueAsDouble();
-    }
-
-    private BooleanSupplier closeToSetpoint(double setpoint) {
-        return () -> (getError(setpoint) < Constants.AlgaeIntake.MAX_ERROR);
     }
 
     private double getError(double setpoint) {
@@ -81,8 +70,6 @@ abstract public class Intake extends SubsystemBase {
     private Command lowerIntake() {
         return changePivotPos(Constants.AlgaeIntake.LOWERED_POS);
     }
-
-
     private Command raiseIntake() {
         return changePivotPos(Constants.AlgaeIntake.RAISED_POS);
     }
@@ -101,20 +88,24 @@ abstract public class Intake extends SubsystemBase {
 
  
 
-    //Changing the position for the intake
-    private Command changePivotPos(double position) {
+    //Changing the position of the intake
+    private Command changePivotPos(Angle position) {
         if (getAbsoluteError() > Constants.AlgaeIntake.ERROR_LIMIT) {
             resetToAbsolutePosition();
         }
 
         pivotMotor.setControl(
-            new PositionDutyCycle(199.5).div(3.75)
+            new PositionDutyCycle(position.div(3.75))
+            
         );
 
-        return run(() -> {
-            pivotPos.setDefault(position);
-        }).until(() -> getError(position) < Constants.AlgaeIntake.MAX_ERROR);
+        //THIS FUNCTION WILL BE USED WHEN TUNING THE PID
+        //TODO: Create a TunableNumber that accepts an Angle object
 
+      return run(() -> {
+    //        pivotPos.setDefault(position);
+     //   }).until(() -> getError(position) < Constants.AlgaeIntake.MAX_ERROR);
+      });
 
     }
 
@@ -130,5 +121,18 @@ abstract public class Intake extends SubsystemBase {
                 //Will stop the intake if not extended
                 : stopIntake();
         return pivotCommand.andThen(intakeCommand);
+    }
+
+    public void periodic() {
+        if (getAbsoluteError() > Constants.AlgaeIntake.ERROR_LIMIT) {
+            resetToAbsolutePosition();
+        }
+         pivotPID.updatePID(pivotMotor);
+ 
+        pivotMotor.getPIDController().setReference(
+                pivotPos.get(),
+                ControlType.kPosition,
+                0,
+                intakeFeedforward.calculate(Math.toRadians(getPosition()), 0.0));
     }
 }
