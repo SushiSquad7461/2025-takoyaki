@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.subsystems.CoralManipulator;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.ElevatorState;
+import frc.robot.subsystems.ManipulatorState;
 import frc.robot.subsystems.Swerve;
 
 /* Notes for Auto Maker:
@@ -59,10 +60,15 @@ public class AutoCommands {
         );
 
         // algae intake commands (TODO: expand on intake functionalities)
-        NamedCommands.registerCommand("prepareIntake",
+        NamedCommands.registerCommand("prepareAlgaeIntake",
             elevator.changeState(ElevatorState.IDLE)  // grounding elevator bec intake
         );
 
+        NamedCommands.registerCommand("knockAlgae",
+            elevator.changeState(ElevatorState.KNOCK)
+            .andThen(manipulator.changeState(ManipulatorState.KNOCK))
+        );
+    
         // reset state
         NamedCommands.registerCommand("resetToIdle",
             elevator.changeState(ElevatorState.IDLE)

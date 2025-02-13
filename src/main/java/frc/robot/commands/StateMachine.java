@@ -31,9 +31,8 @@ public class StateMachine extends Command {
         SCORE_L3(IntakeState.IDLE, ManipulatorState.L3, ElevatorState.L3),
         SCORE_L4(IntakeState.IDLE, ManipulatorState.L4, ElevatorState.L4),
         
-        // special states
-        KNOCK_ALGAE(IntakeState.IDLE, ManipulatorState.KNOCK, ElevatorState.IDLE),
-        CARRY_ALGAE(IntakeState.CARRYING, ManipulatorState.IDLE, ElevatorState.IDLE);
+        // special state
+        KNOCK_ALGAE(IntakeState.IDLE, ManipulatorState.KNOCK, ElevatorState.KNOCK);
 
         public final IntakeState intakeState;
         public final ManipulatorState manipulatorState;
@@ -72,7 +71,9 @@ public class StateMachine extends Command {
 
         // returning to idle after scoring
         if (isScoreState(state) && !manipulator.hasCoral()) {
-            scheduleNewState(RobotState.IDLE);
+            Commands.waitSeconds(0.5)
+                   .andThen(() -> scheduleNewState(RobotState.IDLE))
+                   .schedule();
         }
     }
 
