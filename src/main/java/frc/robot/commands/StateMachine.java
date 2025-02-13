@@ -27,7 +27,7 @@ public class StateMachine extends Command {
         
         // scoring states for different levels
         SCORE_L1(IntakeState.IDLE, ManipulatorState.L1, ElevatorState.L1),
-        SCORE_L2(IntakeState.IDLE, ManipulatorState.L1, ElevatorState.L2),
+        SCORE_L2(IntakeState.IDLE, ManipulatorState.L2, ElevatorState.L2),
         SCORE_L3(IntakeState.IDLE, ManipulatorState.L3, ElevatorState.L3),
         SCORE_L4(IntakeState.IDLE, ManipulatorState.L4, ElevatorState.L4),
         

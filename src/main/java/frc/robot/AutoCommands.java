@@ -53,10 +53,10 @@ public class AutoCommands {
 
         // use if preload is loaded into intake manipulator handoff OR trying to intake from hp station
         NamedCommands.registerCommand("runManipulator",
-        manipulator.runRollers(Constants.CoralManipulator.INTAKE_SPEED)
-            .until(manipulator::hasCoral)  // run until beam break detects coral
-            .withTimeout(5.0)  // timeout after 5 seconds if no coral detected
-            .andThen(manipulator.stopRollers())
+            manipulator.runRollers(Constants.CoralManipulator.INTAKE_SPEED)
+                .until(manipulator::hasCoral)  // run until beam break detects coral
+                .withTimeout(5.0)  // timeout after 5 seconds if no coral detected
+                .andThen(manipulator.stopRollers())
         );
 
         // algae intake commands (TODO: expand on intake functionalities)
