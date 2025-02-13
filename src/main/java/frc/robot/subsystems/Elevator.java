@@ -61,7 +61,6 @@ public class Elevator extends SubsystemBase {
 
     //setting follower
     leftMotor.setControl(new Follower(rightMotor.getDeviceID(), Constants.Elevator.ELEVATOR_LEFT.inversion != Constants.Elevator.ELEVATOR_RIGHT.inversion));
-        
     resetElevator = false;
     openLoop = false;
   }
