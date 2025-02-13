@@ -129,10 +129,11 @@ abstract public class Intake extends SubsystemBase {
         }
          pivotPID.updatePID(pivotMotor);
  
-        pivotMotor.getPIDController().setReference(
-                pivotPos.get(),
-                ControlType.kPosition,
-                0,
-                intakeFeedforward.calculate(Math.toRadians(getPosition()), 0.0));
+         //PID TUNING
+       // pivotMotor.getPIDController().setReference(
+         //       pivotPos.get(),
+          //      ControlType.kPosition,
+            //    0,
+             //   intakeFeedforward.calculate(Math.toRadians(getPosition()), 0.0));
     }
 }
