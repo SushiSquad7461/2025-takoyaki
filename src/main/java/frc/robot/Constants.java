@@ -6,7 +6,6 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
-import static edu.wpi.first.units.Units.derive;
 
 
 import edu.wpi.first.units.AngleUnit;
@@ -20,7 +19,6 @@ import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
 import frc.util.control.PIDConfig;
 import frc.util.motor.MotorConfig;
-import pabeles.concurrency.IntOperatorTask.Max;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -238,10 +236,9 @@ public class Constants {
     public static class AlgaeIntake {
 
         public static final double G = 0.0;
-        public static final double armFeedForward = 0.0; 
         public static final int ENCODER_CHANNEL = 0;
         public static final double ENCODER_ANGLE_OFFSET = 0; 
-        public static final double INTAKE_GEAR_RATIO = 0.0;
+        public static final Dimensionless INTAKE_GEAR_RATIO = Rotations.of(9).div(Rotations.of(1)); // output over input
 
         public static final double INTAKE_SPEED = 0.0;
 
@@ -255,17 +252,19 @@ public class Constants {
             0,
             0,
             true, 
-            null, 
-            MotorConfig.Mode.COAST);
+            MotorConfig.Mode.COAST
+        );
 
         public static final MotorConfig PIVOT_CONFIG = new MotorConfig(
             0,
             0,
             true,
-            PIDConfig.getPid(0.0, 0.0, 0.0),
-            MotorConfig.Mode.BRAKE);
+            PIDConfig.getArmPid(0.0, 0.0, 0.0, 0, 0, 0, 0),
+            MotorConfig.Mode.BRAKE
+        );
     }
-      public static final class AutoConstants { //TODO: Need to tune constants
+    
+    public static final class AutoConstants { //TODO: Need to tune constants
         public static final double kMaxSpeedMetersPerSecond = 3;
         public static final double kMaxAccelerationMetersPerSecondSquared = 3;
         public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
