@@ -5,6 +5,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants;
 import frc.robot.subsystems.CoralManipulator;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Intake;
@@ -18,6 +19,7 @@ public class StateMachine extends Command {
     private final StringPublisher intakeStatePub;
     private final StringPublisher manipulatorStatePub;
     private final StringPublisher elevatorStatePub;
+    private RobotState targetScoreState = RobotState.SCORE_L1;
 
     public enum RobotState {
         IDLE(IntakeState.IDLE, ManipulatorState.IDLE, ElevatorState.IDLE),
@@ -25,11 +27,17 @@ public class StateMachine extends Command {
         INTAKE_CORAL(IntakeState.IDLE, ManipulatorState.INTAKE, ElevatorState.IDLE),
         INTAKE_REVERSE(IntakeState.REVERSE, ManipulatorState.IDLE, ElevatorState.IDLE),
         
+        // prepare states for different levels
+        PREPARE_L1(IntakeState.IDLE, ManipulatorState.IDLE, ElevatorState.L1),
+        PREPARE_L2(IntakeState.IDLE, ManipulatorState.IDLE, ElevatorState.L2),
+        PREPARE_L3(IntakeState.IDLE, ManipulatorState.IDLE, ElevatorState.L3),
+        PREPARE_L4(IntakeState.IDLE, ManipulatorState.IDLE, ElevatorState.L4),
+
         // scoring states for different levels
-        SCORE_L1(IntakeState.IDLE, ManipulatorState.L1, ElevatorState.L1),
-        SCORE_L2(IntakeState.IDLE, ManipulatorState.L2, ElevatorState.L2),
-        SCORE_L3(IntakeState.IDLE, ManipulatorState.L3, ElevatorState.L3),
-        SCORE_L4(IntakeState.IDLE, ManipulatorState.L4, ElevatorState.L4),
+        SCORE_L1(IntakeState.IDLE, ManipulatorState.SCORE, ElevatorState.L1),
+        SCORE_L2(IntakeState.IDLE, ManipulatorState.SCORE, ElevatorState.L2),
+        SCORE_L3(IntakeState.IDLE, ManipulatorState.SCORE, ElevatorState.L3),
+        SCORE_L4(IntakeState.IDLE, ManipulatorState.SCORE, ElevatorState.L4),
         
         // special state
         KNOCK_ALGAE(IntakeState.IDLE, ManipulatorState.KNOCK, ElevatorState.KNOCK);
@@ -61,7 +69,7 @@ public class StateMachine extends Command {
         intakeStatePub = stateTable.getStringTopic("SubsystemStates/Intake").publish();
         manipulatorStatePub = stateTable.getStringTopic("SubsystemStates/Manipulator").publish();
         elevatorStatePub = stateTable.getStringTopic("SubsystemStates/Elevator").publish();
-
+    
         publishStates();
     }
 
@@ -70,11 +78,14 @@ public class StateMachine extends Command {
         publishStates();
 
         // returning to idle after scoring
-        if (isScoreState(state) && !manipulator.hasCoral()) {
-            Commands.waitSeconds(0.5)
-                   .andThen(() -> scheduleNewState(RobotState.IDLE))
-                   .schedule();
+        if (isScoreState(state)) {
+            manipulator.runRollers(Constants.CoralManipulator.SCORE_SPEED)
+                .until(() -> !manipulator.hasCoral())
+                .andThen(Commands.waitSeconds(0.5))
+                .andThen(() -> scheduleNewState(RobotState.IDLE))
+                .schedule();
         }
+
     }
 
     public void scheduleNewState(RobotState newState) {
@@ -86,15 +97,34 @@ public class StateMachine extends Command {
             Commands.runOnce(() -> {
                 state = newState;
                 System.out.println(newState.toString() + " scheduled");
-                publishStates();
+                // elevator state first
+                currentStatePub.set(state.toString());
+                elevatorStatePub.set(state.elevatorState.toString());
             }),
-            // first handle elevator state to avoid collisions
             elevator.changeState(newState.elevatorState),
-            // next, change manipulator and intake states in parallel
+            Commands.runOnce(() -> {
+                intakeStatePub.set(state.intakeState.toString());
+                manipulatorStatePub.set(state.manipulatorState.toString());
+        }), // other states after elevator is in position
             Commands.parallel(
                 manipulator.changeState(newState.manipulatorState),
                 intake.changeState(newState.intakeState)
             )
+        );
+    }
+    
+      
+    public Command score() {
+        return Commands.sequence(
+            Commands.runOnce(() -> {
+                state = targetScoreState;
+                publishStates();
+            }),
+            changeState(targetScoreState),
+            manipulator.runRollers(Constants.CoralManipulator.SCORE_SPEED)
+                .until(() -> !manipulator.hasCoral())
+                .andThen(Commands.waitSeconds(0.5))
+                .andThen(() -> scheduleNewState(RobotState.IDLE))
         );
     }
 
@@ -107,9 +137,17 @@ public class StateMachine extends Command {
 
     private void publishStates() {
         currentStatePub.set(state.toString());
+        elevatorStatePub.set(state.elevatorState.toString());
         intakeStatePub.set(state.intakeState.toString());
         manipulatorStatePub.set(state.manipulatorState.toString());
-        elevatorStatePub.set(state.elevatorState.toString());
     }
+
+    public void setTargetScoreState(RobotState targetState) {
+        if (isScoreState(targetState)) {
+            this.targetScoreState = targetState;
+            System.out.println("Target score state set to: " + targetState);
+        }
+    }
+
 
 }

@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
@@ -27,7 +28,7 @@ public class RobotContainer {
     /* Controllers */
     private final CommandXboxController driverController = new CommandXboxController(Constants.Ports.DRIVER_PORT);
     private final CommandXboxController operatorController = new CommandXboxController(1); 
-
+    
     /* Subsystems */
     private final Swerve swerve = new Swerve();
     private final Elevator elevator = new Elevator();
@@ -35,12 +36,13 @@ public class RobotContainer {
     private final Intake intake = new Intake();
 
     private final StateMachine stateMachine = new StateMachine(intake, manipulator, elevator);
-    private final AutoCommands autos = new AutoCommands(swerve, elevator, manipulator);
+    private final AutoCommands autos = new AutoCommands(swerve, elevator, manipulator, stateMachine);
 
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         // Configure the button bindings
+        stateMachine.schedule(); 
         configureButtonBindings();
     }
 
@@ -58,7 +60,7 @@ public class RobotContainer {
             () -> driverController.getLeftX(),
             () -> driverController.getLeftY(),
             () -> driverController.getRightX(), 
-            () -> driverController.a().getAsBoolean())); //TODO: i'm not sure if this is right for toggling field/robot centric mode
+            () -> driverController.a().getAsBoolean())); // allows you to drive as robot relative only while holding down the button
         
         // Driver handles robot positioning, alignment, and algae
         driverController.y().onTrue(swerve.resetHeading());
@@ -71,11 +73,13 @@ public class RobotContainer {
         driverController.rightBumper().whileTrue(stateMachine.changeState(RobotState.INTAKE_REVERSE)); // intake wheels rolled in reverse
 
         // Operator controls coral scoring
-        operatorController.a().onTrue(stateMachine.changeState(RobotState.SCORE_L1)); //spins manipulator after elevator changes
-        operatorController.x().onTrue(stateMachine.changeState(RobotState.SCORE_L2));
-        operatorController.y().onTrue(stateMachine.changeState(RobotState.SCORE_L3));
-        operatorController.b().onTrue(stateMachine.changeState(RobotState.SCORE_L4));
-
+        operatorController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL));
+        operatorController.a().onTrue(Commands.runOnce(() -> stateMachine.setTargetScoreState(RobotState.SCORE_L1)));
+        operatorController.x().onTrue(Commands.runOnce(() -> stateMachine.setTargetScoreState(RobotState.SCORE_L2)));
+        operatorController.y().onTrue(Commands.runOnce(() -> stateMachine.setTargetScoreState(RobotState.SCORE_L3)));
+        operatorController.b().onTrue(Commands.runOnce(() -> stateMachine.setTargetScoreState(RobotState.SCORE_L4)));
+        operatorController.rightBumper().onTrue(stateMachine.score()); // Right bumper triggers the actual scoring
+        
         // special state => override and resetting to idle, and knocking algae
         operatorController.back().onTrue(stateMachine.changeState(RobotState.IDLE));
         operatorController.leftTrigger().onTrue(stateMachine.changeState(RobotState.KNOCK_ALGAE));
