@@ -4,6 +4,8 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Rotations;
 
 import java.util.function.BooleanSupplier;
+
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -16,11 +18,14 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 
 public class Elevator extends SubsystemBase {  
@@ -33,6 +38,8 @@ public class Elevator extends SubsystemBase {
   private final DoublePublisher currentPub;
   private final BooleanPublisher limitSwitchPub;
   private final DoubleSubscriber setpointSub;
+
+  public SysIdRoutine routine;
 
   
   // State tracking
@@ -63,7 +70,42 @@ public class Elevator extends SubsystemBase {
     leftMotor.setControl(new Follower(rightMotor.getDeviceID(), Constants.Elevator.ELEVATOR_LEFT.inversion != Constants.Elevator.ELEVATOR_RIGHT.inversion));
     resetElevator = false;
     openLoop = false;
+
+    routine = new SysIdRoutine(
+      new SysIdRoutine.Config(),
+      new SysIdRoutine.Mechanism(
+          (Voltage voltage) -> { 
+  
+              double leftPosition = leftMotor.getPosition().getValueAsDouble();  // Correctly retrieve the position value as double
+              double rightPosition = rightMotor.getPosition().getValueAsDouble();  // Same for right motor            
+          
+              double leftCurrent = leftMotor.getSupplyCurrent().getValueAsDouble(); // Correctly retrieve the current value as double
+              double rightCurrent = rightMotor.getSupplyCurrent().getValueAsDouble(); // Same for right motor
+  
+            },
+          
+  
+          (SysIdRoutineLog log) -> {
+              // Log data using SignalLogger
+              SignalLogger.writeString("Left Motor Position", "" + leftMotor.getPosition().getValueAsDouble());
+              SignalLogger.writeString("Right Motor Position", "" + rightMotor.getPosition().getValueAsDouble());
+              SignalLogger.writeString("Left Motor Current", "" + leftMotor.getSupplyCurrent().getValueAsDouble());
+              SignalLogger.writeString("Right Motor Current", "" + rightMotor.getSupplyCurrent().getValueAsDouble());
+      
+          },
+          this
+      )
+  );
+    
   }
+  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return routine.quasistatic(direction);
+  }
+  
+  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    return routine.dynamic(direction);
+  }
+
 
   // moves elevator to defined ElevatorState position *last year specifically checked for elevator idle state
   public Command changeState(ElevatorState state) {
