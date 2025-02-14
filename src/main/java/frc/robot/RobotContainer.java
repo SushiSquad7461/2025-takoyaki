@@ -63,7 +63,7 @@ public class RobotContainer {
         
         // Driver handles robot positioning, alignment, and algae
         driverController.y().onTrue(swerve.resetHeading());
-        driverController.b().onTrue(swerve.runAutoAlign(AlignmentPosition.LEFT));
+        driverController.b().onTrue(swerve.runAutoAlign(AlignmentPosition.CENTER));
         driverController.leftTrigger().onTrue(swerve.runAutoAlign(AlignmentPosition.LEFT));
         driverController.rightTrigger().onTrue(swerve.runAutoAlign(AlignmentPosition.RIGHT));
 

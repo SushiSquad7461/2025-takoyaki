@@ -75,7 +75,8 @@ public class AutoCommands {
         // use if preload is loaded into manipulator
         NamedCommands.registerCommand("scoreManipulator", 
             manipulator.runRollers(Constants.CoralManipulator.SCORE_SPEED)
-                .withTimeout(2.0)  // run rollers for X seconds
+                .until(() -> !manipulator.hasCoral())
+                .withTimeout(5.0) 
                 .andThen(manipulator.stopRollers())
         );
 
