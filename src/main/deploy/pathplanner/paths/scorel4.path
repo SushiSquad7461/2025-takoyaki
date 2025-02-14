@@ -3,41 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.0517979452054795,
-        "y": 6.827290239726027
+        "x": 1.3769366197183086,
+        "y": 7.057922535211268
       },
       "prevControl": null,
       "nextControl": {
-        "x": 0.8492521767027952,
-        "y": 6.680746008650024
+        "x": 1.7862491310510042,
+        "y": 6.7329361322380965
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.1553938356164384,
-        "y": 5.715389554794521
+        "x": 3.545334507042253,
+        "y": 5.357218309859154
       },
       "prevControl": {
-        "x": 4.130288666777993,
-        "y": 5.356660800837694
-      },
-      "nextControl": {
-        "x": 2.1804990044548864,
-        "y": 6.0741183087513475
-      },
-      "isLocked": false,
-      "linkedName": null
-    },
-    {
-      "anchor": {
-        "x": 2.283904109589041,
-        "y": 4.363077910958904
-      },
-      "prevControl": {
-        "x": 2.472592954575073,
-        "y": 4.199076326278032
+        "x": 3.7476203420568606,
+        "y": 5.208575343709593
       },
       "nextControl": null,
       "isLocked": false,
@@ -49,13 +33,35 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "runManipulator",
-      "waypointRelativePos": 2.0,
+      "name": "prepareL4",
+      "waypointRelativePos": 0.28095238095238106,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
         "data": {
-          "name": "runManipulator"
+          "name": "prepareL4"
+        }
+      }
+    },
+    {
+      "name": "scoreManipulator",
+      "waypointRelativePos": 1.0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "scoreManipulator"
+        }
+      }
+    },
+    {
+      "name": "resetToIdle",
+      "waypointRelativePos": 1.0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "resetToIdle"
         }
       }
     }
@@ -70,7 +76,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -55.0
+    "rotation": -59.99999999999999
   },
   "reversed": false,
   "folder": null,
