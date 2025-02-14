@@ -37,12 +37,11 @@ public class RobotContainer {
 
     private final StateMachine stateMachine = new StateMachine(intake, manipulator, elevator);
     private final AutoCommands autos = new AutoCommands(swerve, elevator, manipulator, stateMachine);
-
+    private RobotState targetScoreState = RobotState.SCORE_L1;
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         // Configure the button bindings
-        stateMachine.schedule(); 
         configureButtonBindings();
     }
 
@@ -74,11 +73,11 @@ public class RobotContainer {
 
         // Operator controls coral scoring
         operatorController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL));
-        operatorController.a().onTrue(Commands.runOnce(() -> stateMachine.setTargetScoreState(RobotState.SCORE_L1)));
-        operatorController.x().onTrue(Commands.runOnce(() -> stateMachine.setTargetScoreState(RobotState.SCORE_L2)));
-        operatorController.y().onTrue(Commands.runOnce(() -> stateMachine.setTargetScoreState(RobotState.SCORE_L3)));
-        operatorController.b().onTrue(Commands.runOnce(() -> stateMachine.setTargetScoreState(RobotState.SCORE_L4)));
-        operatorController.rightBumper().onTrue(stateMachine.score()); // Right bumper triggers the actual scoring
+        operatorController.a().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L1));
+        operatorController.x().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L2));
+        operatorController.y().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L3));
+        operatorController.b().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L4));
+        operatorController.rightBumper().onTrue(stateMachine.createScoreCommand(targetScoreState));
         
         // special state => override and resetting to idle, and knocking algae
         operatorController.back().onTrue(stateMachine.changeState(RobotState.IDLE));

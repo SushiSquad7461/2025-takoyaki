@@ -5,6 +5,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.subsystems.CoralManipulator;
 import frc.robot.subsystems.Elevator;
@@ -13,7 +14,7 @@ import frc.robot.subsystems.ManipulatorState;
 import frc.robot.subsystems.ElevatorState;
 import frc.robot.subsystems.IntakeState;
 
-public class StateMachine extends Command {
+public class StateMachine extends SubsystemBase {
     private final NetworkTable stateTable;
     private final StringPublisher currentStatePub;
     private final StringPublisher intakeStatePub;
@@ -69,12 +70,10 @@ public class StateMachine extends Command {
         intakeStatePub = stateTable.getStringTopic("SubsystemStates/Intake").publish();
         manipulatorStatePub = stateTable.getStringTopic("SubsystemStates/Manipulator").publish();
         elevatorStatePub = stateTable.getStringTopic("SubsystemStates/Elevator").publish();
-    
-        publishStates();
     }
 
     @Override
-    public void execute() {
+    public void periodic() {
         publishStates();
 
         // returning to idle after scoring
@@ -85,7 +84,6 @@ public class StateMachine extends Command {
                 .andThen(() -> scheduleNewState(RobotState.IDLE))
                 .schedule();
         }
-
     }
 
     public void scheduleNewState(RobotState newState) {
@@ -112,19 +110,18 @@ public class StateMachine extends Command {
             )
         );
     }
-    
-      
-    public Command score() {
+
+    public Command createScoreCommand(RobotState scoreState) {
+        if (!isScoreState(scoreState)) {
+            return Commands.none();
+        }
+
         return Commands.sequence(
-            Commands.runOnce(() -> {
-                state = targetScoreState;
-                publishStates();
-            }),
-            changeState(targetScoreState),
+            changeState(scoreState),
             manipulator.runRollers(Constants.CoralManipulator.SCORE_SPEED)
                 .until(() -> !manipulator.hasCoral())
                 .andThen(Commands.waitSeconds(0.5))
-                .andThen(() -> scheduleNewState(RobotState.IDLE))
+                .andThen(() -> changeState(RobotState.IDLE).schedule())
         );
     }
 
@@ -133,6 +130,10 @@ public class StateMachine extends Command {
                state == RobotState.SCORE_L2 || 
                state == RobotState.SCORE_L3 || 
                state == RobotState.SCORE_L4;
+    }
+
+    public RobotState getCurrentState() {
+        return state;
     }
 
     private void publishStates() {
