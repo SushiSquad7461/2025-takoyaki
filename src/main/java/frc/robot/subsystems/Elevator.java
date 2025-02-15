@@ -2,12 +2,14 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.networktables.BooleanPublisher;
@@ -51,6 +53,8 @@ public class Elevator extends SubsystemBase {
   private static final Current CURRENT_LIMIT = Amps.of(35);
   private final MotionMagicVoltage motionMagic;
 
+  private final VoltageOut m_voltReq = new VoltageOut(0.0);
+
 
   private Elevator() {    
     limitSwitch = new DigitalInput(Constants.Ports.LIMIT_SWITCH_PORT);
@@ -72,30 +76,24 @@ public class Elevator extends SubsystemBase {
     openLoop = false;
 
     routine = new SysIdRoutine(
-      new SysIdRoutine.Config(),
-      new SysIdRoutine.Mechanism(
-          (Voltage voltage) -> { 
-  
-              double leftPosition = leftMotor.getPosition().getValueAsDouble();  // Correctly retrieve the position value as double
-              double rightPosition = rightMotor.getPosition().getValueAsDouble();  // Same for right motor            
-          
-              double leftCurrent = leftMotor.getSupplyCurrent().getValueAsDouble(); // Correctly retrieve the current value as double
-              double rightCurrent = rightMotor.getSupplyCurrent().getValueAsDouble(); // Same for right motor
-  
-            },
-          
-  
-          (SysIdRoutineLog log) -> {
-              // Log data using SignalLogger
-              SignalLogger.writeString("Left Motor Position", "" + leftMotor.getPosition().getValueAsDouble());
-              SignalLogger.writeString("Right Motor Position", "" + rightMotor.getPosition().getValueAsDouble());
-              SignalLogger.writeString("Left Motor Current", "" + leftMotor.getSupplyCurrent().getValueAsDouble());
-              SignalLogger.writeString("Right Motor Current", "" + rightMotor.getSupplyCurrent().getValueAsDouble());
-      
-          },
-          this
-      )
-  );
+      new SysIdRoutine.Config(
+        null,        // Use default ramp rate (1 V/s)
+        Volts.of(4), // Reduce dynamic step voltage to 4 to prevent brownout
+        null,        // Use default timeout (10 s)
+                     // Log state with Phoenix SignalLogger class
+        (state) -> SignalLogger.writeString("state", state.toString())
+     ),
+     new SysIdRoutine.Mechanism(
+      (volts) -> 
+      {
+        leftMotor.setControl(m_voltReq.withOutput(volts.in(Volts))); 
+        rightMotor.setControl(m_voltReq.withOutput(volts.in(Volts)));
+      }
+      ,
+      null,
+      this
+   )
+);
     
   }
   public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
