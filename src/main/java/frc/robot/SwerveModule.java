@@ -10,6 +10,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.units.Units;
 import frc.lib.math.Conversions;
 import frc.lib.util.SwerveModuleConstants;
 
@@ -50,7 +51,7 @@ public class SwerveModule {
     }
 
     public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop){
-        desiredState = SwerveModuleState.optimize(desiredState, getState().angle); 
+        desiredState.optimize(getState().angle);
         mAngleMotor.setControl(anglePosition.withPosition(desiredState.angle.getRotations()));
         setSpeed(desiredState, isOpenLoop);
     }
@@ -79,14 +80,14 @@ public class SwerveModule {
     public SwerveModuleState getState(){
         return new SwerveModuleState(
             Conversions.RPSToMPS(mDriveMotor.getVelocity().getValueAsDouble(), Constants.Swerve.wheelCircumference), 
-            Rotation2d.fromRotations(mAngleMotor.getPosition().getValueAsDouble())
+            Rotation2d.fromRotations(mAngleMotor.getPosition().getValue().in(Units.Rotations))
         );
     }
 
     public SwerveModulePosition getPosition(){
         return new SwerveModulePosition(
             Conversions.rotationsToMeters(mDriveMotor.getPosition().getValueAsDouble(), Constants.Swerve.wheelCircumference), 
-            Rotation2d.fromRotations(mAngleMotor.getPosition().getValueAsDouble())
+            Rotation2d.fromRotations(mAngleMotor.getPosition().getValue().in(Units.Rotations))
         );
     }
 }

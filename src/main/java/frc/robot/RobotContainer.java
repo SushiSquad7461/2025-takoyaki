@@ -36,7 +36,7 @@ public class RobotContainer {
     private final Intake intake = new Intake();
 
     private final StateMachine stateMachine = new StateMachine(intake, manipulator, elevator);
-    private final AutoCommands autos = new AutoCommands(swerve, elevator, manipulator, stateMachine);
+    // private final AutoCommands autos = new AutoCommands(swerve, elevator, manipulator, stateMachine);
     private RobotState targetScoreState = RobotState.SCORE_L1;
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -56,9 +56,9 @@ public class RobotContainer {
 
         swerve.setDefaultCommand(new TeleopSwerve(
             swerve,
-            () -> driverController.getLeftX(),
-            () -> driverController.getLeftY(),
-            () -> driverController.getRightX(), 
+            () -> -driverController.getLeftY(),
+            () -> -driverController.getLeftX(),
+            () -> -driverController.getRightX(), 
             () -> driverController.a().getAsBoolean())); // allows you to drive as robot relative only while holding down the button
         
         // Driver handles robot positioning, alignment, and algae
@@ -90,6 +90,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return autos.getAuto();
+        // return autos.getAuto();
+        return Commands.none();
     }
 }
