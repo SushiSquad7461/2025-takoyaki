@@ -200,9 +200,9 @@ public class Constants {
         public static final double PIVOT_GEAR_RATIO = 0.0;
 
         // motion and position control      
-        public static final Angle MAX_ANGLE = Degrees.of(0);
+        public static final Angle MAX_ANGLE = Degrees.of(199.5);
         public static final Angle MIN_ANGLE = Degrees.of(0);
-        public static final Angle ANGLE_TOLERANCE = Degrees.of(0);
+        public static final Angle ANGLE_TOLERANCE = Degrees.of(1.0);
                 
         // for motion magic, TODO: set and add jerk to motor config
         public static final AngularVelocity MOTION_MAGIC_VELOCITY = RotationsPerSecond.of(0);
