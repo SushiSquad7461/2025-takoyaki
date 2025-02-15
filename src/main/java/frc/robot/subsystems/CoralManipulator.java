@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -23,8 +24,6 @@ import frc.util.control.nt.PIDTuning;
 
 import java.util.function.BooleanSupplier;
 
-
-
 public class CoralManipulator extends SubsystemBase {
     private final TalonFX pivotMotor;
     private final TalonFX rollerMotor;
@@ -38,10 +37,12 @@ public class CoralManipulator extends SubsystemBase {
     private final DoublePublisher anglePub;
     private final BooleanPublisher beambreakPub;
     private final DoublePublisher currentPub;
-    
+
     private boolean openLoop;
     private boolean changedPos;
     private Angle targetAngle;
+
+    private final VoltageOut m_voltReq = new VoltageOut(0.0);
 
 
     public CoralManipulator() {
@@ -63,32 +64,25 @@ public class CoralManipulator extends SubsystemBase {
         targetAngle = Degrees.of(0);
 
         // Creates a SysIdRoutine
-    routine = new SysIdRoutine(
-      new SysIdRoutine.Config(),
-      new SysIdRoutine.Mechanism(
-          (Voltage voltage) -> { 
-  
-              double leftPosition = pivotMotor.getPosition().getValueAsDouble();  // Correctly retrieve the position value as double
-              double rightPosition = rollerMotor.getPosition().getValueAsDouble();  // Same for right motor            
-          
-              double leftCurrent = pivotMotor.getSupplyCurrent().getValueAsDouble(); // Correctly retrieve the current value as double
-              double rightCurrent = rollerMotor.getSupplyCurrent().getValueAsDouble(); // Same for right motor
-  
-            },
-          
-  
-          (SysIdRoutineLog log) -> {
-              // Log data using SignalLogger
-              SignalLogger.writeString("Left Motor Position", "" + pivotMotor.getPosition().getValueAsDouble());
-              SignalLogger.writeString("Right Motor Position", "" + rollerMotor.getPosition().getValueAsDouble());
-              SignalLogger.writeString("Left Motor Current", "" + pivotMotor.getSupplyCurrent().getValueAsDouble());
-              SignalLogger.writeString("Right Motor Current", "" + rollerMotor.getSupplyCurrent().getValueAsDouble());
-      
-          },
-          this 
-          
-      )
-  );
+        routine = new SysIdRoutine(
+            new SysIdRoutine.Config(
+              null,        // Use default ramp rate (1 V/s)
+              Volts.of(4), // Reduce dynamic step voltage to 4 to prevent brownout
+              null,        // Use default timeout (10 s)
+                           // Log state with Phoenix SignalLogger class
+              (state) -> SignalLogger.writeString("state", state.toString())
+           ),
+           new SysIdRoutine.Mechanism(
+            (volts) -> 
+            {
+              pivotMotor.setControl(m_voltReq.withOutput(volts.in(Volts))); 
+              rollerMotor.setControl(m_voltReq.withOutput(volts.in(Volts)));
+            }
+            ,
+            null,
+            this
+         )
+      );
     
   }
 
