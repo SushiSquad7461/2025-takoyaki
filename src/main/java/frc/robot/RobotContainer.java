@@ -12,7 +12,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.Swerve.AlignmentPosition;
-
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.autos.*;
 import frc.robot.commands.*;
 import frc.robot.subsystems.*;
@@ -30,6 +31,8 @@ public class RobotContainer {
 
     /* Subsystems */
     private final Swerve swerve = new Swerve();
+    private final Elevator elevator = new Elevator(); 
+    private final CoralManipulator manipulator = new CoralManipulator(); 
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
@@ -61,6 +64,17 @@ public class RobotContainer {
 
         m_programmerController.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
         m_programmerController.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
+
+        m_programmerController.a().whileTrue(elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        m_programmerController.b().whileTrue(elevator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        m_programmerController.x().whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        m_programmerController.y().whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+        m_programmerController.a().and(m_programmerController.leftTrigger()).whileTrue(manipulator.sysIdQuasistatic(Direction.kForward));
+        m_programmerController.b().and(m_programmerController.leftTrigger()).whileTrue(manipulator.sysIdQuasistatic(Direction.kReverse));
+        m_programmerController.x().and(m_programmerController.leftTrigger()).whileTrue(manipulator.sysIdDynamic(Direction.kForward));
+        m_programmerController.y().and(m_programmerController.leftTrigger()).whileTrue(manipulator.sysIdDynamic(Direction.kReverse));
+
     }
 
     /**
