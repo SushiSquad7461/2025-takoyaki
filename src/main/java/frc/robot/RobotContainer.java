@@ -4,9 +4,12 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.SignalLogger;
+
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.Swerve.AlignmentPosition;
 
@@ -23,15 +26,16 @@ import frc.robot.subsystems.*;
 public class RobotContainer {
     /* Controllers */
     private final CommandXboxController m_driverController = new CommandXboxController(Constants.Ports.DRIVER_PORT);
+    private final CommandXboxController m_programmerController = new CommandXboxController(2);
 
     /* Subsystems */
     private final Swerve swerve = new Swerve();
-
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         // Configure the button bindings
         configureButtonBindings();
+        
     }
 
     /**
@@ -54,6 +58,9 @@ public class RobotContainer {
         m_driverController.b().onTrue(swerve.runAutoAlign(AlignmentPosition.LEFT));
         m_driverController.leftTrigger().onTrue(swerve.runAutoAlign(AlignmentPosition.LEFT));
         m_driverController.rightTrigger().onTrue(swerve.runAutoAlign(AlignmentPosition.RIGHT));
+
+        m_programmerController.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
+        m_programmerController.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
     }
 
     /**
