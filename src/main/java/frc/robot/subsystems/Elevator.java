@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.Rotations;
 
 import java.util.function.BooleanSupplier;
 
-import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
