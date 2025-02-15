@@ -238,15 +238,15 @@ public class Constants {
         public static final double G = 0.0;
         public static final int ENCODER_CHANNEL = 0;
         public static final double ENCODER_ANGLE_OFFSET = 0; 
-        public static final Dimensionless INTAKE_GEAR_RATIO = Rotations.of(9).div(Rotations.of(1)); // output over input
+        public static final Dimensionless INTAKE_GEAR_RATIO = Rotations.of(3.7521).div(Rotations.of(1)); // output over input
 
         public static final double INTAKE_SPEED = 0.0;
 
         public static final double ERROR_LIMIT = 0.0;
-        public static final double MAX_ERROR = 0.0;
+        public static final double MAX_ERROR = 1.0;
 
-        public static final Angle RAISED_POS = Degrees.of(0);
-        public static final Angle LOWERED_POS = Degrees.of(0); 
+        public static final Angle RAISED_POS = Degrees.of(199.5);
+        public static final Angle LOWERED_POS = Degrees.of(0);
 
         public static final MotorConfig INTAKE_CONFIG = new MotorConfig(
             0,
