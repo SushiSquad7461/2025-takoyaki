@@ -6,7 +6,6 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
-import static edu.wpi.first.units.Units.derive;
 
 
 import edu.wpi.first.units.AngleUnit;
@@ -20,7 +19,6 @@ import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
 import frc.util.control.PIDConfig;
 import frc.util.motor.MotorConfig;
-import pabeles.concurrency.IntOperatorTask.Max;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -202,9 +200,9 @@ public class Constants {
         public static final double PIVOT_GEAR_RATIO = 0.0;
 
         // motion and position control      
-        public static final Angle MAX_ANGLE = Degrees.of(0);
+        public static final Angle MAX_ANGLE = Degrees.of(199.5);
         public static final Angle MIN_ANGLE = Degrees.of(0);
-        public static final Angle ANGLE_TOLERANCE = Degrees.of(0);
+        public static final Angle ANGLE_TOLERANCE = Degrees.of(1.0);
                 
         // for motion magic, TODO: set and add jerk to motor config
         public static final AngularVelocity MOTION_MAGIC_VELOCITY = RotationsPerSecond.of(0);
@@ -233,7 +231,39 @@ public class Constants {
         public static final double SCORE_SPEED = 0;
         public static final double HOLD_SPEED = 0;
     }
+  
+    //TODO: change constants
+    public static class AlgaeIntake {
 
+        public static final double G = 0.0;
+        public static final int ENCODER_CHANNEL = 0;
+        public static final double ENCODER_ANGLE_OFFSET = 0; 
+        public static final Dimensionless INTAKE_GEAR_RATIO = Rotations.of(3.7521).div(Rotations.of(1)); // output over input
+
+        public static final double INTAKE_SPEED = 0.0;
+
+        public static final double ERROR_LIMIT = 0.0;
+        public static final double MAX_ERROR = 1.0;
+
+        public static final Angle RAISED_POS = Degrees.of(199.5);
+        public static final Angle LOWERED_POS = Degrees.of(0);
+
+        public static final MotorConfig INTAKE_CONFIG = new MotorConfig(
+            0,
+            0,
+            true, 
+            MotorConfig.Mode.COAST
+        );
+
+        public static final MotorConfig PIVOT_CONFIG = new MotorConfig(
+            0,
+            0,
+            true,
+            PIDConfig.getArmPid(0.0, 0.0, 0.0, 0, 0, 0, 0),
+            MotorConfig.Mode.BRAKE
+        );
+    }
+    
     public static final class AutoConstants { //TODO: Need to tune constants
         public static final double kMaxSpeedMetersPerSecond = 3;
         public static final double kMaxAccelerationMetersPerSecondSquared = 3;
