@@ -27,7 +27,7 @@ import frc.robot.subsystems.Swerve.AlignmentPosition;
 public class RobotContainer {
     /* Controllers */
     private final CommandXboxController driverController = new CommandXboxController(Constants.Ports.DRIVER_PORT);
-    private final CommandXboxController operatorController = new CommandXboxController(1); 
+    private final CommandXboxController operatorController = new CommandXboxController(Constants.Ports.OPERATOR_PORT); 
     
     /* Subsystems */
     private final Swerve swerve = new Swerve();
@@ -69,7 +69,7 @@ public class RobotContainer {
 
         driverController.leftBumper().whileTrue(stateMachine.changeState(RobotState.INTAKE_ALGAE));  // intake wheels rolled in regular direction
         driverController.leftBumper().onFalse(stateMachine.changeState(RobotState.IDLE)); // raise intake
-        driverController.rightBumper().whileTrue(stateMachine.changeState(RobotState.INTAKE_REVERSE)); // intake wheels rolled in reverse
+        driverController.rightBumper().whileTrue(stateMachine.changeState(RobotState.SCORE_ALGAE)); // intake wheels rolled in reverse
 
         // Operator controls coral scoring
         operatorController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL));
@@ -77,7 +77,7 @@ public class RobotContainer {
         operatorController.x().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L2));
         operatorController.y().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L3));
         operatorController.b().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L4));
-        operatorController.rightBumper().onTrue(stateMachine.createScoreCommand(targetScoreState));
+        operatorController.rightBumper().onTrue(stateMachine.changeState(targetScoreState));
         
         // special state => override and resetting to idle, and knocking algae
         operatorController.back().onTrue(stateMachine.changeState(RobotState.IDLE));

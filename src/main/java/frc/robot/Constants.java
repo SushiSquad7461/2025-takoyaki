@@ -41,7 +41,8 @@ public class Constants {
 
     public static class Ports {
         public static final int DRIVER_PORT = 0;
-        public static final CANBus CANIVORE_NAME = null;
+        public static final int OPERATOR_PORT = 1;
+
         public static final int PIVOT_MOTOR_ID = 0;
         public static final int ROLLER_MOTOR_ID = 0;
         public static final int ELEVATOR_LEFT_ID = 0;

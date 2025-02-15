@@ -26,7 +26,7 @@ public class StateMachine extends SubsystemBase {
         IDLE(IntakeState.IDLE, ManipulatorState.IDLE, ElevatorState.IDLE),
         INTAKE_ALGAE(IntakeState.INTAKE, ManipulatorState.IDLE, ElevatorState.IDLE),
         INTAKE_CORAL(IntakeState.IDLE, ManipulatorState.INTAKE, ElevatorState.IDLE),
-        INTAKE_REVERSE(IntakeState.REVERSE, ManipulatorState.IDLE, ElevatorState.IDLE),
+        SCORE_ALGAE(IntakeState.REVERSE, ManipulatorState.IDLE, ElevatorState.IDLE),
         
         // prepare states for different levels
         PREPARE_L1(IntakeState.IDLE, ManipulatorState.IDLE, ElevatorState.L1),
@@ -75,15 +75,6 @@ public class StateMachine extends SubsystemBase {
     @Override
     public void periodic() {
         publishStates();
-
-        // returning to idle after scoring
-        if (isScoreState(state)) {
-            manipulator.runRollers(Constants.CoralManipulator.SCORE_SPEED)
-                .until(() -> !manipulator.hasCoral())
-                .andThen(Commands.waitSeconds(0.5))
-                .andThen(() -> scheduleNewState(RobotState.IDLE))
-                .schedule();
-        }
     }
 
     public void scheduleNewState(RobotState newState) {
@@ -91,38 +82,35 @@ public class StateMachine extends SubsystemBase {
     }
 
     public Command changeState(RobotState newState) {
+        if (isScoreState(newState)) {
+            return Commands.sequence(
+                Commands.runOnce(() -> {
+                    state = newState;
+                    System.out.println(newState.toString() + " scheduled");
+                }),
+                Commands.parallel(
+                    elevator.changeState(newState.elevatorState),
+                    intake.changeState(newState.intakeState)
+                ), Commands.sequence(
+                    manipulator.changeState(newState.manipulatorState)
+                        .until(() -> !manipulator.hasCoral())
+                        .andThen(Commands.waitSeconds(0.5))
+                        .andThen(changeState(RobotState.IDLE))
+                )
+            );   
+        } 
         return Commands.sequence(
             Commands.runOnce(() -> {
                 state = newState;
                 System.out.println(newState.toString() + " scheduled");
-                // elevator state first
-                currentStatePub.set(state.toString());
-                elevatorStatePub.set(state.elevatorState.toString());
             }),
-            elevator.changeState(newState.elevatorState),
-            Commands.runOnce(() -> {
-                intakeStatePub.set(state.intakeState.toString());
-                manipulatorStatePub.set(state.manipulatorState.toString());
-        }), // other states after elevator is in position
             Commands.parallel(
+                elevator.changeState(newState.elevatorState),
                 manipulator.changeState(newState.manipulatorState),
                 intake.changeState(newState.intakeState)
             )
         );
-    }
 
-    public Command createScoreCommand(RobotState scoreState) {
-        if (!isScoreState(scoreState)) {
-            return Commands.none();
-        }
-
-        return Commands.sequence(
-            changeState(scoreState),
-            manipulator.runRollers(Constants.CoralManipulator.SCORE_SPEED)
-                .until(() -> !manipulator.hasCoral())
-                .andThen(Commands.waitSeconds(0.5))
-                .andThen(() -> changeState(RobotState.IDLE).schedule())
-        );
     }
 
     private boolean isScoreState(RobotState state) {

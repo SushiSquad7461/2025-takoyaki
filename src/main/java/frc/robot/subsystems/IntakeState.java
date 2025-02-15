@@ -8,7 +8,7 @@ public enum IntakeState {
     SCORE(false, Direction.REVERSED), //score possibility 1, retracted and reversed
     INTAKE(true, Direction.RUNNING), //extended and running forward
     REVERSE(true, Direction.REVERSED), //score possibility 2, extended and running backward
-    CARRYING(true, Direction.REVERSED); //extended and holding algae (reversed)
+    CARRYING(true, Direction.OFF); //extended and holding algae (reversed)
 
     //TODO: Add more intake states 
 
