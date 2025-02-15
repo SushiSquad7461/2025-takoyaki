@@ -73,8 +73,10 @@ public class MotorConfig {
 
    public MotorConfig(int canId, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode, Angle forwardSoftLimit, Angle reverseSoftLimit) { this(canId, "rio", currentLimit, inversion, pid, mode, RadiansPerSecond.zero(), RadiansPerSecondPerSecond.zero(), forwardSoftLimit, reverseSoftLimit); }
    public MotorConfig(int canId, int currentLimit, Boolean inversion, Mode mode) { this(canId, "rio", currentLimit, inversion, PIDConfig.getZeroPid(), mode, RadiansPerSecond.zero(), RadiansPerSecondPerSecond.zero(), null, null); }
+   public MotorConfig(int canId, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode) { this(canId, "rio", currentLimit, inversion, pid, mode, RadiansPerSecond.zero(), RadiansPerSecondPerSecond.zero(), null, null); }
 
-   public PIDTuning genPIDTuning(String motorName, boolean tuningMode) {
+
+public PIDTuning genPIDTuning(String motorName, boolean tuningMode) {
         return new PIDTuning(motorName, pid, tuningMode);
    }
 
