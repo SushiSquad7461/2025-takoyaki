@@ -1,15 +1,14 @@
 package frc.robot.subsystems;
 
-import frc.robot.util.Direction;
+
+import frc.robot.Direction;
 
 public enum IntakeState {
     //All Intake states 
-    IDLE(false, Direction.OFF), //retracted and stopped
-    SCORE(false, Direction.REVERSED), //score possibility 1, retracted and reversed
-    INTAKE(true, Direction.RUNNING), //extended and running forward
-    REVERSE(true, Direction.REVERSED), //score possibility 2, extended and running backward
-    CARRYING(true, Direction.OFF); //extended and holding algae (reversed)
-
+    IDLE(false, Direction.OFF),
+    INTAKE(true, Direction.RUNNING),
+    REVERSE(true, Direction.REVERSED),
+    CARRYING(true, Direction.OFF);
     //TODO: Add more intake states 
 
     public boolean intakeExtended;
@@ -20,4 +19,3 @@ public enum IntakeState {
         this.direction = direction;
     }
 }  
-

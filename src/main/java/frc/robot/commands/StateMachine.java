@@ -8,9 +8,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.CoralManipulator;
 import frc.robot.subsystems.Elevator;
-import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.ManipulatorState;
 import frc.robot.subsystems.ElevatorState;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.IntakeState;
 
 public class StateMachine extends SubsystemBase {
