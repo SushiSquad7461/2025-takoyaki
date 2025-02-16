@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.SignalLogger;
+
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -17,6 +19,7 @@ import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.Swerve.AlignmentPosition;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -27,7 +30,8 @@ import frc.robot.subsystems.Swerve.AlignmentPosition;
 public class RobotContainer {
     /* Controllers */
     private final CommandXboxController driverController = new CommandXboxController(Constants.Ports.DRIVER_PORT);
-    private final CommandXboxController operatorController = new CommandXboxController(Constants.Ports.OPERATOR_PORT); 
+    private final CommandXboxController operatorController = new CommandXboxController(Constants.Ports.OPERATOR_PORT);
+    private final CommandXboxController programmerController = new CommandXboxController(Constants.Ports.PROG_PORT);
     
     /* Subsystems */
     private final Swerve swerve = new Swerve();
@@ -43,6 +47,7 @@ public class RobotContainer {
     public RobotContainer() {
         // Configure the button bindings
         configureButtonBindings();
+        
     }
 
     /**
@@ -78,10 +83,23 @@ public class RobotContainer {
         operatorController.y().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L3));
         operatorController.b().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L4));
         operatorController.rightBumper().onTrue(stateMachine.changeState(targetScoreState));
-        
         // special state => override and resetting to idle, and knocking algae
         operatorController.back().onTrue(stateMachine.changeState(RobotState.IDLE));
         operatorController.leftTrigger().onTrue(stateMachine.changeState(RobotState.KNOCK_ALGAE));
+
+
+        programmerController.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
+        programmerController.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
+
+        programmerController.a().whileTrue(elevator.sysIdQuasistatic(Direction.kForward));
+        programmerController.b().whileTrue(elevator.sysIdQuasistatic(Direction.kReverse));
+        programmerController.x().whileTrue(elevator.sysIdDynamic(Direction.kForward));
+        programmerController.y().whileTrue(elevator.sysIdDynamic(Direction.kReverse));
+
+        programmerController.a().and(programmerController.leftTrigger()).whileTrue(intake.sysIdQuasistatic(Direction.kForward));
+        programmerController.b().and(programmerController.leftTrigger()).whileTrue(intake.sysIdQuasistatic(Direction.kReverse));
+        programmerController.x().and(programmerController.leftTrigger()).whileTrue(intake.sysIdDynamic(Direction.kForward));
+        programmerController.y().and(programmerController.leftTrigger()).whileTrue(intake.sysIdDynamic(Direction.kReverse));
     }
 
     /**
