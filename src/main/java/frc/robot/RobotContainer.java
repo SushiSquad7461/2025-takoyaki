@@ -97,10 +97,10 @@ public class RobotContainer {
         programmerController.x().whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
         programmerController.y().whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-        programmerController.a().and(programmerController.leftTrigger()).whileTrue(manipulator.sysIdQuasistatic(Direction.kForward));
-        programmerController.b().and(programmerController.leftTrigger()).whileTrue(manipulator.sysIdQuasistatic(Direction.kReverse));
-        programmerController.x().and(programmerController.leftTrigger()).whileTrue(manipulator.sysIdDynamic(Direction.kForward));
-        programmerController.y().and(programmerController.leftTrigger()).whileTrue(manipulator.sysIdDynamic(Direction.kReverse));
+        programmerController.a().and(programmerController.leftTrigger()).whileTrue(intake.sysIdQuasistatic(Direction.kForward));
+        programmerController.b().and(programmerController.leftTrigger()).whileTrue(intake.sysIdQuasistatic(Direction.kReverse));
+        programmerController.x().and(programmerController.leftTrigger()).whileTrue(intake.sysIdDynamic(Direction.kForward));
+        programmerController.y().and(programmerController.leftTrigger()).whileTrue(intake.sysIdDynamic(Direction.kReverse));
       
     }
 
