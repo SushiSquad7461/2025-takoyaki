@@ -89,8 +89,11 @@ public class StateMachine extends SubsystemBase {
                 }),
                 Commands.parallel(
                     elevator.changeState(newState.elevatorState),
-                    intake.changeState(newState.intakeState)
-                ), Commands.sequence(
+                    (state.intakeState != IntakeState.REVERSE && 
+                    state.intakeState != IntakeState.INTAKE) ? 
+                       intake.changeState(newState.intakeState) : 
+                       Commands.none()
+                   ), Commands.sequence(
                     manipulator.changeState(newState.manipulatorState)
                         .until(() -> !manipulator.hasCoral())
                         .andThen(Commands.waitSeconds(0.5))
