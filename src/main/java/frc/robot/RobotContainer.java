@@ -31,12 +31,12 @@ public class RobotContainer {
     
     /* Subsystems */
     private final Swerve swerve = new Swerve();
-    // private final Elevator elevator = new Elevator();
-    // private final CoralManipulator manipulator = new CoralManipulator();
-    // private final Intake intake = new Intake();
+    private final Elevator elevator = new Elevator();
+    private final CoralManipulator manipulator = new CoralManipulator();
+    private final Intake intake = new Intake();
 
-    // private final StateMachine stateMachine = new StateMachine(intake, manipulator, elevator);
-    // private final AutoCommands autos = new AutoCommands(swerve, elevator, manipulator, stateMachine);
+    private final StateMachine stateMachine = new StateMachine(intake, manipulator, elevator);
+    private final AutoCommands autos = new AutoCommands(swerve, elevator, manipulator, stateMachine);
     private RobotState targetScoreState = RobotState.SCORE_L1;
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -67,21 +67,21 @@ public class RobotContainer {
         driverController.leftTrigger().onTrue(swerve.runAutoAlign(AlignmentPosition.LEFT));
         driverController.rightTrigger().onTrue(swerve.runAutoAlign(AlignmentPosition.RIGHT));
 
-        // driverController.leftBumper().whileTrue(stateMachine.changeState(RobotState.INTAKE_ALGAE));  // intake wheels rolled in regular direction
-        // driverController.leftBumper().onFalse(stateMachine.changeState(RobotState.IDLE)); // raise intake
-        // driverController.rightBumper().whileTrue(stateMachine.changeState(RobotState.SCORE_ALGAE)); // intake wheels rolled in reverse
+        driverController.leftBumper().whileTrue(stateMachine.changeState(RobotState.INTAKE_ALGAE));  // intake wheels rolled in regular direction
+        driverController.leftBumper().onFalse(stateMachine.changeState(RobotState.IDLE)); // raise intake
+        driverController.rightBumper().whileTrue(stateMachine.changeState(RobotState.SCORE_ALGAE)); // intake wheels rolled in reverse
 
         // Operator controls coral scoring
-        // operatorController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL));
+        operatorController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL));
         operatorController.a().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L1));
         operatorController.x().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L2));
         operatorController.y().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L3));
         operatorController.b().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L4));
-        // operatorController.rightBumper().onTrue(stateMachine.changeState(targetScoreState));
+        operatorController.rightBumper().onTrue(stateMachine.changeState(targetScoreState));
         
-        // // special state => override and resetting to idle, and knocking algae
-        // operatorController.back().onTrue(stateMachine.changeState(RobotState.IDLE));
-        // operatorController.leftTrigger().onTrue(stateMachine.changeState(RobotState.KNOCK_ALGAE));
+        // special state => override and resetting to idle, and knocking algae
+        operatorController.back().onTrue(stateMachine.changeState(RobotState.IDLE));
+        operatorController.leftTrigger().onTrue(stateMachine.changeState(RobotState.KNOCK_ALGAE));
     }
 
     /**
