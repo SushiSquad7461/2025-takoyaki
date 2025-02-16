@@ -28,8 +28,34 @@ public class Intake extends SubsystemBase {
         wheelMotor = Constants.AlgaeIntake.INTAKE_CONFIG.createTalon();
         pivotPos = new TunableNumber("Intake Pos", Constants.AlgaeIntake.RAISED_POS.magnitude(), Constants.TUNING_MODE);
         pivotPID = Constants.AlgaeIntake.PIVOT_CONFIG.genPIDTuning("Pivot Intake", Constants.TUNING_MODE);
-    }
 
+         routine = new SysIdRoutine(
+      new SysIdRoutine.Config(
+        null,        // Use default ramp rate (1 V/s)
+        Volts.of(4), // Reduce dynamic step voltage to 4 to prevent brownout
+        null,        // Use default timeout (10 s)
+                     // Log state with Phoenix SignalLogger class
+        (state) -> SignalLogger.writeString("state", state.toString())
+     ),
+     new SysIdRoutine.Mechanism(
+      (volts) -> 
+      {
+        pivotMotor.setControl(m_voltReq.withOutput(volts.in(Volts))); 
+        wheelMotor.setControl(m_voltReq.withOutput(volts.in(Volts)));
+      }
+      ,
+      null,
+      this
+   )
+);
+    }
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return routine.quasistatic(direction);
+      }
+      
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return routine.dynamic(direction);
+      }
 
     //retrieving position and other related values
     private void resetToAbsolutePosition() {
