@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Intake;
+package frc.robot.subsystems;
 
 
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -8,13 +8,13 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Direction;
-import frc.util.control.nt.PIDTuning;
-import frc.util.control.nt.TunableNumber;
+import frc.robot.util.control.nt.PIDTuning;
+import frc.robot.util.control.nt.TunableNumber;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 
-abstract public class Intake extends SubsystemBase {
+public class Intake extends SubsystemBase {
     
     private final TalonFX pivotMotor;
     private final TalonFX wheelMotor;
@@ -74,8 +74,6 @@ abstract public class Intake extends SubsystemBase {
         return runOnce(() -> wheelMotor.set(0.0));
     }
 
- 
-
     //Changing the position of the intake
     private Command changePivotPos(Angle position) {
         if (getAbsoluteError() > Constants.AlgaeIntake.ERROR_LIMIT) {
@@ -93,13 +91,10 @@ abstract public class Intake extends SubsystemBase {
 
     //Changes the state of the intake
     public Command changeState(IntakeState newState) {
-
         //Will check to see if intake is up, if it, lower intake, else, raise intake
         Command pivotCommand = newState.intakeExtended ? lowerIntake() : raiseIntake();
-        Command intakeCommand = newState.intakeExtended
-                //Checks to see if state reverses intake, if it does then reverse intake, if not run intake
-                ? (newState.direction == Direction.REVERSED ? reverseIntake() : runIntake())
-
+        //Checks to see if state reverses intake, if it does then reverse intake, if not run intake
+        Command intakeCommand = newState.intakeExtended ? (newState.direction == Direction.REVERSED ? reverseIntake() : runIntake())
                 //Will stop the intake if not extended
                 : stopIntake();
         return pivotCommand.andThen(intakeCommand);
