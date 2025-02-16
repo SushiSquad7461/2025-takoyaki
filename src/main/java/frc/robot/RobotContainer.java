@@ -19,7 +19,6 @@ import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.Swerve.AlignmentPosition;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 /**
@@ -92,16 +91,15 @@ public class RobotContainer {
         programmerController.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
         programmerController.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
 
-        programmerController.a().whileTrue(elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        programmerController.b().whileTrue(elevator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-        programmerController.x().whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        programmerController.y().whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        programmerController.a().whileTrue(elevator.sysIdQuasistatic(Direction.kForward));
+        programmerController.b().whileTrue(elevator.sysIdQuasistatic(Direction.kReverse));
+        programmerController.x().whileTrue(elevator.sysIdDynamic(Direction.kForward));
+        programmerController.y().whileTrue(elevator.sysIdDynamic(Direction.kReverse));
 
         programmerController.a().and(programmerController.leftTrigger()).whileTrue(intake.sysIdQuasistatic(Direction.kForward));
         programmerController.b().and(programmerController.leftTrigger()).whileTrue(intake.sysIdQuasistatic(Direction.kReverse));
         programmerController.x().and(programmerController.leftTrigger()).whileTrue(intake.sysIdDynamic(Direction.kForward));
         programmerController.y().and(programmerController.leftTrigger()).whileTrue(intake.sysIdDynamic(Direction.kReverse));
-      
     }
 
     /**
