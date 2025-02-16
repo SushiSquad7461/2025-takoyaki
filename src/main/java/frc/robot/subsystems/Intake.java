@@ -74,8 +74,6 @@ public class Intake extends SubsystemBase {
         return runOnce(() -> wheelMotor.set(0.0));
     }
 
- 
-
     //Changing the position of the intake
     private Command changePivotPos(Angle position) {
         if (getAbsoluteError() > Constants.AlgaeIntake.ERROR_LIMIT) {
@@ -93,13 +91,13 @@ public class Intake extends SubsystemBase {
 
     //Changes the state of the intake
     public Command changeState(IntakeState newState) {
+        // if (newState == IntakeState.IDLE || newState == IntakeState.INTAKE) {
 
+        // }
         //Will check to see if intake is up, if it, lower intake, else, raise intake
         Command pivotCommand = newState.intakeExtended ? lowerIntake() : raiseIntake();
-        Command intakeCommand = newState.intakeExtended
-                //Checks to see if state reverses intake, if it does then reverse intake, if not run intake
-                ? (newState.direction == Direction.REVERSED ? reverseIntake() : runIntake())
-
+        //Checks to see if state reverses intake, if it does then reverse intake, if not run intake
+        Command intakeCommand = newState.intakeExtended ? (newState.direction == Direction.REVERSED ? reverseIntake() : runIntake())
                 //Will stop the intake if not extended
                 : stopIntake();
         return pivotCommand.andThen(intakeCommand);
