@@ -56,7 +56,7 @@ public class Elevator extends SubsystemBase {
   private final VoltageOut m_voltReq = new VoltageOut(0.0);
 
 
-  private Elevator() {    
+  public Elevator() {    
     limitSwitch = new DigitalInput(Constants.Ports.LIMIT_SWITCH_PORT);
     motionMagic = new MotionMagicVoltage(0); //TODO: configure motion magic parameters
 
@@ -160,8 +160,13 @@ public class Elevator extends SubsystemBase {
 
   @Override
   public void periodic() {
-    positionPub.set(rightMotor.getPosition().getValueAsDouble());
-    currentPub.set(rightMotor.getSupplyCurrent().getValueAsDouble());
+    final var pos = rightMotor.getPosition();
+    final var current = rightMotor.getSupplyCurrent();
+    if(!pos.getStatus().isError() && !current.getStatus().isError()) {
+      positionPub.set(pos.getValueAsDouble());
+      currentPub.set(current.getValueAsDouble());
+    }
+
     limitSwitchPub.set(elevatorAtBottom());
 
     if (elevatorAtBottom()) {

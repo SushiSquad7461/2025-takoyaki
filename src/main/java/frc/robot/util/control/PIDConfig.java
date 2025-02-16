@@ -1,4 +1,4 @@
-package frc.util.control;
+package frc.robot.util.control;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;

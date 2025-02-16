@@ -1,4 +1,4 @@
-package frc.util.motor;
+package frc.robot.util.motor;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
@@ -15,8 +15,8 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
-import frc.util.control.PIDConfig;
-import frc.util.control.nt.PIDTuning;
+import frc.robot.util.control.PIDConfig;
+import frc.robot.util.control.nt.PIDTuning;
 
 import com.revrobotics.spark.config.SparkMaxConfig;
 
@@ -73,8 +73,10 @@ public class MotorConfig {
 
    public MotorConfig(int canId, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode, Angle forwardSoftLimit, Angle reverseSoftLimit) { this(canId, "rio", currentLimit, inversion, pid, mode, RadiansPerSecond.zero(), RadiansPerSecondPerSecond.zero(), forwardSoftLimit, reverseSoftLimit); }
    public MotorConfig(int canId, int currentLimit, Boolean inversion, Mode mode) { this(canId, "rio", currentLimit, inversion, PIDConfig.getZeroPid(), mode, RadiansPerSecond.zero(), RadiansPerSecondPerSecond.zero(), null, null); }
+   public MotorConfig(int canId, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode) { this(canId, "rio", currentLimit, inversion, pid, mode, RadiansPerSecond.zero(), RadiansPerSecondPerSecond.zero(), null, null); }
 
-   public PIDTuning genPIDTuning(String motorName, boolean tuningMode) {
+
+public PIDTuning genPIDTuning(String motorName, boolean tuningMode) {
         return new PIDTuning(motorName, pid, tuningMode);
    }
 
