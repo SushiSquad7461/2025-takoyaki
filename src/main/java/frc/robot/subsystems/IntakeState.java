@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Intake;
+package frc.robot.subsystems;
 
 
 import frc.robot.Direction;
@@ -7,8 +7,7 @@ public enum IntakeState {
     //All Intake states 
     IDLE(false, Direction.OFF),
     INTAKE(true, Direction.RUNNING),
-    REVERSE(true, Direction.REVERSED),
-    CARRYING(true, Direction.OFF);
+    REVERSE(true, Direction.REVERSED);
     //TODO: Add more intake states 
 
     public boolean intakeExtended;

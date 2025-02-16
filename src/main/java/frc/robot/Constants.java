@@ -6,21 +6,23 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
-
+import static edu.wpi.first.units.Units.Seconds;
 
 import edu.wpi.first.units.AngleUnit;
+import edu.wpi.first.units.AngularAccelerationUnit;
 import edu.wpi.first.units.DistanceUnit;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.PerUnit;
+import edu.wpi.first.units.TimeUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
-import frc.util.control.PIDConfig;
-import frc.util.motor.MotorConfig;
+import edu.wpi.first.units.measure.Per;
+import frc.robot.util.control.PIDConfig;
+import frc.robot.util.motor.MotorConfig;
 
-import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
@@ -38,13 +40,14 @@ public class Constants {
 
     public static class Ports {
         public static final int DRIVER_PORT = 0;
-        public static final CANBus CANIVORE_NAME = null;
+        public static final int OPERATOR_PORT = 1;
+
         public static final int PIVOT_MOTOR_ID = 0;
         public static final int ROLLER_MOTOR_ID = 0;
         public static final int ELEVATOR_LEFT_ID = 0;
         public static final int ELEVATOR_RIGHT_ID = 0;
-        public static final int LIMIT_SWITCH_PORT = 0; 
-        public static final int BEAM_BREAK_PORT = 0; 
+        public static final int LIMIT_SWITCH_PORT = 1; 
+        public static final int BEAM_BREAK_PORT = 2; 
     }
 
     public static class CustomUnits {
@@ -58,7 +61,7 @@ public class Constants {
         public static final double LOW_ROT = 0.1;
         public static final int CAMERA_RESOLUTIONX = 1280;
         
-        public static final COTSTalonFXSwerveConstants chosenModule =  //TODO: This must be tuned to specific robot
+        public static final COTSTalonFXSwerveConstants chosenModule = 
         COTSTalonFXSwerveConstants.SDS.MK4i.KrakenX60(COTSTalonFXSwerveConstants.SDS.MK4i.driveRatios.L3);
 
         /* Drivetrain Constants */
@@ -133,7 +136,7 @@ public class Constants {
             public static final int driveMotorID = 1;
             public static final int angleMotorID = 2;
             public static final int canCoderID = 3;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(158.466797);
+        public static final Rotation2d angleOffset = Rotation2d.fromDegrees(169.628906);
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -143,7 +146,7 @@ public class Constants {
             public static final int driveMotorID = 4;
             public static final int angleMotorID = 5;
             public static final int canCoderID = 6;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-197.490234);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(168.925781); //168.925781
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -153,7 +156,7 @@ public class Constants {
             public static final int driveMotorID = 7;
             public static final int angleMotorID = 8;
             public static final int canCoderID = 9;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-4.746094);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-15.732422);
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -163,7 +166,7 @@ public class Constants {
             public static final int driveMotorID = 10;
             public static final int angleMotorID = 11;
             public static final int canCoderID = 12;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(197.841797);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-144.228516);
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -207,8 +210,8 @@ public class Constants {
         // for motion magic, TODO: set and add jerk to motor config
         public static final AngularVelocity MOTION_MAGIC_VELOCITY = RotationsPerSecond.of(0);
         public static final AngularAcceleration MOTION_MAGIC_ACCELERATION = RotationsPerSecondPerSecond.of(0);
-        public static final double MOTION_MAGIC_JERK = 0;
-        
+        public static final Per<AngularAccelerationUnit, TimeUnit> MOTION_MAGIC_JERK = Per.ofBaseUnits(0.0, PerUnit.combine(RotationsPerSecondPerSecond, Seconds));
+
         public static final MotorConfig PIVOT_CONFIG = new MotorConfig(
             Ports.PIVOT_MOTOR_ID,
             0,
@@ -273,7 +276,7 @@ public class Constants {
         public static final double kPXController = 1;
         public static final double kPYController = 1;
         public static final double kPThetaController = 1;
-    
+
         /* Constraint for the motion profilied robot angle controller */
         public static final TrapezoidProfile.Constraints kThetaControllerConstraints =
             new TrapezoidProfile.Constraints(

@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Rotations;
 
 import java.util.function.BooleanSupplier;
+
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -45,7 +46,7 @@ public class Elevator extends SubsystemBase {
   private final MotionMagicVoltage motionMagic;
 
 
-  private Elevator() {    
+  public Elevator() {    
     limitSwitch = new DigitalInput(Constants.Ports.LIMIT_SWITCH_PORT);
     motionMagic = new MotionMagicVoltage(0); //TODO: configure motion magic parameters
 
@@ -120,8 +121,13 @@ public class Elevator extends SubsystemBase {
 
   @Override
   public void periodic() {
-    positionPub.set(rightMotor.getPosition().getValueAsDouble());
-    currentPub.set(rightMotor.getSupplyCurrent().getValueAsDouble());
+    final var pos = rightMotor.getPosition();
+    final var current = rightMotor.getSupplyCurrent();
+    if(!pos.getStatus().isError() && !current.getStatus().isError()) {
+      positionPub.set(pos.getValueAsDouble());
+      currentPub.set(current.getValueAsDouble());
+    }
+
     limitSwitchPub.set(elevatorAtBottom());
 
     if (elevatorAtBottom()) {

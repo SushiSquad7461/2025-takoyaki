@@ -1,4 +1,4 @@
-package frc.util.motor;
+package frc.robot.util.motor;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
@@ -15,8 +15,8 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
-import frc.util.control.PIDConfig;
-import frc.util.control.nt.PIDTuning;
+import frc.robot.util.control.PIDConfig;
+import frc.robot.util.control.nt.PIDTuning;
 
 import com.revrobotics.spark.config.SparkMaxConfig;
 
