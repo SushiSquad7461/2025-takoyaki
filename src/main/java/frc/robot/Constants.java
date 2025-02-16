@@ -41,6 +41,7 @@ public class Constants {
     public static class Ports {
         public static final int DRIVER_PORT = 0;
         public static final int OPERATOR_PORT = 1;
+        public static final int PROG_PORT = 2;
 
         public static final int PIVOT_MOTOR_ID = 0;
         public static final int ROLLER_MOTOR_ID = 0;

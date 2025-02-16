@@ -21,9 +21,6 @@ import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.Swerve.AlignmentPosition;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.autos.*;
-import frc.robot.commands.*;
-import frc.robot.subsystems.*;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -34,7 +31,8 @@ import frc.robot.subsystems.*;
 public class RobotContainer {
     /* Controllers */
     private final CommandXboxController driverController = new CommandXboxController(Constants.Ports.DRIVER_PORT);
-    private final CommandXboxController programmerController = new CommandXboxController(2);
+    private final CommandXboxController operatorController = new CommandXboxController(Constants.Ports.OPERATOR_PORT);
+    private final CommandXboxController programmerController = new CommandXboxController(Constants.Ports.PROG_PORT);
     
     /* Subsystems */
     private final Swerve swerve = new Swerve();
@@ -99,10 +97,10 @@ public class RobotContainer {
         programmerController.x().whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
         programmerController.y().whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-        programmerController.a().and(m_programmerController.leftTrigger()).whileTrue(manipulator.sysIdQuasistatic(Direction.kForward));
-        programmerController.b().and(m_programmerController.leftTrigger()).whileTrue(manipulator.sysIdQuasistatic(Direction.kReverse));
-        programmerController.x().and(m_programmerController.leftTrigger()).whileTrue(manipulator.sysIdDynamic(Direction.kForward));
-        programmerController.y().and(m_programmerController.leftTrigger()).whileTrue(manipulator.sysIdDynamic(Direction.kReverse));
+        programmerController.a().and(programmerController.leftTrigger()).whileTrue(manipulator.sysIdQuasistatic(Direction.kForward));
+        programmerController.b().and(programmerController.leftTrigger()).whileTrue(manipulator.sysIdQuasistatic(Direction.kReverse));
+        programmerController.x().and(programmerController.leftTrigger()).whileTrue(manipulator.sysIdDynamic(Direction.kForward));
+        programmerController.y().and(programmerController.leftTrigger()).whileTrue(manipulator.sysIdDynamic(Direction.kReverse));
       
     }
 
