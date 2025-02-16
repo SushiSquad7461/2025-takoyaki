@@ -6,6 +6,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.wpilibj2.command.Command;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Direction;
 import frc.robot.util.control.nt.PIDTuning;
@@ -13,6 +14,10 @@ import frc.robot.util.control.nt.TunableNumber;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
+import com.ctre.phoenix6.controls.VoltageOut;
+import static edu.wpi.first.units.Units.Volts;
+
+import com.ctre.phoenix6.SignalLogger;
 
 public class Intake extends SubsystemBase {
     
@@ -20,6 +25,8 @@ public class Intake extends SubsystemBase {
     private final TalonFX wheelMotor;
     private TunableNumber pivotPos;
     private PIDTuning pivotPID;
+    private SysIdRoutine routine;
+    private final VoltageOut m_voltReq = new VoltageOut(0.0);
 
     public Intake() {
         super();
@@ -28,9 +35,32 @@ public class Intake extends SubsystemBase {
         wheelMotor = Constants.AlgaeIntake.INTAKE_CONFIG.createTalon();
         pivotPos = new TunableNumber("Intake Pos", Constants.AlgaeIntake.RAISED_POS.magnitude(), Constants.TUNING_MODE);
         pivotPID = Constants.AlgaeIntake.PIVOT_CONFIG.genPIDTuning("Pivot Intake", Constants.TUNING_MODE);
+        
+        routine = new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null, // Use default ramp rate (1 V/s)
+                Volts.of(4), // Reduce dynamic step voltage to 4 to prevent brownout
+                null, // Use default timeout (10 s)
+                // Log state with Phoenix SignalLogger class
+                (state) -> SignalLogger.writeString("state", state.toString())),
+            new SysIdRoutine.Mechanism(
+                (volts) -> {
+                    pivotMotor.setControl(m_voltReq.withOutput(volts.in(Volts)));
+                },
+                null,
+                this
+            )
+        );
     }
 
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return routine.quasistatic(direction);
+    }
 
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return routine.dynamic(direction);
+    }
+    
     //retrieving position and other related values
     private void resetToAbsolutePosition() {
         pivotMotor.setPosition(getAbsolutePosition());
