@@ -180,9 +180,9 @@ public class Constants {
 
     public static class Elevator {
         public static final Distance MAX_HEIGHT = Inches.of(28.0); 
-        public static final Measure<? extends PerUnit<DistanceUnit, AngleUnit>> ELEVATOR_EXTENSION_PER_MOTOR_ANGLE = CustomUnits.MetersPerRotation.of(0); //TODO: measure elevator height and divide by gear ratio (repeat 5x)
+        public static final Distance ELEVATOR_EXTENSION_PER_ROTATION = Meters.of(0.1); //TODO: measure elevator height and divide by gear ratio (repeat 5x)
         public static final Dimensionless GEAR_RATIO = Rotations.of(52*60).div(Rotations.of(18*18)); //output over input
-        public static final Angle MOTOR_MAX_HEIGHT = (Angle) MAX_HEIGHT.div(ELEVATOR_EXTENSION_PER_MOTOR_ANGLE).div(GEAR_RATIO);
+        public static final Angle MOTOR_MAX_HEIGHT = frc.robot.subsystems.Elevator.heightToMotor(MAX_HEIGHT);
 
         // for motion magic, TODO: set and add jerk to motor config
         public static final AngularVelocity MOTION_MAGIC_VELOCITY = RotationsPerSecond.of(80);

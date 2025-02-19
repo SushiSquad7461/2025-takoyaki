@@ -96,11 +96,14 @@ public class Elevator extends SubsystemBase {
 
   // checks if elevator has reached target position
   private BooleanSupplier elevatorInPosition(Distance targetPos) {
-    Angle targetAngle = (Angle) targetPos.div(Constants.Elevator.ELEVATOR_EXTENSION_PER_MOTOR_ANGLE).div(Constants.Elevator.GEAR_RATIO); //converts target position into angle
+    Angle targetAngle = heightToMotor(targetPos); //converts target position into angle
     return () -> Math.abs(rightMotor.getPosition().getValue().in(Rotations)
-        - targetAngle.in(Rotations)) < Constants.Elevator.MAX_ERROR.in(Rotations); //TODO: need to set max error properly
+        - targetAngle.in(Rotations)) < Constants.Elevator.MAX_ERROR.in(Rotations);
   }
 
+  public static Angle heightToMotor(Distance distance) {
+    return distance.div(Constants.Elevator.GEAR_RATIO).div(Constants.Elevator.ELEVATOR_EXTENSION_PER_ROTATION).times(Rotations.of(1));
+  }
   // uses limit switch to zero elevator
   public Command resetElevator() {
     return runOnce(() -> {
