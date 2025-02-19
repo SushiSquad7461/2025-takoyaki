@@ -178,7 +178,7 @@ public class Constants {
     public static class Elevator {
         //TODO: use sysid and set all of these values
         public static final Distance MAX_HEIGHT = Inches.of(28.0); 
-        public static final Measure<? extends PerUnit<DistanceUnit, AngleUnit>> ELEVATOR_EXTENSION_PER_MOTOR_ANGLE = CustomUnits.MetersPerRotation.of(0); //measure elevator height and divide by gear ratio (repeat 5x)
+        public static final Measure<? extends PerUnit<DistanceUnit, AngleUnit>> ELEVATOR_EXTENSION_PER_MOTOR_ANGLE = CustomUnits.MetersPerRotation.of(0); //TODO: measure elevator height and divide by gear ratio (repeat 5x)
         public static final Dimensionless GEAR_RATIO = Rotations.of(52*60).div(Rotations.of(18*18)); // output over input
         public static final Angle MOTOR_MAX_HEIGHT = (Angle) MAX_HEIGHT.div(ELEVATOR_EXTENSION_PER_MOTOR_ANGLE).div(GEAR_RATIO);
 
@@ -192,7 +192,8 @@ public class Constants {
             35,
             true,
             PIDConfig.getElevatorPid(0.0, 0.0, 0, 0, 0, 0, 0),
-            MotorConfig.Mode.BRAKE, MOTOR_MAX_HEIGHT, 
+            MotorConfig.Mode.BRAKE, 
+            MOTOR_MAX_HEIGHT, 
             Degrees.of(0)).withMotionMagic(MOTION_MAGIC_VELOCITY, MOTION_MAGIC_ACCELERATION);
 
         public static final MotorConfig ELEVATOR_RIGHT = new MotorConfig(
@@ -208,8 +209,6 @@ public class Constants {
     }
 
     public static final class CoralManipulator {
-        public static final double PIVOT_GEAR_RATIO = 0.0;
-
         // motion and position control w/ pivot
         public static final Angle MAX_ANGLE = Degrees.of(199.5);
         public static final Angle MIN_ANGLE = Degrees.of(0);
@@ -229,8 +228,6 @@ public class Constants {
     }
   
     public static class AlgaeIntake {
-
-        public static final double G = 0.0;
         //TODO: set gear ratio
         public static final Dimensionless INTAKE_GEAR_RATIO = Rotations.of(15).div(Rotations.of(1)); // output over input
 
@@ -240,7 +237,6 @@ public class Constants {
         public static final Angle RAISED_POS = Degrees.of(199.5).div(INTAKE_GEAR_RATIO);
         public static final Angle LOWERED_POS = Degrees.of(0);
 
-        public static final Angle MAX_SPIKE_HEIGHT = Rotations.of(5.0);
         public static final Current CURRENT_LIMIT = Amps.of(35.0);
 
         public static final MotorConfig INTAKE_CONFIG = new MotorConfig(
@@ -265,7 +261,7 @@ public class Constants {
         public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
         public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
     
-        public static final double kPXController = 1;
+        public static final double kPTranslationController = 1;
         public static final double kPThetaController = 1;
 
         /* Constraint for the motion profilied robot angle controller */

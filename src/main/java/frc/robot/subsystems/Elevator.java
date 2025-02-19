@@ -38,8 +38,6 @@ public class Elevator extends SubsystemBase {
   private final BooleanPublisher limitSwitchPub;
   public SysIdRoutine routine;
 
-  // Set proper constants later
-  private static final Angle MAX_SPIKE_HEIGHT = Rotations.of(5);
   private static final Current CURRENT_LIMIT = Amps.of(35);
 
   private final VoltageOut m_voltReq = new VoltageOut(0.0);
@@ -133,8 +131,7 @@ public class Elevator extends SubsystemBase {
   }
 
   private boolean currentSpike() {
-    return (rightMotor.getPosition().getValue().compareTo(MAX_SPIKE_HEIGHT) < 0 &&
-        rightMotor.getSupplyCurrent().getValue().compareTo(CURRENT_LIMIT) > 0);
+    return (rightMotor.getSupplyCurrent().getValue().compareTo(CURRENT_LIMIT) > 0);
   }
 
   @Override

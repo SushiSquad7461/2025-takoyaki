@@ -91,8 +91,7 @@ public class Intake extends SubsystemBase {
     }
     
     private boolean currentSpike() {
-        return (pivotMotor.getPosition().getValue().compareTo(Constants.AlgaeIntake.MAX_SPIKE_HEIGHT) < 0 &&
-            pivotMotor.getSupplyCurrent().getValue().compareTo(Constants.AlgaeIntake.CURRENT_LIMIT) > 0);
+        return (pivotMotor.getSupplyCurrent().getValue().compareTo(Constants.AlgaeIntake.CURRENT_LIMIT) > 0);
     }
 
     private Command reverseIntake() {
