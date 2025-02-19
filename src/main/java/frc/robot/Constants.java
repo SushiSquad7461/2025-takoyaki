@@ -45,10 +45,13 @@ public class Constants {
         public static final int OPERATOR_PORT = 1;
         public static final int PROG_PORT = 2;
 
-        public static final int PIVOT_MOTOR_ID = 0;
+        public static final int INTAKE_ROLLER_ID = 0;
+        public static final int INTAKE_PIVOT_ID = 0;
         public static final int ROLLER_MOTOR_ID = 0;
+
         public static final int ELEVATOR_LEFT_ID = 0;
         public static final int ELEVATOR_RIGHT_ID = 0;
+        
         public static final int LIMIT_SWITCH_PORT = 1; 
         public static final int BEAM_BREAK_PORT = 2; 
     }
@@ -240,14 +243,14 @@ public class Constants {
         public static final Current CURRENT_LIMIT = Amps.of(35.0);
 
         public static final MotorConfig INTAKE_CONFIG = new MotorConfig(
-            0,
+            Ports.INTAKE_ROLLER_ID,
             0,
             true, 
             MotorConfig.Mode.COAST
         );
 
         public static final MotorConfig PIVOT_CONFIG = new MotorConfig(
-            0,
+            Ports.INTAKE_PIVOT_ID,
             0,
             true,
             PIDConfig.getArmPid(0.0, 0.0, 0.0, 0, 0, 0, 0),
