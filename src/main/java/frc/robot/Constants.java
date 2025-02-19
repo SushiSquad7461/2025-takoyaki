@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
@@ -17,6 +18,7 @@ import edu.wpi.first.units.TimeUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Per;
@@ -175,54 +177,44 @@ public class Constants {
 
     public static class Elevator {
         //TODO: use sysid and set all of these values
-        public static final Distance MAX_HEIGHT = Inches.of(45.0); 
-        public static final Measure<? extends PerUnit<DistanceUnit, AngleUnit>> ELEVATOR_EXTENSION_PER_MOTOR_ANGLE = CustomUnits.MetersPerRotation.of(0);
-        public static final Dimensionless GEAR_RATIO = Rotations.of(0).div(Rotations.of(1)); // output over input
+        public static final Distance MAX_HEIGHT = Inches.of(28.0); 
+        public static final Measure<? extends PerUnit<DistanceUnit, AngleUnit>> ELEVATOR_EXTENSION_PER_MOTOR_ANGLE = CustomUnits.MetersPerRotation.of(0); //measure elevator height and divide by gear ratio (repeat 5x)
+        public static final Dimensionless GEAR_RATIO = Rotations.of(52*60).div(Rotations.of(18*18)); // output over input
         public static final Angle MOTOR_MAX_HEIGHT = (Angle) MAX_HEIGHT.div(ELEVATOR_EXTENSION_PER_MOTOR_ANGLE).div(GEAR_RATIO);
 
+        // for motion magic, TODO: set and add jerk to motor config
+        public static final AngularVelocity MOTION_MAGIC_VELOCITY = RotationsPerSecond.of(0);
+        public static final AngularAcceleration MOTION_MAGIC_ACCELERATION = RotationsPerSecondPerSecond.of(0);
+        public static final Per<AngularAccelerationUnit, TimeUnit> MOTION_MAGIC_JERK = Per.ofBaseUnits(0.0, PerUnit.combine(RotationsPerSecondPerSecond, Seconds)); //add towards end of tuning
+        
         public static final MotorConfig ELEVATOR_LEFT = new MotorConfig(
             Ports.ELEVATOR_LEFT_ID,
-            0,
+            35,
             true,
             PIDConfig.getElevatorPid(0.0, 0.0, 0, 0, 0, 0, 0),
-            MotorConfig.Mode.BRAKE, MOTOR_MAX_HEIGHT, Degrees.of(0));
+            MotorConfig.Mode.BRAKE, MOTOR_MAX_HEIGHT, 
+            Degrees.of(0)).withMotionMagic(MOTION_MAGIC_VELOCITY, MOTION_MAGIC_ACCELERATION);
 
         public static final MotorConfig ELEVATOR_RIGHT = new MotorConfig(
             0,
-            0,
+            35,
             false,
             PIDConfig.getElevatorPid(0.0, 0.0, 0, 0, 0, 0, 0),
             MotorConfig.Mode.BRAKE,
             MOTOR_MAX_HEIGHT, 
-            Degrees.of(0));
+            Degrees.of(0)).withMotionMagic(MOTION_MAGIC_VELOCITY, MOTION_MAGIC_ACCELERATION);
 
         public static final Angle MAX_ERROR = Degrees.of(1.0);
-
     }
 
     public static final class CoralManipulator {
         public static final double PIVOT_GEAR_RATIO = 0.0;
 
-        // motion and position control      
+        // motion and position control w/ pivot
         public static final Angle MAX_ANGLE = Degrees.of(199.5);
         public static final Angle MIN_ANGLE = Degrees.of(0);
-        public static final Angle ANGLE_TOLERANCE = Degrees.of(1.0);
-                
-        // for motion magic, TODO: set and add jerk to motor config
-        public static final AngularVelocity MOTION_MAGIC_VELOCITY = RotationsPerSecond.of(0);
-        public static final AngularAcceleration MOTION_MAGIC_ACCELERATION = RotationsPerSecondPerSecond.of(0);
-        public static final Per<AngularAccelerationUnit, TimeUnit> MOTION_MAGIC_JERK = Per.ofBaseUnits(0.0, PerUnit.combine(RotationsPerSecondPerSecond, Seconds));
-
-        public static final MotorConfig PIVOT_CONFIG = new MotorConfig(
-            Ports.PIVOT_MOTOR_ID,
-            0,
-            false,
-            PIDConfig.getArmPid(0, 0, 0, 0, 0, 0, 0),
-            MotorConfig.Mode.BRAKE, 
-            MAX_ANGLE, 
-            MIN_ANGLE
-        );
-        
+        public static final Angle ANGLE_TOLERANCE = Degrees.of(5.0);
+                        
         public static final MotorConfig ROLLER_CONFIG = new MotorConfig(
             Ports.ROLLER_MOTOR_ID,
             0,
@@ -231,26 +223,25 @@ public class Constants {
         );
         
         // roller speeds for diff states (should be in range [-1, 1])
-        public static final double INTAKE_SPEED = 0;
-        public static final double SCORE_SPEED = 0;
+        public static final double INTAKE_SPEED = 0.5;
+        public static final double SCORE_SPEED = 0.8;
         public static final double HOLD_SPEED = 0;
     }
   
-    //TODO: change constants
     public static class AlgaeIntake {
 
         public static final double G = 0.0;
-        public static final int ENCODER_CHANNEL = 0;
-        public static final double ENCODER_ANGLE_OFFSET = 0; 
-        public static final Dimensionless INTAKE_GEAR_RATIO = Rotations.of(3.7521).div(Rotations.of(1)); // output over input
+        //TODO: set gear ratio
+        public static final Dimensionless INTAKE_GEAR_RATIO = Rotations.of(15).div(Rotations.of(1)); // output over input
 
-        public static final double INTAKE_SPEED = 0.0;
+        public static final double INTAKE_SPEED = 0.9;
+        public static final Angle MAX_ERROR = Degrees.of(5.0);
 
-        public static final double ERROR_LIMIT = 0.0;
-        public static final double MAX_ERROR = 1.0;
-
-        public static final Angle RAISED_POS = Degrees.of(199.5);
+        public static final Angle RAISED_POS = Degrees.of(199.5).div(INTAKE_GEAR_RATIO);
         public static final Angle LOWERED_POS = Degrees.of(0);
+
+        public static final Angle MAX_SPIKE_HEIGHT = Rotations.of(5.0);
+        public static final Current CURRENT_LIMIT = Amps.of(35.0);
 
         public static final MotorConfig INTAKE_CONFIG = new MotorConfig(
             0,
@@ -275,7 +266,6 @@ public class Constants {
         public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
     
         public static final double kPXController = 1;
-        public static final double kPYController = 1;
         public static final double kPThetaController = 1;
 
         /* Constraint for the motion profilied robot angle controller */
