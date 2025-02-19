@@ -40,7 +40,7 @@ public class Elevator extends SubsystemBase {
 
   private static final Current CURRENT_LIMIT = Amps.of(35);
 
-  private final VoltageOut m_voltReq = new VoltageOut(0.0);
+  private final VoltageOut m_voltReq = new VoltageOut(Volts.of(0));
 
   public Elevator() {
     limitSwitch = new DigitalInput(Constants.Ports.LIMIT_SWITCH_PORT);
