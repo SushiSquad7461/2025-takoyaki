@@ -144,6 +144,47 @@
                 }
               }
             ]
+          },
+          {
+            "title": "Auto",
+            "x": 0.0,
+            "y": 384.0,
+            "width": 384.0,
+            "height": 256.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "availableAutos",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Auto/availableAutos",
+                  "period": 0.06,
+                  "data_type": "string[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "selectedAuto",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Auto/selectedAuto",
+                  "period": 0.06,
+                  "data_type": "string",
+                  "show_submit_button": false
+                }
+              }
+            ]
           }
         ],
         "containers": [
@@ -218,8 +259,8 @@
         "layouts": [
           {
             "title": "Elevator",
-            "x": 896.0,
-            "y": 0.0,
+            "x": 640.0,
+            "y": 256.0,
             "width": 256.0,
             "height": 384.0,
             "type": "List Layout",
@@ -276,8 +317,8 @@
           },
           {
             "title": "PIDTuning",
-            "x": 1152.0,
-            "y": 0.0,
+            "x": 896.0,
+            "y": 256.0,
             "width": 256.0,
             "height": 384.0,
             "type": "List Layout",
@@ -345,7 +386,7 @@
           },
           {
             "title": "Manipulator",
-            "x": 640.0,
+            "x": 256.0,
             "y": 0.0,
             "width": 256.0,
             "height": 256.0,
@@ -389,7 +430,7 @@
           },
           {
             "title": "SubsystemStates",
-            "x": 384.0,
+            "x": 0.0,
             "y": 0.0,
             "width": 256.0,
             "height": 256.0,
@@ -444,7 +485,7 @@
           },
           {
             "title": "Alignment",
-            "x": 640.0,
+            "x": 384.0,
             "y": 256.0,
             "width": 256.0,
             "height": 384.0,
@@ -517,7 +558,7 @@
           {
             "title": "USB Camera 0",
             "x": 0.0,
-            "y": 0.0,
+            "y": 256.0,
             "width": 384.0,
             "height": 384.0,
             "type": "List Layout",
@@ -561,8 +602,8 @@
         "containers": [
           {
             "title": "Swerve Drive",
-            "x": 384.0,
-            "y": 256.0,
+            "x": 512.0,
+            "y": 0.0,
             "width": 256.0,
             "height": 256.0,
             "type": "SwerveDrive",
@@ -571,6 +612,58 @@
               "period": 0.06,
               "show_robot_rotation": true,
               "rotation_unit": "Radians"
+            }
+          },
+          {
+            "title": "Auto Align Center",
+            "x": 768.0,
+            "y": 128.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Command",
+            "properties": {
+              "topic": "/SmartDashboard/Auto Align Center",
+              "period": 0.06,
+              "show_type": true
+            }
+          },
+          {
+            "title": "Auto Align Right",
+            "x": 1024.0,
+            "y": 128.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Command",
+            "properties": {
+              "topic": "/SmartDashboard/Auto Align Right",
+              "period": 0.06,
+              "show_type": true
+            }
+          },
+          {
+            "title": "Coral Level",
+            "x": 768.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Command",
+            "properties": {
+              "topic": "/SmartDashboard/Coral Level",
+              "period": 0.06,
+              "show_type": true
+            }
+          },
+          {
+            "title": "Auto Align Left",
+            "x": 1024.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Command",
+            "properties": {
+              "topic": "/SmartDashboard/Auto Align Left",
+              "period": 0.06,
+              "show_type": true
             }
           }
         ]
