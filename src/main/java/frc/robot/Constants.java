@@ -44,12 +44,12 @@ public class Constants {
         public static final int OPERATOR_PORT = 1;
         public static final int PROG_PORT = 2;
 
-        public static final int INTAKE_ROLLER_ID = 0;
-        public static final int INTAKE_PIVOT_ID = 0;
-        public static final int ROLLER_MOTOR_ID = 0;
+        public static final int ALGAE_INTAKE_ROLLER_ID = 15;
+        public static final int INTAKE_PIVOT_ID = 17;
+        public static final int ROLLER_MOTOR_ID = 16;
 
-        public static final int ELEVATOR_LEFT_ID = 0;
-        public static final int ELEVATOR_RIGHT_ID = 0;
+        public static final int ELEVATOR_LEFT_ID = 14;
+        public static final int ELEVATOR_RIGHT_ID = 18;
 
         public static final int LIMIT_SWITCH_PORT = 1; 
         public static final int BEAM_BREAK_PORT = 2; 
@@ -241,7 +241,7 @@ public class Constants {
 
         //TODO: use sysid and set all of these values
         public static final MotorConfig INTAKE_CONFIG = new MotorConfig(
-            Ports.INTAKE_ROLLER_ID,
+            Ports.ALGAE_INTAKE_ROLLER_ID,
             0,
             true, 
             MotorConfig.Mode.COAST
