@@ -8,10 +8,10 @@ public enum ElevatorState {
     //TODO: set these height values
     IDLE(Inches.of(0)),
     L1(Inches.of(0)),
-    L2(Inches.of(35)),
-    L3(Inches.of(47)),
-    L4(Inches.of(50)),       
-    KNOCK(Inches.of(37));         
+    L2(Inches.of(10)),
+    L3(Inches.of(15)),
+    L4(Inches.of(22)),       
+    KNOCK(Inches.of(20));         
 
     Distance position;
     

@@ -47,7 +47,6 @@ public class RobotContainer {
     public RobotContainer() {
         // Configure the button bindings
         configureButtonBindings();
-        
     }
 
     /**
@@ -108,7 +107,6 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        // return autos.getAuto();
-        return Commands.none();
+        return autos.getAuto();
     }
 }

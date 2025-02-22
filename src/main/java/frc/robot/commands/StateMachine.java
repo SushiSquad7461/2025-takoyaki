@@ -1,5 +1,7 @@
 package frc.robot.commands;
 
+import static edu.wpi.first.units.Units.Seconds;
+
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
@@ -96,7 +98,7 @@ public class StateMachine extends SubsystemBase {
                    ), Commands.sequence(
                     manipulator.changeState(newState.manipulatorState)
                         .until(() -> !manipulator.hasCoral())
-                        .andThen(Commands.waitSeconds(0.5))
+                        .andThen(Commands.waitTime(Seconds.of(0.5)))
                         .andThen(changeState(RobotState.IDLE))
                 )
             );   
