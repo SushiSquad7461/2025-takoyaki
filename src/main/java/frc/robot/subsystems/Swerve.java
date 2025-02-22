@@ -145,7 +145,9 @@ public class Swerve extends SubsystemBase {
               return false;
             },
             this
-        );    SmartDashboard.putData("Swerve Drive", new Sendable() {
+        ); 
+        
+        SmartDashboard.putData("Swerve Drive", new Sendable() {
                 
     @Override
     public void initSendable(SendableBuilder builder) {
