@@ -1,4 +1,4 @@
-package frc.util.control.nt;
+package frc.robot.util.control.nt;
 
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
