@@ -228,13 +228,13 @@ public class Constants {
         
         // roller speeds for diff states (should be in range [-1, 1])
         public static final double INTAKE_SPEED = 0.1;
-        public static final double SCORE_SPEED = 0.2;
+        public static final double SCORE_SPEED = 0.17;
         public static final double HOLD_SPEED = 0;
     }
   
     public static class AlgaeIntake {
         public static final Dimensionless INTAKE_GEAR_RATIO = Rotations.of(15).div(Rotations.of(1)); // output over input
-        public static final double INTAKE_SPEED = 0.1;
+        public static final double INTAKE_SPEED = 0.2;
 
         public static final Angle MAX_ERROR = Degrees.of(5.0).times(INTAKE_GEAR_RATIO);
         public static final Angle RAISED_POS = Degrees.of(12).times(INTAKE_GEAR_RATIO);

@@ -75,7 +75,7 @@ public class Swerve extends SubsystemBase {
             new SwerveModule(3, Constants.Swerve.Mod3.constants)
         };
 
-        camera = new PhotonCamera("23");
+        camera = new PhotonCamera("Arducam_OV9281_USB_Camera");
         photonPoseEstimator = new PhotonPoseEstimator(
             AprilTagFields.k2025Reefscape.loadAprilTagLayoutField(),
             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
