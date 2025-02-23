@@ -56,7 +56,7 @@ public class RobotContainer {
         configureButtonBindings();
 
         elevator.setDefaultCommand(elevator.resetElevator().andThen(() -> elevator.removeDefaultCommand()));
-        intake.setDefaultCommand(intake.reset().andThen(() -> intake.removeDefaultCommand()));
+        intake.setDefaultCommand(intake.reset(true).andThen(() -> intake.removeDefaultCommand()));
     }
 
     /**
