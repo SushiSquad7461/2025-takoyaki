@@ -36,7 +36,7 @@ import frc.lib.util.COTSTalonFXSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
 
 public class Constants {
-    public static boolean TUNING_MODE;
+    public static boolean TUNING_MODE = false;
     public static final double stickDeadband = 0.1;
 
     public static class Ports {
@@ -51,8 +51,8 @@ public class Constants {
         public static final int ELEVATOR_LEFT_ID = 14;
         public static final int ELEVATOR_RIGHT_ID = 18;
 
-        public static final int LIMIT_SWITCH_PORT = 1; 
-        public static final int BEAM_BREAK_PORT = 2; 
+        public static final int LIMIT_SWITCH_PORT = 2; 
+        public static final int BEAM_BREAK_PORT = 1; 
     }
 
     public static class CustomUnits {
@@ -179,7 +179,7 @@ public class Constants {
 
     public static class Elevator {
         public static final Distance MAX_HEIGHT = Inches.of(28.0); 
-        public static final Distance ELEVATOR_EXTENSION_PER_ROTATION = Meters.of(0.1); //TODO: measure elevator height and divide by gear ratio (repeat 5x)
+        public static final Distance ELEVATOR_EXTENSION_PER_ROTATION = Inches.of(3.994); 
         public static final Dimensionless GEAR_RATIO = Rotations.of(52*60).div(Rotations.of(18*18)); //output over input
         public static final Angle MOTOR_MAX_HEIGHT = frc.robot.subsystems.Elevator.heightToMotor(MAX_HEIGHT);
 
@@ -192,22 +192,25 @@ public class Constants {
         public static final MotorConfig ELEVATOR_LEFT = new MotorConfig(
             Ports.ELEVATOR_LEFT_ID,
             35,
-            true,
+            false,
             PIDConfig.getElevatorPid(0.0, 0.0, 0, 0, 0, 0, 0),
             MotorConfig.Mode.BRAKE, 
-            MOTOR_MAX_HEIGHT, 
-            Degrees.of(0)).withMotionMagic(MOTION_MAGIC_VELOCITY, MOTION_MAGIC_ACCELERATION);
+            null, //MOTOR_MAX_HEIGHT, 
+            null //Degrees.of(0)
+        ).withMotionMagic(MOTION_MAGIC_VELOCITY, MOTION_MAGIC_ACCELERATION);
 
         public static final MotorConfig ELEVATOR_RIGHT = new MotorConfig(
             Ports.ELEVATOR_RIGHT_ID,
             35,
-            false,
-            PIDConfig.getElevatorPid(0.0, 0.0, 0, 0, 0, 0, 0),
+            true,
+            PIDConfig.getElevatorPid(0.11, 0.0, 0.02, 0, 0, 0, 0),
             MotorConfig.Mode.BRAKE,
-            MOTOR_MAX_HEIGHT, 
-            Degrees.of(0)).withMotionMagic(MOTION_MAGIC_VELOCITY, MOTION_MAGIC_ACCELERATION);
+            null, //MOTOR_MAX_HEIGHT, 
+            null //Degrees.of(0)
+        ).withMotionMagic(MOTION_MAGIC_VELOCITY, MOTION_MAGIC_ACCELERATION);
 
-        public static final Angle MAX_ERROR = Degrees.of(1.0);
+        public static final Angle MAX_ERROR = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(1.0));
+        public static final Angle RELAXED_MAX_ERROR = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(4.0));
     }
 
     public static final class CoralManipulator {
@@ -224,34 +227,35 @@ public class Constants {
         );
         
         // roller speeds for diff states (should be in range [-1, 1])
-        public static final double INTAKE_SPEED = 0.5;
-        public static final double SCORE_SPEED = 0.8;
+        public static final double INTAKE_SPEED = 0.1;
+        public static final double SCORE_SPEED = 0.2;
         public static final double HOLD_SPEED = 0;
     }
   
     public static class AlgaeIntake {
         public static final Dimensionless INTAKE_GEAR_RATIO = Rotations.of(15).div(Rotations.of(1)); // output over input
-        public static final double INTAKE_SPEED = 0.9;
+        public static final double INTAKE_SPEED = 0.1;
 
-        public static final Angle MAX_ERROR = Degrees.of(5.0);
-        public static final Angle RAISED_POS = Degrees.of(199.5).div(INTAKE_GEAR_RATIO);
-        public static final Angle LOWERED_POS = Degrees.of(0);
+        public static final Angle MAX_ERROR = Degrees.of(5.0).times(INTAKE_GEAR_RATIO);
+        public static final Angle RAISED_POS = Degrees.of(12).times(INTAKE_GEAR_RATIO);
+        public static final Angle LOWERED_POS = Degrees.of(53).times(INTAKE_GEAR_RATIO);
 
-        public static final Current CURRENT_LIMIT = Amps.of(35.0);
+        public static final Current CURRENT_SPIKE_LIMIT_DOWN = Amps.of(5);
+        public static final Current CURRENT_SPIKE_LIMIT_UP = Amps.of(5);
 
         //TODO: use sysid and set all of these values
         public static final MotorConfig INTAKE_CONFIG = new MotorConfig(
             Ports.ALGAE_INTAKE_ROLLER_ID,
-            0,
+            35,
             true, 
             MotorConfig.Mode.COAST
         );
 
         public static final MotorConfig PIVOT_CONFIG = new MotorConfig(
             Ports.INTAKE_PIVOT_ID,
-            0,
+            35,
             true,
-            PIDConfig.getArmPid(0.0, 0.0, 0.0, 0, 0, 0, 0),
+            PIDConfig.getArmPid(0.2, 0.0, 0.0, 0, 0, 0, 0),
             MotorConfig.Mode.BRAKE
         );
     }

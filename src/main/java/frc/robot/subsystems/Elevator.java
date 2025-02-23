@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Amp;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Rotations;
@@ -8,9 +9,12 @@ import static edu.wpi.first.units.Units.Volts;
 import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -26,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.util.control.nt.PIDTuning;
 
 public class Elevator extends SubsystemBase {
   private final TalonFX leftMotor;
@@ -36,15 +41,17 @@ public class Elevator extends SubsystemBase {
   private final DoublePublisher positionPub;
   private final DoublePublisher currentPub;
   private final BooleanPublisher limitSwitchPub;
+  private PIDTuning elevatorRightPID;
   public SysIdRoutine routine;
+  private boolean reset = false;
 
-  private static final Current CURRENT_LIMIT = Amps.of(35);
+  private static final Current CURRENT_LIMIT = Amps.of(5);
 
   private final VoltageOut m_voltReq = new VoltageOut(Volts.of(0));
 
   public Elevator() {
     limitSwitch = new DigitalInput(Constants.Ports.LIMIT_SWITCH_PORT);
-
+    elevatorRightPID = Constants.Elevator.ELEVATOR_LEFT.genPIDTuning("Elevator", Constants.TUNING_MODE);
     leftMotor = Constants.Elevator.ELEVATOR_LEFT.createTalon();
     rightMotor = Constants.Elevator.ELEVATOR_RIGHT.createTalon();
 
@@ -88,21 +95,27 @@ public class Elevator extends SubsystemBase {
   // moves elevator to defined ElevatorState position *last year specifically
   // checked for elevator idle state
   public Command changeState(ElevatorState state) {
-    return runOnce(() -> {
+    return run(() -> {
       elevatorTable.getDoubleTopic("Setpoint").publish().set(state.getPos().in(Inches));
-    }).andThen(new WaitUntilCommand(elevatorInPosition(state.getPos())))
-        .andThen(state == ElevatorState.IDLE || state == ElevatorState.L1 ? resetElevator() : Commands.none());
+      rightMotor.setControl(new PositionDutyCycle(heightToMotor(state.position)));
+      if(state != ElevatorState.IDLE) reset = false;
+    }).until(elevatorInPosition(state))
+        .andThen(state == ElevatorState.IDLE && !reset ? resetElevator() : Commands.none());
   }
 
   // checks if elevator has reached target position
-  private BooleanSupplier elevatorInPosition(Distance targetPos) {
-    Angle targetAngle = heightToMotor(targetPos); //converts target position into angle
+  private BooleanSupplier elevatorInPosition(ElevatorState state) {
+    var maxErr = state == ElevatorState.IDLE && currentSpike() ? Constants.Elevator.RELAXED_MAX_ERROR.in(Rotations) : Constants.Elevator.MAX_ERROR.in(Rotations);
+    Angle targetAngle = heightToMotor(state.position); //converts target position into angle
     return () -> Math.abs(rightMotor.getPosition().getValue().in(Rotations)
-        - targetAngle.in(Rotations)) < Constants.Elevator.MAX_ERROR.in(Rotations);
+        - targetAngle.in(Rotations)) < maxErr;
   }
 
   public static Angle heightToMotor(Distance distance) {
-    return distance.div(Constants.Elevator.GEAR_RATIO).div(Constants.Elevator.ELEVATOR_EXTENSION_PER_ROTATION).times(Rotations.of(1));
+    return distance
+      .times(Constants.Elevator.GEAR_RATIO)
+      .div(Constants.Elevator.ELEVATOR_EXTENSION_PER_ROTATION)
+      .times(Rotations.of(1));
   }
   // uses limit switch to zero elevator
   public Command resetElevator() {
@@ -112,6 +125,7 @@ public class Elevator extends SubsystemBase {
       .andThen(runOnce(() -> {
         rightMotor.set(0.0);
         rightMotor.setPosition(0.0); //zeroes
+        reset = true;
       })
     );
   }
@@ -130,7 +144,7 @@ public class Elevator extends SubsystemBase {
   }
 
   private boolean elevatorAtBottom() {
-    return limitSwitch.get() || currentSpike();
+    return currentSpike(); // || limitSwitch.get()
   }
 
   private boolean currentSpike() {
@@ -142,12 +156,23 @@ public class Elevator extends SubsystemBase {
     final var pos = rightMotor.getPosition();
     final var current = rightMotor.getSupplyCurrent();
     
+    elevatorRightPID.updatePID(rightMotor);
+
     if (!pos.getStatus().isError() && !current.getStatus().isError()) {
-      positionPub.set(pos.getValueAsDouble());
-      currentPub.set(current.getValueAsDouble());
+      positionPub.set(pos.getValue().in(Rotations));
+      currentPub.set(current.getValue().in(Amp));
     }
 
-    limitSwitchPub.set(elevatorAtBottom());
+    limitSwitchPub.set(limitSwitch.get());
   }
+
+  public Command goUp() {
+    return run(() -> rightMotor.set(.2)).finallyDo(() -> rightMotor.set(0));
+  }
+
+
+public Command goDown() {
+  return run(() -> rightMotor.set(-.2)).finallyDo(() -> rightMotor.set(0));
+}
 
 }

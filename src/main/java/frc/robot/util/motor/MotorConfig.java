@@ -76,9 +76,9 @@ public class MotorConfig {
    public MotorConfig(int canId, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode) { this(canId, "rio", currentLimit, inversion, pid, mode, RadiansPerSecond.zero(), RadiansPerSecondPerSecond.zero(), null, null); }
 
 
-public PIDTuning genPIDTuning(String motorName, boolean tuningMode) {
-        return new PIDTuning(motorName, pid, tuningMode);
-   }
+     public PIDTuning genPIDTuning(String motorName, boolean tuningMode) {
+          return new PIDTuning(motorName, pid, tuningMode);
+     }
 
    public TalonFXConfiguration getTalonConfig() {
         TalonFXConfiguration talonConfig = new TalonFXConfiguration();
@@ -97,7 +97,6 @@ public PIDTuning genPIDTuning(String motorName, boolean tuningMode) {
 
         talonConfig.MotorOutput.NeutralMode = mode.getTalonMode();
         talonConfig.MotorOutput.Inverted = inversion ? InvertedValue.CounterClockwise_Positive : InvertedValue.Clockwise_Positive;
-
         pid.updatePidConfig(talonConfig);
 
         return talonConfig;

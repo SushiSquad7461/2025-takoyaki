@@ -51,22 +51,19 @@ public class CoralManipulator extends SubsystemBase {
         if (state == ManipulatorState.INTAKE) {
             // for intake, run until detect coral
             return runRollers(state.getRollerSpeed())
-                    .until(this::hasCoral)
-                    .andThen(Commands.waitTime(Seconds.of(0.5))
-                    .andThen(stopRollers()));
+                .until(this::hasCoral)
+                .andThen(Commands.waitTime(Seconds.of(0.2)))
+                .andThen(stopRollers())
+                .unless(this::hasCoral);
         }
 
         // for scoring, only run if coral piece is detected
-        if (state == ManipulatorState.SCORE && !hasCoral()) {
-            return Commands.none();
-        }
-
         // else, default to running rollers
-        return runRollers(state.getRollerSpeed());
+        return runRollers(state.getRollerSpeed()).unless(() -> !hasCoral());
     }
 
     public Command runRollers(double speed) {
-        return runOnce(() -> rollerMotor.set(speed));
+        return run(() -> rollerMotor.set(speed));
     }
 
     public Command stopRollers() {
@@ -79,7 +76,7 @@ public class CoralManipulator extends SubsystemBase {
 
     @Override
     public void periodic() {
-        beambreakPub.set(hasCoral());
+        beambreakPub.set(beambreak.get());
         currentPub.set(rollerMotor.getSupplyCurrent().getValue().in(Amps));
     }
 
