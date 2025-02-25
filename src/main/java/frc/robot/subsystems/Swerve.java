@@ -77,7 +77,7 @@ public class Swerve extends SubsystemBase {
         mSwerveMods = new SwerveModule[] {
             new SwerveModule(0, Constants.Swerve.Mod0.constants),
             new SwerveModule(1, Constants.Swerve.Mod1.constants),
-            new SwerveModule(2, Constants.Swerve.Mod2.constants),
+            new SwerveModule( 2, Constants.Swerve.Mod2.constants),
             new SwerveModule(3, Constants.Swerve.Mod3.constants)
         };
 
@@ -250,6 +250,10 @@ public class Swerve extends SubsystemBase {
         }
     }
     
+    /*
+     * Determines which camera to use based on position and vision quality
+     * @param position The alignment position to use
+     */
     private PhotonCamera getPreferredCamera(AlignmentPosition position) {
         PhotonCamera preferredCamera;
         
@@ -290,13 +294,17 @@ public class Swerve extends SubsystemBase {
         return preferredCamera;
     }
         
+    /*
+     * Aligns the robot to the target based on the given position
+     */
     public Command runAutoAlign(AlignmentPosition position) {
         return new RunCommand(
             () -> {
-                PhotonPipelineResult result = leftCamera.getLatestResult();
                 currentAlignmentPosition = position;
                 
                 PhotonCamera bestCamera = getPreferredCamera(position);
+                PhotonPipelineResult result = bestCamera.getLatestResult();
+
                 if (bestCamera != activeCamera) {
                     activeCamera = bestCamera;
                 }
@@ -316,6 +324,7 @@ public class Swerve extends SubsystemBase {
                     desiredXPub.set(idX);
                     table.getStringTopic("Alignment/ActiveCamera").publish().set(activeCamera == leftCamera ? "left camera" : "right camera");
 
+                    //TODO: use pid loop here
                     if (Math.abs(centerX - idX) > ALIGNMENT_TOLERANCE) {
                         var dirMultiplier = centerX > idX ? -1 : 1;
                         drive(
@@ -325,7 +334,7 @@ public class Swerve extends SubsystemBase {
                             false
                         );
                     }
-                } else { //switch cameras if no targets found with getBestCamera()'s returned camera
+                } else { //switch cameras if no targets found with getPreferredCamera()'s returned camera
                     activeCamera = (activeCamera == leftCamera) ? rightCamera : leftCamera;
                 }
             }
@@ -343,6 +352,9 @@ public class Swerve extends SubsystemBase {
         };
     }
 
+    /*
+     * Checks if robot is aligned with the target and switches cameras if no targets in view.
+     */
     private boolean isAligned(AlignmentPosition position) {
         PhotonPipelineResult result = activeCamera.getLatestResult();
 
