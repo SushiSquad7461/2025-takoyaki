@@ -76,7 +76,7 @@ public class CoralManipulator extends SubsystemBase {
 
     @Override
     public void periodic() {
-        beambreakPub.set(beambreak.get());
+        beambreakPub.set(hasCoral());
         currentPub.set(rollerMotor.getSupplyCurrent().getValue().in(Amps));
     }
 
