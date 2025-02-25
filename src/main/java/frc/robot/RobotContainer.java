@@ -72,9 +72,9 @@ public class RobotContainer {
 
         swerve.setDefaultCommand(new TeleopSwerve(
             swerve,
-            () -> -driverController.getLeftY(),
-            () -> -driverController.getLeftX(),
-            () -> -driverController.getRightX(), 
+            () -> -Math.pow(driverController.getLeftY(), 3),
+            () -> -Math.pow(driverController.getLeftX(), 3),
+            () -> -Math.pow(driverController.getRightX(), 3), 
             () -> driverController.a().getAsBoolean())); // allows you to drive as robot relative only while holding down the button
         
         // Driver handles robot positioning, alignment, and algae

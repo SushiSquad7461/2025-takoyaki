@@ -47,9 +47,9 @@ public class Swerve extends SubsystemBase {
     private final PhotonCamera camera;
     private final PhotonPoseEstimator photonPoseEstimator;
     private AlignmentPosition currentAlignmentPosition = AlignmentPosition.CENTER;
-    private static final double LEFT_OFFSET = -200;
-    private static final double RIGHT_OFFSET = 200;
-    private static final double ALIGNMENT_TOLERANCE = 50;
+    private static final double LEFT_OFFSET = 380; //TODO: make these constants
+    private static final double RIGHT_OFFSET = -340;
+    private static final double ALIGNMENT_TOLERANCE = 5;
     
     private final NetworkTable table;
     private final DoublePublisher poseXPub;
@@ -260,16 +260,10 @@ public class Swerve extends SubsystemBase {
                     targetCenterXPub.set(centerX);
                     desiredXPub.set(idX);
     
-                    if (centerX < idX - ALIGNMENT_TOLERANCE) {
+                    if (Math.abs(centerX - idX) > ALIGNMENT_TOLERANCE) {
+                        var dirMultiplier = centerX > idX ? -1 : 1;
                         drive(
-                            new Translation2d(0, 0.1),
-                            0,
-                            true,
-                            false
-                        );
-                    } else if (centerX > idX + ALIGNMENT_TOLERANCE) {
-                        drive(
-                            new Translation2d(0, -0.1),
+                            new Translation2d(0, 0.25 * dirMultiplier),
                             0,
                             true,
                             false
