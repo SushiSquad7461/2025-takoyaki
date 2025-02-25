@@ -94,7 +94,7 @@ public class RobotContainer {
         operatorController.y().onTrue(Commands.runOnce(() -> targetScoreCommand = scoreCommands[2]));
         // operatorController.b().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L4));
         operatorController.rightBumper().onTrue(Commands.runOnce(() -> CommandScheduler.getInstance().schedule(targetScoreCommand))).onFalse(idle);
-        operatorController.rightTrigger().onTrue(Commands.runOnce(() -> manipulator.runRollers(0.3))).onFalse(Commands.runOnce(() -> manipulator.runRollers(0)));
+        operatorController.rightTrigger().onTrue(manipulator.runRollers(0.1)).onFalse(Commands.runOnce(() -> manipulator.runRollers(0)));
         // special state => override and resetting to idle, and knocking algae
         operatorController.back().onTrue(idle);
         operatorController.leftTrigger().onTrue(stateMachine.changeState(RobotState.KNOCK_ALGAE)).onFalse(idle);

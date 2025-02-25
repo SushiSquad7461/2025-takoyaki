@@ -8,8 +8,8 @@ public enum ElevatorState {
     //TODO: set these height values
     IDLE(Inches.of(0)),
     L1(Inches.of(2)),
-    L2(Inches.of(8)),
-    L3(Inches.of(16)),
+    L2(Inches.of(7)),
+    L3(Inches.of(15)),
     L4(Inches.of(24)),       
     L3_KNOCK(Inches.of(17));         
 
