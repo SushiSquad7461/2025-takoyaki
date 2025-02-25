@@ -44,11 +44,17 @@ public class Swerve extends SubsystemBase {
     public SwerveModule[] mSwerveMods;
     public Pigeon2 gyro;
 
-    private final PhotonCamera camera;
+    private final PhotonCamera leftCamera;
+    private final PhotonCamera rightCamera;
+    private PhotonCamera activeCamera; // Tracks which camera is currently being used
+
     private final PhotonPoseEstimator photonPoseEstimator;
     private AlignmentPosition currentAlignmentPosition = AlignmentPosition.CENTER;
     private static final double LEFT_OFFSET = 380; //TODO: make these constants
     private static final double RIGHT_OFFSET = -340;
+    private static final double LEFT_CAM_OFFSET = 100; //50px is about an inch
+    private static final double RIGHT_CAM_OFFSET = -100;
+
     private static final double ALIGNMENT_TOLERANCE = 5;
     
     private final NetworkTable table;
@@ -75,11 +81,15 @@ public class Swerve extends SubsystemBase {
             new SwerveModule(3, Constants.Swerve.Mod3.constants)
         };
 
-        camera = new PhotonCamera("Arducam_OV9281_USB_Camera");
+        //TODO: rename cameras
+        leftCamera = new PhotonCamera("Arducam_OV9281_USB_Camera");
+        rightCamera = new PhotonCamera("Arducam_OV9281_USB_Camera");
+        activeCamera = leftCamera;
+        
         photonPoseEstimator = new PhotonPoseEstimator(
             AprilTagFields.k2025Reefscape.loadAprilTagLayoutField(),
             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-            new Transform3d() //adjust based on camera mounting
+            new Transform3d() //adjust based on camera specific mounting
         );
 
         poseEstimator = new SwerveDrivePoseEstimator(
@@ -240,12 +250,57 @@ public class Swerve extends SubsystemBase {
         }
     }
     
+    private PhotonCamera getPreferredCamera(AlignmentPosition position) {
+        PhotonCamera preferredCamera;
+        
+        switch(position) {
+            case LEFT:
+                preferredCamera = leftCamera;
+                break;
+            case RIGHT:
+                preferredCamera = rightCamera;
+                break;
+            case CENTER:
+
+            default:
+                PhotonPipelineResult leftResult = leftCamera.getLatestResult();
+                PhotonPipelineResult rightResult = rightCamera.getLatestResult();
+                
+                if (leftResult.hasTargets() && !rightResult.hasTargets()) {
+                    preferredCamera = leftCamera;
+                } else if (!leftResult.hasTargets() && rightResult.hasTargets()) {
+                    preferredCamera = rightCamera;
+                } else if (leftResult.hasTargets() && rightResult.hasTargets()) {
+                    preferredCamera = (leftResult.getBestTarget().getPoseAmbiguity() 
+                        < rightResult.getBestTarget().getPoseAmbiguity()) ? leftCamera : rightCamera;
+                } else {
+                    preferredCamera = activeCamera;
+                }
+                break;
+        }
+        
+        //fallback to other camera if selected camera has no targets
+        if (!preferredCamera.getLatestResult().hasTargets()) {
+            PhotonCamera fallbackCamera = (preferredCamera == leftCamera) ? rightCamera : leftCamera;
+            if (fallbackCamera.getLatestResult().hasTargets()) {
+                return fallbackCamera;
+            }
+        }
+        
+        return preferredCamera;
+    }
+        
     public Command runAutoAlign(AlignmentPosition position) {
         return new RunCommand(
             () -> {
-                PhotonPipelineResult result = camera.getLatestResult();
+                PhotonPipelineResult result = leftCamera.getLatestResult();
                 currentAlignmentPosition = position;
                 
+                PhotonCamera bestCamera = getPreferredCamera(position);
+                if (bestCamera != activeCamera) {
+                    activeCamera = bestCamera;
+                }
+    
                 if (result.hasTargets()) {
                     var bestTarget = result.getBestTarget();
                     List<TargetCorner> targets = bestTarget.getDetectedCorners();
@@ -259,7 +314,8 @@ public class Swerve extends SubsystemBase {
                     centerX /= targets.size();
                     targetCenterXPub.set(centerX);
                     desiredXPub.set(idX);
-    
+                    table.getStringTopic("Alignment/ActiveCamera").publish().set(activeCamera == leftCamera ? "left camera" : "right camera");
+
                     if (Math.abs(centerX - idX) > ALIGNMENT_TOLERANCE) {
                         var dirMultiplier = centerX > idX ? -1 : 1;
                         drive(
@@ -269,24 +325,38 @@ public class Swerve extends SubsystemBase {
                             false
                         );
                     }
+                } else { //switch cameras if no targets found with getBestCamera()'s returned camera
+                    activeCamera = (activeCamera == leftCamera) ? rightCamera : leftCamera;
                 }
             }
         ).until(() -> isAligned(currentAlignmentPosition)).withTimeout(5);
     }
 
+    //TODO: need to apply + calculate left camera positional offset from center and right positional offset from center in pixels
     private double getTargetX(AlignmentPosition position) {
         double centerX = Constants.Swerve.CAMERA_RESOLUTIONX / 2;
+        var camOffset = activeCamera == leftCamera ? LEFT_CAM_OFFSET : RIGHT_CAM_OFFSET;
         return switch(position) {
-            case LEFT -> centerX + LEFT_OFFSET;
-            case RIGHT -> centerX + RIGHT_OFFSET;
-            case CENTER -> centerX;
+            case LEFT -> centerX + LEFT_OFFSET + camOffset;
+            case RIGHT -> centerX + RIGHT_OFFSET + camOffset;
+            case CENTER -> centerX + camOffset;
         };
     }
 
     private boolean isAligned(AlignmentPosition position) {
-        PhotonPipelineResult result = camera.getLatestResult();
-        if (!result.hasTargets()) return false;
-        
+        PhotonPipelineResult result = activeCamera.getLatestResult();
+
+        if (!result.hasTargets()) {
+            PhotonCamera otherCamera = (activeCamera == leftCamera) ? rightCamera : leftCamera;
+            result = otherCamera.getLatestResult();
+
+            if (result.hasTargets()) {
+                activeCamera = otherCamera;
+            } else {
+                return false; //no targets found for both cameras
+            }
+        }
+
         var bestTarget = result.getBestTarget();
         List<TargetCorner> corners = bestTarget.getDetectedCorners();
         
@@ -297,6 +367,7 @@ public class Swerve extends SubsystemBase {
         centerX /= corners.size();
         
         double targetX = getTargetX(position);
+        table.getDoubleTopic("Alignment/Error").publish().set(Math.abs(centerX - targetX));
         return Math.abs(centerX - targetX) < ALIGNMENT_TOLERANCE;
     }
 
@@ -316,7 +387,7 @@ public class Swerve extends SubsystemBase {
         }
 
         alignmentPositionPub.set(currentAlignmentPosition.toString());
-        isAlignedPub.set(isAligned(currentAlignmentPosition));
+        isAlignedPub.set(isAligned(currentAlignmentPosition));    
     }
 
     
