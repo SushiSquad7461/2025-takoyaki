@@ -7,6 +7,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Volts;
 
 import java.util.HashMap;
@@ -39,8 +41,11 @@ import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -76,12 +81,14 @@ public class Swerve extends SubsystemBase {
     private final BooleanPublisher isAlignedPub;
     private final DoublePublisher targetCenterXPub;
     private final DoublePublisher desiredXPub;
+    private final StringPublisher selectedPositionPub;
+    private ReefScorePosition selectedScorePosition;
 
     public Swerve() {
         gyro = new Pigeon2(Constants.Swerve.pigeonID);
         gyro.getConfigurator().apply(new Pigeon2Configuration());
         gyro.setYaw(0);
-
+        
         mSwerveMods = new SwerveModule[] {
             new SwerveModule(0, Constants.Swerve.Mod0.constants),
             new SwerveModule(1, Constants.Swerve.Mod1.constants),
@@ -128,14 +135,16 @@ public class Swerve extends SubsystemBase {
         cancoderPubs = new DoublePublisher[4];
         anglePubs = new DoublePublisher[4];
         velocityPubs = new DoublePublisher[4];
-        
+        selectedPositionPub = table.getStringTopic("AutoAlign/SelectedPosition").publish();
+        selectedScorePosition = ReefScorePosition.FRONT;
+
         for (int i = 0; i < 4; i++) {
             cancoderPubs[i] = table.getDoubleTopic("Module " + i + "/CANcoder").publish();
             anglePubs[i] = table.getDoubleTopic("Module " + i + "/Angle").publish();
             velocityPubs[i] = table.getDoubleTopic("Module " + i + "/Velocity").publish();
         }
+        initializeScorePositions();
 
-        // For drive characterization
         driveSysIdRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(
                 null,        // Use default ramp rate (1 V/s)
@@ -156,7 +165,6 @@ public class Swerve extends SubsystemBase {
             )
         );
 
-        // For steer characterization
         steerSysIdRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(
                 null,        // Use default ramp rate (1 V/s)
@@ -404,6 +412,122 @@ public class Swerve extends SubsystemBase {
         };
     }
 
+    private boolean isAprilTagVisible() {
+        return !leftCameraResults.isEmpty() && leftCameraResults.get(leftCameraResults.size() - 1).hasTargets() ||
+            !rightCameraResults.isEmpty() && rightCameraResults.get(rightCameraResults.size() - 1).hasTargets();
+    }
+
+    public Command runOdometryAlign() {
+        final double driveSpeed = 0.5;
+        final double rotationSpeed = 0.5;
+        selectedScorePosition = findClosestScorePosition();
+        Pose2d targetPose = getScorePose(selectedScorePosition);
+        // how off we can be
+        final Distance positionTolerance = Meters.of(.1);
+        final Angle rotationTolerance = Degrees.of(0.1);
+        
+        final DoublePublisher targetXPub = table.getDoubleTopic("Alignment/OdomTarget/X").publish();
+        final DoublePublisher targetYPub = table.getDoubleTopic("Alignment/OdomTarget/Y").publish();
+        final DoublePublisher targetRotPub = table.getDoubleTopic("Alignment/OdomTarget/Rotation").publish();
+        
+        return new RunCommand(
+            () -> {
+                Pose2d currentPose = getPose();
+                // diff between current and target
+                Distance xError = Meters.of(targetPose.getX() - currentPose.getX());
+                Distance yError = Meters.of(targetPose.getY() - currentPose.getY());
+                Angle rotationError = Degrees.of(targetPose.getRotation().minus(currentPose.getRotation()).getRadians()); //-pi to pi
+                
+                targetXPub.set(targetPose.getX());
+                targetYPub.set(targetPose.getY());
+                targetRotPub.set(targetPose.getRotation().getDegrees());
+                
+                Distance distance = Meters.of(Math.sqrt(Math.pow(xError.in(Meters), 2) + Math.pow(yError.in(Meters), 2)));
+                
+                if (distance.gt(positionTolerance)) {
+                    double xOutput = xError.div(distance).times(driveSpeed).magnitude();
+                    double yOutput = yError.div(distance).times(driveSpeed).magnitude();
+                    double rotOutput = Math.signum(rotationError.in(Degrees)) *
+                    (Math.abs(Math.abs(rotationError.in(Degrees)) > rotationTolerance.in(Degrees) ? rotationSpeed : 0));
+                    
+                    drive(
+                        new Translation2d(xOutput, yOutput),
+                        rotOutput,
+                        true,
+                        true
+                    );
+
+                } else if (Math.abs(rotationError.in(Degrees)) < rotationTolerance.in(Degrees)) {
+                    drive(
+                        new Translation2d(0, 0),
+                        Math.signum(rotationError.in(Degrees)) * rotationSpeed,
+                        true,
+                        true
+                    );
+
+                } else { //if we're at the target
+                    drive(new Translation2d(0, 0), 0, true, true);
+                }
+            }
+        ).until(() -> {
+            Pose2d currentPose = getPose();
+            double positionError = currentPose.getTranslation().getDistance(targetPose.getTranslation());
+            double rotationError = Math.abs(currentPose.getRotation().minus(targetPose.getRotation()).getRadians());
+            
+            return positionError < positionTolerance.in(Meters) && rotationError < rotationTolerance.in(Degrees);
+        }).withTimeout(5); 
+    }
+    
+    public enum ReefScorePosition {
+        FRONT,
+        FRONTLEFT,
+        BACKLEFT,
+        BACK,
+        BACKRIGHT,
+        FRONTRIGHT
+    }
+    
+    private Map<ReefScorePosition, Pose2d> scorePositions = new HashMap<>();
+    
+    private void initializeScorePositions() {
+        scorePositions.put(ReefScorePosition.FRONT, new Pose2d(3.66, 4.03, Rotation2d.fromDegrees(180)));
+        scorePositions.put(ReefScorePosition.FRONTLEFT, new Pose2d(4.07, 4.75, Rotation2d.fromDegrees(120)));
+        scorePositions.put(ReefScorePosition.BACKLEFT, new Pose2d(4.90, 4.75, Rotation2d.fromDegrees(60)));
+        scorePositions.put(ReefScorePosition.BACK, new Pose2d(5.32, 4.03, Rotation2d.fromDegrees(0)));
+        scorePositions.put(ReefScorePosition.BACKRIGHT, new Pose2d(4.90, 3.31, Rotation2d.fromDegrees(-60)));
+        scorePositions.put(ReefScorePosition.FRONTRIGHT, new Pose2d(4.07, 3.31, Rotation2d.fromDegrees(-120)));
+    }
+            
+    public ReefScorePosition findClosestScorePosition() {
+        Pose2d currentPose = getPose();
+        ReefScorePosition closestPosition = ReefScorePosition.FRONT;
+        double closestDistance = Double.MAX_VALUE;
+        
+        for (Map.Entry<ReefScorePosition, Pose2d> entry : scorePositions.entrySet()) {
+            double distance = currentPose.getTranslation().getDistance(entry.getValue().getTranslation());
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestPosition = entry.getKey();
+            }
+        }
+        
+        return closestPosition;
+    }
+
+    public Command runAlignment() {
+        return runOnce(() -> 
+            Commands.either(
+                runAutoAlign(AlignmentPosition.CENTER),
+                runOdometryAlign(),
+                this::isAprilTagVisible
+            )
+        );
+    }    
+
+    public Pose2d getScorePose(ReefScorePosition position) {
+        return scorePositions.get(position);
+    }
+
     @Override
     public void periodic(){
         leftCameraResults = leftCamera.getAllUnreadResults();
@@ -424,6 +548,7 @@ public class Swerve extends SubsystemBase {
 
         alignmentPositionPub.set(currentAlignmentPosition.toString());
         isAlignedPub.set(isAligned(currentAlignmentPosition).getAsBoolean());
+        selectedPositionPub.set(selectedScorePosition.toString());
     }
 
     
