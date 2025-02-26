@@ -9,6 +9,8 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
+import java.util.Map;
+
 import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.AngularAccelerationUnit;
 import edu.wpi.first.units.DistanceUnit;
@@ -21,6 +23,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Per;
+import frc.robot.subsystems.Swerve.AlignmentPosition;
 import frc.robot.util.control.PIDConfig;
 import frc.robot.util.motor.MotorConfig;
 
@@ -274,5 +277,17 @@ public class Constants {
         public static final TrapezoidProfile.Constraints kThetaControllerConstraints =
             new TrapezoidProfile.Constraints(
                 kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);
+
+        public static final Map<AlignmentPosition, Double> leftCameraOffsets = Map.of(
+            AlignmentPosition.LEFT, 0.,
+            AlignmentPosition.RIGHT, -(double)Swerve.CAMERA_RESOLUTIONX, // TODO verify target offscreen in this case
+            AlignmentPosition.CENTER, 0.
+        );
+
+        public static final Map<AlignmentPosition, Double> rightCameraOffsets = Map.of(
+            AlignmentPosition.LEFT, 2.*Swerve.CAMERA_RESOLUTIONX, // TODO verify target offscreen in this case
+            AlignmentPosition.RIGHT, 0.,
+            AlignmentPosition.CENTER, 0.
+        );
     }
 }

@@ -7,7 +7,10 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BooleanSupplier;
 
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
@@ -45,15 +48,13 @@ public class Swerve extends SubsystemBase {
     public Pigeon2 gyro;
 
     private final PhotonCamera leftCamera;
+    private List<PhotonPipelineResult> leftCameraResults;
     private final PhotonCamera rightCamera;
-    private PhotonCamera activeCamera; // Tracks which camera is currently being used
+    private List<PhotonPipelineResult> rightCameraResults;
+    private final Map<PhotonCamera, Map<AlignmentPosition, Double>> targetPositions;
 
     private final PhotonPoseEstimator photonPoseEstimator;
     private AlignmentPosition currentAlignmentPosition = AlignmentPosition.CENTER;
-    private static final double LEFT_OFFSET = 380; //TODO: make these constants
-    private static final double RIGHT_OFFSET = -340;
-    private static final double LEFT_CAM_OFFSET = 100; //50px is about an inch
-    private static final double RIGHT_CAM_OFFSET = -100;
 
     private static final double ALIGNMENT_TOLERANCE = 5;
     
@@ -84,7 +85,10 @@ public class Swerve extends SubsystemBase {
         //TODO: rename cameras
         leftCamera = new PhotonCamera("Arducam_OV9281_USB_Camera");
         rightCamera = new PhotonCamera("Arducam_OV9281_USB_Camera");
-        activeCamera = leftCamera;
+        targetPositions = Map.of(
+            leftCamera, Constants.AutoConstants.leftCameraOffsets,
+            rightCamera, Constants.AutoConstants.rightCameraOffsets
+        );
         
         photonPoseEstimator = new PhotonPoseEstimator(
             AprilTagFields.k2025Reefscape.loadAprilTagLayoutField(),
@@ -249,142 +253,91 @@ public class Swerve extends SubsystemBase {
             mod.resetToAbsolute();
         }
     }
-    
-    /*
-     * Determines which camera to use based on position and vision quality
-     * @param position The alignment position to use
-     */
-    private PhotonCamera getPreferredCamera(AlignmentPosition position) {
-        PhotonCamera preferredCamera;
-        
-        switch(position) {
-            case LEFT:
-                preferredCamera = leftCamera;
-                break;
-            case RIGHT:
-                preferredCamera = rightCamera;
-                break;
-            case CENTER:
 
-            default:
-                PhotonPipelineResult leftResult = leftCamera.getLatestResult();
-                PhotonPipelineResult rightResult = rightCamera.getLatestResult();
-                
-                if (leftResult.hasTargets() && !rightResult.hasTargets()) {
-                    preferredCamera = leftCamera;
-                } else if (!leftResult.hasTargets() && rightResult.hasTargets()) {
-                    preferredCamera = rightCamera;
-                } else if (leftResult.hasTargets() && rightResult.hasTargets()) {
-                    preferredCamera = (leftResult.getBestTarget().getPoseAmbiguity() 
-                        < rightResult.getBestTarget().getPoseAmbiguity()) ? leftCamera : rightCamera;
-                } else {
-                    preferredCamera = activeCamera;
-                }
-                break;
+    private static double getCenterX(List<TargetCorner> corners) {
+        double centerX = 0;
+        for (var corner : corners) {
+            centerX += corner.x;
         }
-        
-        //fallback to other camera if selected camera has no targets
-        if (!preferredCamera.getLatestResult().hasTargets()) {
-            PhotonCamera fallbackCamera = (preferredCamera == leftCamera) ? rightCamera : leftCamera;
-            if (fallbackCamera.getLatestResult().hasTargets()) {
-                return fallbackCamera;
-            }
-        }
-        
-        return preferredCamera;
+        centerX /= corners.size();
+        return centerX;
     }
         
     /*
      * Aligns the robot to the target based on the given position
      */
     public Command runAutoAlign(AlignmentPosition position) {
+        
+
         return new RunCommand(
             () -> {
                 currentAlignmentPosition = position;
+                PhotonCamera firstCam = leftCamera;
+                PhotonCamera secondCam = rightCamera;
+                List<PhotonPipelineResult> firstCamResults = leftCameraResults;
+                List<PhotonPipelineResult> secondCamResults = rightCameraResults;
+
+                if(position == AlignmentPosition.RIGHT) {
+                    firstCam = leftCamera;
+                    secondCam = rightCamera;
+                    firstCamResults = leftCameraResults;
+                    secondCamResults = rightCameraResults;
+                }
                 
-                PhotonCamera bestCamera = getPreferredCamera(position);
-                PhotonPipelineResult result = bestCamera.getLatestResult();
-
-                if (bestCamera != activeCamera) {
-                    activeCamera = bestCamera;
-                }
-    
-                if (result.hasTargets()) {
-                    var bestTarget = result.getBestTarget();
-                    List<TargetCorner> targets = bestTarget.getDetectedCorners();
-                    double centerX = 0;
-
-                    double idX = getTargetX(position);
-                    for (var target : targets) {
-                        centerX += target.x;
+                double offset = 0;
+                if(!firstCamResults.isEmpty() && firstCamResults.get(firstCamResults.size()-1).hasTargets()) {
+                    var firstRes = firstCamResults.get(firstCamResults.size()-1);
+                    if(!secondCamResults.isEmpty() && secondCamResults.get(secondCamResults.size()-1).hasTargets()) {
+                        var secondRes = secondCamResults.get(secondCamResults.size()-1);
+                        if(secondRes.getBestTarget().getPoseAmbiguity() < firstRes.getBestTarget().getPoseAmbiguity()) {
+                            offset = getCenterX(secondRes.getBestTarget().detectedCorners) - targetPositions.get(secondCam).get(position);
+                        } else {
+                            offset = getCenterX(firstRes.getBestTarget().detectedCorners) - targetPositions.get(firstCam).get(position);
+                        }
+                    } else {
+                        offset = getCenterX(firstRes.getBestTarget().detectedCorners) - targetPositions.get(firstCam).get(position);
                     }
-                    
-                    centerX /= targets.size();
-                    targetCenterXPub.set(centerX);
-                    desiredXPub.set(idX);
-                    table.getStringTopic("Alignment/ActiveCamera").publish().set(activeCamera == leftCamera ? "left camera" : "right camera");
-
-                    //TODO: use pid loop here
-                    if (Math.abs(centerX - idX) > ALIGNMENT_TOLERANCE) {
-                        var dirMultiplier = centerX > idX ? -1 : 1;
-                        drive(
-                            new Translation2d(0, 0.25 * dirMultiplier),
-                            0,
-                            true,
-                            false
-                        );
-                    }
-                } else { //switch cameras if no targets found with getPreferredCamera()'s returned camera
-                    activeCamera = (activeCamera == leftCamera) ? rightCamera : leftCamera;
+                } else if(!secondCamResults.isEmpty() && secondCamResults.get(secondCamResults.size()-1).hasTargets()) {
+                    var secondRes = secondCamResults.get(secondCamResults.size()-1);
+                    offset = getCenterX(secondRes.getBestTarget().detectedCorners) - targetPositions.get(secondCam).get(position);
                 }
+
+                drive(
+                    new Translation2d(0, 0.25 * Math.signum(offset)),
+                    0,
+                    true,
+                    false
+                );
             }
-        ).until(() -> isAligned(currentAlignmentPosition)).withTimeout(5);
-    }
-
-    //TODO: need to apply + calculate left camera positional offset from center and right positional offset from center in pixels
-    private double getTargetX(AlignmentPosition position) {
-        double centerX = Constants.Swerve.CAMERA_RESOLUTIONX / 2;
-        var camOffset = activeCamera == leftCamera ? LEFT_CAM_OFFSET : RIGHT_CAM_OFFSET;
-        return switch(position) {
-            case LEFT -> centerX + LEFT_OFFSET + camOffset;
-            case RIGHT -> centerX + RIGHT_OFFSET + camOffset;
-            case CENTER -> centerX + camOffset;
-        };
+        ).until(isAligned(position)).withTimeout(5);
     }
 
     /*
      * Checks if robot is aligned with the target and switches cameras if no targets in view.
      */
-    private boolean isAligned(AlignmentPosition position) {
-        PhotonPipelineResult result = activeCamera.getLatestResult();
-
-        if (!result.hasTargets()) {
-            PhotonCamera otherCamera = (activeCamera == leftCamera) ? rightCamera : leftCamera;
-            result = otherCamera.getLatestResult();
-
-            if (result.hasTargets()) {
-                activeCamera = otherCamera;
-            } else {
-                return false; //no targets found for both cameras
+    private BooleanSupplier isAligned(AlignmentPosition position) {
+        return () -> {
+            final PhotonCamera cam = position == AlignmentPosition.RIGHT
+                ? rightCamera
+                : leftCamera;
+            final List<PhotonPipelineResult> results = position == AlignmentPosition.RIGHT
+                ? rightCameraResults
+                : leftCameraResults;
+            final double targetAprilTagX = targetPositions.get(cam).get(position);
+            if(results.isEmpty()) return false;
+            var last = results.get(results.size() - 1);
+            if(last.hasTargets()) {
+                return Math.abs(getCenterX(last.getBestTarget().detectedCorners) - targetAprilTagX) < ALIGNMENT_TOLERANCE;
             }
-        }
-
-        var bestTarget = result.getBestTarget();
-        List<TargetCorner> corners = bestTarget.getDetectedCorners();
-        
-        double centerX = 0;
-        for (var corner : corners) {
-            centerX += corner.x;
-        }
-        centerX /= corners.size();
-        
-        double targetX = getTargetX(position);
-        table.getDoubleTopic("Alignment/Error").publish().set(Math.abs(centerX - targetX));
-        return Math.abs(centerX - targetX) < ALIGNMENT_TOLERANCE;
+            return false;
+        };
     }
 
     @Override
     public void periodic(){
+        leftCameraResults = leftCamera.getAllUnreadResults();
+        rightCameraResults = rightCamera.getAllUnreadResults();
+
         poseEstimator.update(getGyroYaw(), getModulePositions());
 
         Pose2d currentPose = getPose();
@@ -399,7 +352,7 @@ public class Swerve extends SubsystemBase {
         }
 
         alignmentPositionPub.set(currentAlignmentPosition.toString());
-        isAlignedPub.set(isAligned(currentAlignmentPosition));    
+        isAlignedPub.set(isAligned(currentAlignmentPosition).getAsBoolean());
     }
 
     
