@@ -114,6 +114,16 @@ public class RobotContainer {
         programmerController.x().and(programmerController.leftTrigger()).whileTrue(intake.sysIdDynamic(Direction.kForward));
         programmerController.y().and(programmerController.leftTrigger()).whileTrue(intake.sysIdDynamic(Direction.kReverse));
 
+        programmerController.a().and(programmerController.povUp()).whileTrue(swerve.sysIdDriveQuasistatic(Direction.kForward));
+        programmerController.b().and(programmerController.povUp()).whileTrue(swerve.sysIdDriveQuasistatic(Direction.kReverse));
+        programmerController.x().and(programmerController.povUp()).whileTrue(swerve.sysIdDriveDynamic(Direction.kForward));
+        programmerController.y().and(programmerController.povUp()).whileTrue(swerve.sysIdDriveDynamic(Direction.kReverse));
+
+        programmerController.a().and(programmerController.povDown()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kForward));
+        programmerController.b().and(programmerController.povDown()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kReverse));
+        programmerController.x().and(programmerController.povDown()).whileTrue(swerve.sysIdSteerDynamic(Direction.kForward));
+        programmerController.y().and(programmerController.povDown()).whileTrue(swerve.sysIdSteerDynamic(Direction.kReverse));
+
         programmerController.povUp().whileTrue(elevator.goUp());
         programmerController.povDown().whileTrue(elevator.goDown());
         programmerController.povLeft().whileTrue(elevator.resetElevator());

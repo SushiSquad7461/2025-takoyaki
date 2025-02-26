@@ -7,6 +7,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
+import static edu.wpi.first.units.Units.Volts;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +20,7 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.TargetCorner;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -29,7 +32,6 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.BooleanPublisher;
@@ -41,11 +43,14 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 public class Swerve extends SubsystemBase {
     public SwerveDrivePoseEstimator poseEstimator;
     public SwerveModule[] mSwerveMods;
     public Pigeon2 gyro;
+    public SysIdRoutine driveSysIdRoutine;
+    public SysIdRoutine steerSysIdRoutine;
 
     private final PhotonCamera leftCamera;
     private List<PhotonPipelineResult> leftCameraResults;
@@ -130,6 +135,48 @@ public class Swerve extends SubsystemBase {
             velocityPubs[i] = table.getDoubleTopic("Module " + i + "/Velocity").publish();
         }
 
+        // For drive characterization
+        driveSysIdRoutine = new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,        // Use default ramp rate (1 V/s)
+                Volts.of(4), // Reduce dynamic step voltage to 4 to prevent brownout
+                null,        // Use default timeout (10 s)
+                // Log state with Phoenix SignalLogger class
+                (state) -> SignalLogger.writeString("state", state.toString())
+            ),
+            new SysIdRoutine.Mechanism(
+                (volts) -> {
+                    // Apply the same voltage to all drive motors
+                    for(SwerveModule mod : mSwerveMods){
+                        mod.setDriveVoltage(volts.in(Volts));
+                    }
+                },
+                null,
+                this
+            )
+        );
+
+        // For steer characterization
+        steerSysIdRoutine = new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,        // Use default ramp rate (1 V/s)
+                Volts.of(4), // Reduce dynamic step voltage to 4 to prevent brownout
+                null,        // Use default timeout (10 s)
+                // Log state with Phoenix SignalLogger class
+                (state) -> SignalLogger.writeString("state", state.toString())
+            ),
+            new SysIdRoutine.Mechanism(
+                (volts) -> {
+                    // Apply the same voltage to all steer motors
+                    for(SwerveModule mod : mSwerveMods){
+                        mod.setSteerVoltage(volts.in(Volts));
+                    }
+                },
+                null,
+                this
+            )
+        );
+
         try{
             RobotConfig config = RobotConfig.fromGUISettings();
             AutoBuilder.configure(
@@ -159,6 +206,22 @@ public class Swerve extends SubsystemBase {
           e.printStackTrace();
         }
     
+    }
+    
+    public Command sysIdDriveQuasistatic(SysIdRoutine.Direction direction) {
+        return driveSysIdRoutine.quasistatic(direction);
+    }
+    
+    public Command sysIdDriveDynamic(SysIdRoutine.Direction direction) {
+        return driveSysIdRoutine.dynamic(direction);
+    }
+    
+    public Command sysIdSteerQuasistatic(SysIdRoutine.Direction direction) {
+        return steerSysIdRoutine.quasistatic(direction);
+    }
+    
+    public Command sysIdSteerDynamic(SysIdRoutine.Direction direction) {
+        return steerSysIdRoutine.dynamic(direction);
     }
     
     public static enum AlignmentPosition {
