@@ -96,7 +96,11 @@ public class Swerve extends SubsystemBase {
     private final BooleanPublisher isAlignedPub;
     private final DoublePublisher targetCenterXPub;
     private final DoublePublisher desiredXPub;
+
     private final StringPublisher selectedPositionPub;
+    private final DoublePublisher targetXPub;
+    private final DoublePublisher targetYPub;
+    private final DoublePublisher targetRotPub;
 
     private static final AprilTagFields WELDED_LAYOUT = AprilTagFields.k2025Reefscape;
     private static final AprilTagFields ANDYMARK_LAYOUT = AprilTagFields.k2025ReefscapeAndymark;
@@ -133,7 +137,7 @@ public class Swerve extends SubsystemBase {
             getModulePositions(),
             new Pose2d()
         );
-
+    
         try {
             AprilTagFieldLayout weldedLayout = AprilTagFieldLayout.loadFromResource(WELDED_LAYOUT.m_resourceFile);
             photonPoseEstimatorLeft = new PhotonPoseEstimator(
@@ -159,6 +163,9 @@ public class Swerve extends SubsystemBase {
         isAlignedPub = table.getBooleanTopic("Alignment/IsAligned").publish();
         targetCenterXPub = table.getDoubleTopic("Alignment/TargetCenterX").publish();
         desiredXPub = table.getDoubleTopic("Alignment/DesiredX").publish();
+        targetXPub = table.getDoubleTopic("Alignment/OdomTarget/X").publish();
+        targetYPub = table.getDoubleTopic("Alignment/OdomTarget/Y").publish();
+        targetRotPub = table.getDoubleTopic("Alignment/OdomTarget/Rotation").publish();
 
         cancoderPubs = new DoublePublisher[4];
         anglePubs = new DoublePublisher[4];
@@ -250,12 +257,11 @@ public class Swerve extends SubsystemBase {
                 // Boolean supplier that controls when the path will be mirrored for the red alliance
                 // This will flip the path being followed to the red side of the field.
                 // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-
-                var alliance = DriverStation.getAlliance();
-                if (alliance.isPresent()) {
-                    return alliance.get() == DriverStation.Alliance.Red;
-                }
-                return false;
+                    var alliance = DriverStation.getAlliance();
+                    if (alliance.isPresent()) {
+                        return alliance.get() == DriverStation.Alliance.Red;
+                    }
+                    return false;
                 },
                 this
             );
@@ -575,14 +581,121 @@ public class Swerve extends SubsystemBase {
     private Map<ReefScorePosition, Pose2d> scorePositions = new HashMap<>();
     
     private void initializeScorePositions() {
-        scorePositions.put(ReefScorePosition.FRONT, new Pose2d(1.84, 8.2, Rotation2d.fromDegrees(-90)));
-        scorePositions.put(ReefScorePosition.FRONTLEFT, new Pose2d(-0.04, 5.55, Rotation2d.fromDegrees(0)));
-        scorePositions.put(ReefScorePosition.BACKLEFT, new Pose2d(-0.04, 4.98, Rotation2d.fromDegrees(0)));
-        scorePositions.put(ReefScorePosition.BACK, new Pose2d(0.36, 0.88, Rotation2d.fromDegrees(60)));
-        scorePositions.put(ReefScorePosition.BACKRIGHT, new Pose2d(1.46, 0.25, Rotation2d.fromDegrees(60)));
-        scorePositions.put(ReefScorePosition.FRONTRIGHT, new Pose2d(11.9, 3.71, Rotation2d.fromDegrees(-60)));
-    }
+        Distance distanceAway = Meters.of(1.0);
+        var alliance = DriverStation.getAlliance();
+        boolean isRedAlliance = alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
+        
+        if (!isRedAlliance) {            
+            // Tag 18 (FRONT)
+            Pose2d blueTag18 = new Pose2d(3.6576, 4.0259, Rotation2d.fromDegrees(180));
+            scorePositions.put(ReefScorePosition.FRONT, 
+                new Pose2d(
+                    blueTag18.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(180)), 
+                    blueTag18.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(180)), 
+                    blueTag18.getRotation()
+                ));
             
+            // Tag 19 (FRONTLEFT)
+            Pose2d blueTag19 = new Pose2d(4.0739, 4.7455, Rotation2d.fromDegrees(120));
+            scorePositions.put(ReefScorePosition.FRONTLEFT, 
+                new Pose2d(
+                    blueTag19.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(120)), 
+                    blueTag19.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(120)), 
+                    blueTag19.getRotation()
+                ));
+            
+            // Tag 20 (BACKLEFT)
+            Pose2d blueTag20 = new Pose2d(4.9047, 4.7455, Rotation2d.fromDegrees(60));
+            scorePositions.put(ReefScorePosition.BACKLEFT, 
+                new Pose2d(
+                    blueTag20.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(60)), 
+                    blueTag20.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(60)), 
+                    blueTag20.getRotation()
+                ));
+            
+            // Tag 21 (BACK)
+            Pose2d blueTag21 = new Pose2d(5.3210, 4.0259, Rotation2d.fromDegrees(0));
+            scorePositions.put(ReefScorePosition.BACK, 
+                new Pose2d(
+                    blueTag21.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(0)), 
+                    blueTag21.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(0)), 
+                    blueTag21.getRotation()
+                ));
+            
+            // Tag 22 (BACKRIGHT)
+            Pose2d blueTag22 = new Pose2d(4.9047, 3.3063, Rotation2d.fromDegrees(-60));
+            scorePositions.put(ReefScorePosition.BACKRIGHT, 
+                new Pose2d(
+                    blueTag22.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(-60)), 
+                    blueTag22.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(-60)), 
+                    blueTag22.getRotation()
+                ));
+            
+            // Tag 17 (FRONTRIGHT)
+            Pose2d blueTag17 = new Pose2d(4.0739, 3.3063, Rotation2d.fromDegrees(-120));
+            scorePositions.put(ReefScorePosition.FRONTRIGHT, 
+                new Pose2d(
+                    blueTag17.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(-120)), 
+                    blueTag17.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(-120)), 
+                    blueTag17.getRotation()
+                ));
+        } else { // Red Alliance
+            // Tag 7 (FRONT)
+            Pose2d redTag7 = new Pose2d(13.8905, 4.0259, Rotation2d.fromDegrees(0));
+            scorePositions.put(ReefScorePosition.FRONT, 
+                new Pose2d(
+                    redTag7.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(0)), 
+                    redTag7.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(0)), 
+                    redTag7.getRotation()
+                ));
+            
+            // Tag 6 (FRONTLEFT)
+            Pose2d redTag6 = new Pose2d(13.4744, 3.3063, Rotation2d.fromDegrees(-60));
+            scorePositions.put(ReefScorePosition.FRONTLEFT, 
+                new Pose2d(
+                    redTag6.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(-60)), 
+                    redTag6.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(-60)), 
+                    redTag6.getRotation()
+                ));
+            
+            // Tag 11 (BACKLEFT)
+            Pose2d redTag11 = new Pose2d(12.6434, 3.3063, Rotation2d.fromDegrees(-120));
+            scorePositions.put(ReefScorePosition.BACKLEFT, 
+                new Pose2d(
+                    redTag11.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(-120)), 
+                    redTag11.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(-120)), 
+                    redTag11.getRotation()
+                ));
+            
+            // Tag 10 (BACK)
+            Pose2d redTag10 = new Pose2d(12.2273, 4.0259, Rotation2d.fromDegrees(180));
+            scorePositions.put(ReefScorePosition.BACK, 
+                new Pose2d(
+                    redTag10.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(180)), 
+                    redTag10.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(180)), 
+                    redTag10.getRotation()
+                ));
+            
+            // Tag 9 (BACKRIGHT)
+            Pose2d redTag9 = new Pose2d(12.6434, 4.7455, Rotation2d.fromDegrees(120));
+            scorePositions.put(ReefScorePosition.BACKRIGHT, 
+                new Pose2d(
+                    redTag9.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(120)), 
+                    redTag9.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(120)), 
+                    redTag9.getRotation()
+                ));
+            
+            // Tag 8 (FRONTRIGHT)
+            Pose2d redTag8 = new Pose2d(13.4744, 4.7455, Rotation2d.fromDegrees(60));
+            scorePositions.put(ReefScorePosition.FRONTRIGHT, 
+                new Pose2d(
+                    redTag8.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(60)), 
+                    redTag8.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(60)), 
+                    redTag8.getRotation()
+                ));
+        }
+    }
+
     public ReefScorePosition findClosestScorePosition() {
         Pose2d currentPose = getPose();
         ReefScorePosition closestPosition = ReefScorePosition.FRONT;
@@ -604,7 +717,10 @@ public class Swerve extends SubsystemBase {
         selectedScorePosition = findClosestScorePosition();
         Pose2d targetPose = getScorePose(selectedScorePosition);
         Pose2d currentPose = getPose();
-        
+        targetXPub.set(targetPose.getX());
+        targetYPub.set(targetPose.getY());
+        targetRotPub.set(targetPose.getRotation().getDegrees());
+
         // trajectory configuration
         TrajectoryConfig config = new TrajectoryConfig(
             Constants.AutoConstants.kMaxSpeedMetersPerSecond * 0.5, //TODO: tweak
