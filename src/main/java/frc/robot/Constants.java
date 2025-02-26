@@ -52,7 +52,8 @@ public class Constants {
         public static final int ELEVATOR_RIGHT_ID = 18;
 
         public static final int LIMIT_SWITCH_PORT = 2; 
-        public static final int BEAM_BREAK_PORT = 1; 
+        public static final int BEAM_BREAK_PORT = 1;
+        public static final int ELEV_BEAM_BREAK_PORT = 3; 
     }
 
     public static class CustomUnits {

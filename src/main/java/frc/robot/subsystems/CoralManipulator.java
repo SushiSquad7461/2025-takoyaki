@@ -19,19 +19,23 @@ import frc.robot.Constants;
 public class CoralManipulator extends SubsystemBase {
     private final TalonFX rollerMotor;
     private final DigitalInput beambreak;
+    private final DigitalInput elevBeambreak;
     public SysIdRoutine routine;
 
     private final NetworkTable manipulatorTable;
     private final BooleanPublisher beambreakPub;
+    private final BooleanPublisher elevBeambreakPub;
     private final DoublePublisher currentPub;
 
     public CoralManipulator() {
         rollerMotor = Constants.CoralManipulator.ROLLER_CONFIG.createTalon();
         beambreak = new DigitalInput(Constants.Ports.BEAM_BREAK_PORT);
+        elevBeambreak = new DigitalInput(Constants.Ports.ELEV_BEAM_BREAK_PORT);
 
         // network table setup
         manipulatorTable = NetworkTableInstance.getDefault().getTable("Manipulator");
         beambreakPub = manipulatorTable.getBooleanTopic("BeamBreak").publish();
+        elevBeambreakPub = manipulatorTable.getBooleanTopic("Elevator BeamBreak").publish();
         currentPub = manipulatorTable.getDoubleTopic("Current").publish();
     }
 
@@ -50,16 +54,21 @@ public class CoralManipulator extends SubsystemBase {
 
         if (state == ManipulatorState.INTAKE) {
             // for intake, run until detect coral
-            return runRollers(state.getRollerSpeed())
-                .andThen(Commands.waitUntil(this::hasCoral))
-                .andThen(Commands.waitTime(Seconds.of(0.02)))
-                .andThen(stopRollers())
-                .unless(this::hasCoral);
+            if(coralInputted()){
+                return runRollers(state.getRollerSpeed())
+                    .until(this::coralPastElevator)
+                    .andThen(Commands.waitTime(Seconds.of(0.5))
+                    .andThen(stopRollers()));
+            }
         }
 
         // for scoring, only run if coral piece is detected
+        if (state == ManipulatorState.SCORE && !coralPastElevator()) {
+            return Commands.none();
+        }
+
         // else, default to running rollers
-        return runRollers(state.getRollerSpeed()).unless(() -> !hasCoral());
+        return runRollers(state.getRollerSpeed());
     }
 
     public Command runRollers(double speed) {
@@ -70,13 +79,19 @@ public class CoralManipulator extends SubsystemBase {
         return runOnce(() -> rollerMotor.set(0));
     }
 
-    public boolean hasCoral() {
-        return !beambreak.get(); // get() returns true when circuit is closed
+    public boolean coralPastElevator() {
+        return elevBeambreak.get() && !beambreak.get(); // get() returns true when circuit is closed
+    }
+
+
+    public boolean coralInputted(){
+        return !elevBeambreak.get();
     }
 
     @Override
     public void periodic() {
-        beambreakPub.set(hasCoral());
+        beambreakPub.set(!beambreak.get());
+        elevBeambreakPub.set(!elevBeambreak.get());
         currentPub.set(rollerMotor.getSupplyCurrent().getValue().in(Amps));
     }
 
