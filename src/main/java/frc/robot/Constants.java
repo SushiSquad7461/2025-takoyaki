@@ -206,7 +206,7 @@ public class Constants {
             PIDConfig.getElevatorPid(.022479, 0.0, 0.02, .15891, 0.060976, 0.11353, 0.0014317),
             MotorConfig.Mode.BRAKE,
             null, //MOTOR_MAX_HEIGHT, 
-            null //Degrees.of(0)
+            null //Degrees.of(0)e
         ).withMotionMagic(MOTION_MAGIC_VELOCITY, MOTION_MAGIC_ACCELERATION);
 
         public static final Angle MAX_ERROR = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(1.0));
