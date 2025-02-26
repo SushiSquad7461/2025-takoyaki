@@ -54,12 +54,12 @@ public class CoralManipulator extends SubsystemBase {
 
         if (state == ManipulatorState.INTAKE) {
             // for intake, run until detect coral
-            if(coralInputted()){
-                return runRollers(state.getRollerSpeed())
-                    .until(this::hasCoral)
-                    .andThen(Commands.waitTime(Seconds.of(0.25))
-                    .andThen(stopRollers()));
-            }
+            return runRollers(state.getRollerSpeed())
+                .andThen(Commands.waitUntil(this::coralInputted))
+                .andThen(Commands.waitUntil(this::hasCoral))
+                .andThen(Commands.waitTime(Seconds.of(0.25)))
+                .andThen(stopRollers())
+                .unless(this::hasCoral);
         }
 
         // for scoring, only run if coral piece is detected
