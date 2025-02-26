@@ -8,6 +8,7 @@ import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -67,9 +68,18 @@ public class RobotContainer {
         
         // Driver handles robot positioning, alignment, and algae
         driverController.y().onTrue(swerve.resetHeading());
-        driverController.b().onTrue(swerve.runAutoAlign(AlignmentPosition.CENTER));
-        driverController.leftTrigger().onTrue(swerve.runAutoAlign(AlignmentPosition.LEFT));
-        driverController.rightTrigger().onTrue(swerve.runAutoAlign(AlignmentPosition.RIGHT));
+
+        var autoAlignCenter = swerve.runAutoAlign(AlignmentPosition.CENTER);
+        driverController.b().onTrue(autoAlignCenter);
+        SmartDashboard.putData(autoAlignCenter);
+
+        var autoAlignLeft = swerve.runAutoAlign(AlignmentPosition.LEFT);
+        driverController.leftTrigger().onTrue(autoAlignLeft);
+        SmartDashboard.putData(autoAlignLeft);
+
+        var autoAlignRight = swerve.runAutoAlign(AlignmentPosition.RIGHT);
+        driverController.rightTrigger().onTrue(autoAlignRight);
+        SmartDashboard.putData(autoAlignRight);
 
         driverController.leftBumper().whileTrue(stateMachine.changeState(RobotState.INTAKE_ALGAE));  // intake wheels rolled in regular direction
         driverController.leftBumper().onFalse(stateMachine.changeState(RobotState.IDLE)); // raise intake
@@ -81,7 +91,11 @@ public class RobotContainer {
         operatorController.x().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L2));
         operatorController.y().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L3));
         operatorController.b().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L4));
-        operatorController.rightBumper().onTrue(stateMachine.changeState(targetScoreState));
+
+        var scoreState = stateMachine.changeState(targetScoreState);
+        operatorController.rightBumper().onTrue(scoreState);
+        SmartDashboard.putData(scoreState);
+
         // special state => override and resetting to idle, and knocking algae
         operatorController.back().onTrue(stateMachine.changeState(RobotState.IDLE));
         operatorController.leftTrigger().onTrue(stateMachine.changeState(RobotState.KNOCK_ALGAE));
