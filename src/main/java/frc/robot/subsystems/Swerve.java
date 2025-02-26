@@ -32,14 +32,22 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.PathPoint;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
@@ -54,6 +62,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 public class Swerve extends SubsystemBase {
@@ -74,7 +83,7 @@ public class Swerve extends SubsystemBase {
 
     private AlignmentPosition currentAlignmentPosition = AlignmentPosition.CENTER;
 
-    private static final double ALIGNMENT_TOLERANCE = 5;
+    private static final double ALIGNMENT_TOLERANCE = 5; //pixels
     
     private final NetworkTable table;
     private final DoublePublisher poseXPub;
@@ -499,8 +508,8 @@ public class Swerve extends SubsystemBase {
         selectedScorePosition = findClosestScorePosition();
         Pose2d targetPose = getScorePose(selectedScorePosition);
         // how off we can be
-        final Distance positionTolerance = Meters.of(.1);
-        final Angle rotationTolerance = Degrees.of(0.1);
+        final Distance positionTolerance = Meters.of(.05);
+        final Angle rotationTolerance = Degrees.of(5);
         
         final DoublePublisher targetXPub = table.getDoubleTopic("Alignment/OdomTarget/X").publish();
         final DoublePublisher targetYPub = table.getDoubleTopic("Alignment/OdomTarget/Y").publish();
@@ -588,6 +597,59 @@ public class Swerve extends SubsystemBase {
         }
         
         return closestPosition;
+    }
+
+    public Command runTrajectoryOdomAlign() {
+        // find closest score position to align with
+        selectedScorePosition = findClosestScorePosition();
+        Pose2d targetPose = getScorePose(selectedScorePosition);
+        Pose2d currentPose = getPose();
+        
+        // trajectory configuration
+        TrajectoryConfig config = new TrajectoryConfig(
+            Constants.AutoConstants.kMaxSpeedMetersPerSecond * 0.5, //TODO: tweak
+            Constants.AutoConstants.kMaxAccelerationMetersPerSecondSquared * 0.5)
+            .setKinematics(Constants.Swerve.swerveKinematics);
+        
+        // generate simple path with just start and end points
+        Trajectory trajectory = TrajectoryGenerator.generateTrajectory(
+            currentPose,
+            List.of(), 
+            targetPose,
+            config);
+        
+        PIDController xController = new PIDController(Constants.AutoConstants.kPTranslationController, 0, 0);
+        PIDController yController = new PIDController(Constants.AutoConstants.kPTranslationController, 0, 0);
+        
+        ProfiledPIDController thetaController = new ProfiledPIDController(
+            Constants.AutoConstants.kPThetaController, 0, 0,
+            new TrapezoidProfile.Constraints(
+                Constants.AutoConstants.kMaxAngularSpeedRadiansPerSecond,
+                Constants.AutoConstants.kMaxAngularSpeedRadiansPerSecondSquared
+            ));
+        
+        thetaController.enableContinuousInput(-Math.PI, Math.PI);
+        
+        SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
+            trajectory,
+            this::getPose,
+            Constants.Swerve.swerveKinematics,
+            xController,
+            yController,
+            thetaController,
+            this::setModuleStates,
+            this);
+        
+        // resets odometry to the starting pose, follows trajectory, and stops robot
+        return Commands.sequence(
+            runOnce(() -> {
+                table.getDoubleTopic("Alignment/OdomTarget/X").publish().set(targetPose.getX());
+                table.getDoubleTopic("Alignment/OdomTarget/Y").publish().set(targetPose.getY());
+                table.getDoubleTopic("Alignment/OdomTarget/Rotation").publish().set(targetPose.getRotation().getDegrees());
+            }),
+            swerveControllerCommand,
+            runOnce(() -> drive(new Translation2d(), 0, true, true))
+        );
     }
 
     public Command runAlignment() {

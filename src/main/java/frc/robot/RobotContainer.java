@@ -104,7 +104,9 @@ public class RobotContainer {
         // odometry autoalign testing
         operatorController.povUp().whileTrue(swerve.runOdometryAlign())
             .onFalse(Commands.runOnce(() -> swerve.drive(Translation2d.kZero, 0, true, true), swerve));
-    
+        operatorController.povUp().whileTrue(swerve.runTrajectoryOdomAlign())
+            .onFalse(Commands.runOnce(() -> swerve.drive(Translation2d.kZero, 0, true, true), swerve));;
+
 
         programmerController.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
         programmerController.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
@@ -119,15 +121,15 @@ public class RobotContainer {
         programmerController.x().and(programmerController.leftTrigger()).whileTrue(intake.sysIdDynamic(Direction.kForward));
         programmerController.y().and(programmerController.leftTrigger()).whileTrue(intake.sysIdDynamic(Direction.kReverse));
 
-        programmerController.a().and(programmerController.povUp()).whileTrue(swerve.sysIdDriveQuasistatic(Direction.kForward));
-        programmerController.b().and(programmerController.povUp()).whileTrue(swerve.sysIdDriveQuasistatic(Direction.kReverse));
-        programmerController.x().and(programmerController.povUp()).whileTrue(swerve.sysIdDriveDynamic(Direction.kForward));
-        programmerController.y().and(programmerController.povUp()).whileTrue(swerve.sysIdDriveDynamic(Direction.kReverse));
+        programmerController.a().and(programmerController.povLeft()).whileTrue(swerve.sysIdDriveQuasistatic(Direction.kForward));
+        programmerController.b().and(programmerController.povLeft()).whileTrue(swerve.sysIdDriveQuasistatic(Direction.kReverse));
+        programmerController.x().and(programmerController.povLeft()).whileTrue(swerve.sysIdDriveDynamic(Direction.kForward));
+        programmerController.y().and(programmerController.povLeft()).whileTrue(swerve.sysIdDriveDynamic(Direction.kReverse));
 
-        programmerController.a().and(programmerController.povDown()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kForward));
-        programmerController.b().and(programmerController.povDown()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kReverse));
-        programmerController.x().and(programmerController.povDown()).whileTrue(swerve.sysIdSteerDynamic(Direction.kForward));
-        programmerController.y().and(programmerController.povDown()).whileTrue(swerve.sysIdSteerDynamic(Direction.kReverse));
+        programmerController.a().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kForward));
+        programmerController.b().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kReverse));
+        programmerController.x().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kForward));
+        programmerController.y().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kReverse));
 
         programmerController.povUp().whileTrue(elevator.goUp());
         programmerController.povDown().whileTrue(elevator.goDown());

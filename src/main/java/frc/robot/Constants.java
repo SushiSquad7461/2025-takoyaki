@@ -191,12 +191,10 @@ public class Constants {
         public static final Dimensionless GEAR_RATIO = Rotations.of(52*60).div(Rotations.of(18*18)); //output over input
         public static final Angle MOTOR_MAX_HEIGHT = frc.robot.subsystems.Elevator.heightToMotor(MAX_HEIGHT);
 
-        // for motion magic, TODO: set and add jerk to motor config
         public static final AngularVelocity MOTION_MAGIC_VELOCITY = RotationsPerSecond.of(80);
         public static final AngularAcceleration MOTION_MAGIC_ACCELERATION = RotationsPerSecondPerSecond.of(160);
         public static final Per<AngularAccelerationUnit, TimeUnit> MOTION_MAGIC_JERK = Per.ofBaseUnits(0.0, PerUnit.combine(RotationsPerSecondPerSecond, Seconds)); //add towards end of tuning
         
-        //TODO: use sysid and set all of these values
         public static final MotorConfig ELEVATOR_LEFT = new MotorConfig(
             Ports.ELEVATOR_LEFT_ID,
             35,
@@ -214,7 +212,7 @@ public class Constants {
             PIDConfig.getElevatorPid(.022479, 0.0, 0.02, .15891, 0.060976, 0.11353, 0.0014317),
             MotorConfig.Mode.BRAKE,
             null, //MOTOR_MAX_HEIGHT, 
-            null //Degrees.of(0)e
+            null //Degrees.of(0)
         ).withMotionMagic(MOTION_MAGIC_VELOCITY, MOTION_MAGIC_ACCELERATION);
 
         public static final Angle MAX_ERROR = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(1.0));
@@ -268,14 +266,14 @@ public class Constants {
         );
     }
     
-    public static final class AutoConstants { //TODO: Need to tune constants
+    public static final class AutoConstants { //TODO: Need to tune constants!
         public static final double kMaxSpeedMetersPerSecond = 3;
         public static final double kMaxAccelerationMetersPerSecondSquared = 3;
         public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
         public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
     
-        public static final double kPTranslationController = 1;
-        public static final double kPThetaController = 1;
+        public static final double kPTranslationController = .2;
+        public static final double kPThetaController = .2;
     }
 
     public static final class VisionConstants { //TODO: only tell pipeline to give pose when multiple tags detected
