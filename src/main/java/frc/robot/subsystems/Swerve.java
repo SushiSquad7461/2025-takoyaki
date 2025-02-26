@@ -176,7 +176,7 @@ public class Swerve extends SubsystemBase {
             table.getTopic("FieldLayout/Selected"), 
             EnumSet.of(NetworkTableEvent.Kind.kValueRemote),
             event -> {
-                if (event.valueData != null) {
+                if (event.valueData.equals(null)) {
                     String selectedLayout = event.valueData.value.getString();
                     setFieldLayout(selectedLayout);
                 }
@@ -421,10 +421,10 @@ public class Swerve extends SubsystemBase {
                 List<PhotonPipelineResult> secondCamResults = rightCameraResults;
 
                 if(position == AlignmentPosition.RIGHT) {
-                    firstCam = leftCamera;
-                    secondCam = rightCamera;
-                    firstCamResults = leftCameraResults;
-                    secondCamResults = rightCameraResults;
+                    firstCam = rightCamera;
+                    secondCam = leftCamera;
+                    firstCamResults = rightCameraResults;
+                    secondCamResults = leftCameraResults;
                 }
                 
                 double actualCenterX = 0;
@@ -434,6 +434,7 @@ public class Swerve extends SubsystemBase {
                     var firstRes = firstCamResults.get(firstCamResults.size()-1);
                     if(!secondCamResults.isEmpty() && secondCamResults.get(secondCamResults.size()-1).hasTargets()) {
                         var secondRes = secondCamResults.get(secondCamResults.size()-1);
+                        // Both cameras see so choose the camera with the least pose ambiguity 
                         if(secondRes.getBestTarget().getPoseAmbiguity() < firstRes.getBestTarget().getPoseAmbiguity()) {
                             actualCenterX = getCenterX(secondRes.getBestTarget().detectedCorners);
                             desiredCenterX = targetPositions.get(secondCam).get(position);
@@ -441,11 +442,12 @@ public class Swerve extends SubsystemBase {
                             actualCenterX = getCenterX(firstRes.getBestTarget().detectedCorners);
                             desiredCenterX = targetPositions.get(firstCam).get(position);
                         }
-                    } else {
+                    } else { // Only camera with priority sees
                         actualCenterX = getCenterX(firstRes.getBestTarget().detectedCorners);
                         desiredCenterX = targetPositions.get(firstCam).get(position);
                     }
                 } else if(!secondCamResults.isEmpty() && secondCamResults.get(secondCamResults.size()-1).hasTargets()) {
+                    // Only second camera sees
                     var secondRes = secondCamResults.get(secondCamResults.size()-1);
                     actualCenterX = getCenterX(secondRes.getBestTarget().detectedCorners);
                     desiredCenterX = targetPositions.get(secondCam).get(position);
@@ -531,7 +533,7 @@ public class Swerve extends SubsystemBase {
                         true
                     );
 
-                } else if (Math.abs(rotationError.in(Degrees)) < rotationTolerance.in(Degrees)) {
+                } else if (Math.abs(rotationError.in(Degrees)) > rotationTolerance.in(Degrees)) {
                     drive(
                         new Translation2d(0, 0),
                         Math.signum(rotationError.in(Degrees)) * rotationSpeed,
