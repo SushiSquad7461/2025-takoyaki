@@ -30,6 +30,7 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -98,20 +99,20 @@ public class Swerve extends SubsystemBase {
 
         //TODO: rename cameras
         leftCamera = new PhotonCamera("Arducam_OV9281_USB_Camera");
-        rightCamera = new PhotonCamera("Arducam_OV9281_USB_Camera");
+        rightCamera = new PhotonCamera("Arducam_OV9782_USB_Camera");
         targetPositions = Map.of(
             leftCamera, Constants.VisionConstants.leftCameraOffsets,
             rightCamera, Constants.VisionConstants.rightCameraOffsets
         );
         
         photonPoseEstimatorLeft = new PhotonPoseEstimator(
-            AprilTagFields.k2025Reefscape.loadAprilTagLayoutField(),
+            AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape),
             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
             Constants.VisionConstants.leftTransform3d 
         );
 
         photonPoseEstimatorRight = new PhotonPoseEstimator(
-            AprilTagFields.k2025Reefscape.loadAprilTagLayoutField(),
+            AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape),
             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
             Constants.VisionConstants.rightTransform3d
         );
@@ -346,8 +347,6 @@ public class Swerve extends SubsystemBase {
      * Aligns the robot to the target based on the given position
      */
     public Command runAutoAlign(AlignmentPosition position) {
-        
-
         return new RunCommand(
             () -> {
                 currentAlignmentPosition = position;
@@ -490,12 +489,12 @@ public class Swerve extends SubsystemBase {
     private Map<ReefScorePosition, Pose2d> scorePositions = new HashMap<>();
     
     private void initializeScorePositions() {
-        scorePositions.put(ReefScorePosition.FRONT, new Pose2d(3.66, 4.03, Rotation2d.fromDegrees(180)));
-        scorePositions.put(ReefScorePosition.FRONTLEFT, new Pose2d(4.07, 4.75, Rotation2d.fromDegrees(120)));
-        scorePositions.put(ReefScorePosition.BACKLEFT, new Pose2d(4.90, 4.75, Rotation2d.fromDegrees(60)));
-        scorePositions.put(ReefScorePosition.BACK, new Pose2d(5.32, 4.03, Rotation2d.fromDegrees(0)));
-        scorePositions.put(ReefScorePosition.BACKRIGHT, new Pose2d(4.90, 3.31, Rotation2d.fromDegrees(-60)));
-        scorePositions.put(ReefScorePosition.FRONTRIGHT, new Pose2d(4.07, 3.31, Rotation2d.fromDegrees(-120)));
+        scorePositions.put(ReefScorePosition.FRONT, new Pose2d(1.84, 8.2, Rotation2d.fromDegrees(-90)));
+        scorePositions.put(ReefScorePosition.FRONTLEFT, new Pose2d(-0.04, 5.55, Rotation2d.fromDegrees(0)));
+        scorePositions.put(ReefScorePosition.BACKLEFT, new Pose2d(-0.04, 4.98, Rotation2d.fromDegrees(0)));
+        scorePositions.put(ReefScorePosition.BACK, new Pose2d(0.36, 0.88, Rotation2d.fromDegrees(60)));
+        scorePositions.put(ReefScorePosition.BACKRIGHT, new Pose2d(1.46, 0.25, Rotation2d.fromDegrees(60)));
+        scorePositions.put(ReefScorePosition.FRONTRIGHT, new Pose2d(11.9, 3.71, Rotation2d.fromDegrees(-60)));
     }
             
     public ReefScorePosition findClosestScorePosition() {
