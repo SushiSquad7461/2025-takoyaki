@@ -56,14 +56,14 @@ public class CoralManipulator extends SubsystemBase {
             // for intake, run until detect coral
             if(coralInputted()){
                 return runRollers(state.getRollerSpeed())
-                    .until(this::coralPastElevator)
-                    .andThen(Commands.waitTime(Seconds.of(0.5))
+                    .until(this::hasCoral)
+                    .andThen(Commands.waitTime(Seconds.of(0.25))
                     .andThen(stopRollers()));
             }
         }
 
         // for scoring, only run if coral piece is detected
-        if (state == ManipulatorState.SCORE && !coralPastElevator()) {
+        if (state == ManipulatorState.SCORE && !hasCoral()) {
             return Commands.none();
         }
 
@@ -79,7 +79,7 @@ public class CoralManipulator extends SubsystemBase {
         return runOnce(() -> rollerMotor.set(0));
     }
 
-    public boolean coralPastElevator() {
+    public boolean hasCoral() {
         return elevBeambreak.get() && !beambreak.get(); // get() returns true when circuit is closed
     }
 

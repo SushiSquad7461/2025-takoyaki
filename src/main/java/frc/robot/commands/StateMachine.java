@@ -96,7 +96,7 @@ public class StateMachine extends SubsystemBase {
                        Commands.none()
                    ), Commands.sequence(
                     manipulator.changeState(newState.manipulatorState)
-                        .until(() -> !manipulator.coralInputted())
+                        .until(() -> !manipulator.hasCoral())
                         .andThen(Commands.waitTime(Seconds.of(0.5)))
                 )
             );   
