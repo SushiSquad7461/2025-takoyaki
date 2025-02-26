@@ -45,7 +45,8 @@ public class RobotContainer {
     private Command[] scoreCommands = {
         stateMachine.changeState(RobotState.SCORE_L1),
         stateMachine.changeState(RobotState.SCORE_L2),
-        stateMachine.changeState(RobotState.SCORE_L3)
+        stateMachine.changeState(RobotState.SCORE_L3),
+        stateMachine.changeState(RobotState.SCORE_L4)
         // TODO add L4 when energy chain fixed
     };
     private Command targetScoreCommand = scoreCommands[0];
@@ -92,7 +93,7 @@ public class RobotContainer {
         operatorController.a().onTrue(Commands.runOnce(() -> targetScoreCommand = scoreCommands[0]));
         operatorController.x().onTrue(Commands.runOnce(() -> targetScoreCommand = scoreCommands[1]));
         operatorController.y().onTrue(Commands.runOnce(() -> targetScoreCommand = scoreCommands[2]));
-        // operatorController.b().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L4));
+        operatorController.b().onTrue(Commands.runOnce(() -> targetScoreCommand = scoreCommands[3]));
         operatorController.rightBumper().onTrue(Commands.runOnce(() -> CommandScheduler.getInstance().schedule(targetScoreCommand))).onFalse(idle);
         operatorController.rightTrigger().onTrue(manipulator.runRollers(0.1)).onFalse(Commands.runOnce(() -> manipulator.runRollers(0)));
         // special state => override and resetting to idle, and knocking algae
