@@ -164,7 +164,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public Command goUp() {
-    return run(() -> rightMotor.set(.2)).finallyDo(() -> rightMotor.set(0));
+    return run(() -> rightMotor.set(.1)).finallyDo(() -> rightMotor.set(0));
   }
 
 

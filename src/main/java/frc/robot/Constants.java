@@ -203,7 +203,7 @@ public class Constants {
             Ports.ELEVATOR_RIGHT_ID,
             35,
             true,
-            PIDConfig.getElevatorPid(0.11, 0.0, 0.02, .15891, 0.060976, 0.11353, 0.0014317),
+            PIDConfig.getElevatorPid(.022479, 0.0, 0.02, .15891, 0.060976, 0.11353, 0.0014317),
             MotorConfig.Mode.BRAKE,
             null, //MOTOR_MAX_HEIGHT, 
             null //Degrees.of(0)
