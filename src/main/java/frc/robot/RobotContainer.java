@@ -71,15 +71,15 @@ public class RobotContainer {
 
         var autoAlignCenter = swerve.runAutoAlign(AlignmentPosition.CENTER);
         driverController.b().onTrue(autoAlignCenter);
-        SmartDashboard.putData("Auto Align Center",autoAlignCenter);
+        SmartDashboard.putData(autoAlignCenter);
 
         var autoAlignLeft = swerve.runAutoAlign(AlignmentPosition.LEFT);
         driverController.leftTrigger().onTrue(autoAlignLeft);
-        SmartDashboard.putData("Auto Align Left",autoAlignLeft);
+        SmartDashboard.putData(autoAlignLeft);
 
         var autoAlignRight = swerve.runAutoAlign(AlignmentPosition.RIGHT);
         driverController.rightTrigger().onTrue(autoAlignRight);
-        SmartDashboard.putData("Auto Align Right",autoAlignRight);
+        SmartDashboard.putData(autoAlignRight);
 
         driverController.leftBumper().whileTrue(stateMachine.changeState(RobotState.INTAKE_ALGAE));  // intake wheels rolled in regular direction
         driverController.leftBumper().onFalse(stateMachine.changeState(RobotState.IDLE)); // raise intake
@@ -94,7 +94,7 @@ public class RobotContainer {
 
         var scoreState = stateMachine.changeState(targetScoreState);
         operatorController.rightBumper().onTrue(scoreState);
-        SmartDashboard.putData("Coral Level",scoreState);
+        SmartDashboard.putData(scoreState);
 
         // special state => override and resetting to idle, and knocking algae
         operatorController.back().onTrue(stateMachine.changeState(RobotState.IDLE));
