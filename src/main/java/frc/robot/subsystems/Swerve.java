@@ -53,7 +53,9 @@ public class Swerve extends SubsystemBase {
     private List<PhotonPipelineResult> rightCameraResults;
     private final Map<PhotonCamera, Map<AlignmentPosition, Double>> targetPositions;
 
-    private final PhotonPoseEstimator photonPoseEstimator;
+    private final PhotonPoseEstimator photonPoseEstimatorLeft;
+    private final PhotonPoseEstimator photonPoseEstimatorRight;
+
     private AlignmentPosition currentAlignmentPosition = AlignmentPosition.CENTER;
 
     private static final double ALIGNMENT_TOLERANCE = 5;
@@ -86,14 +88,20 @@ public class Swerve extends SubsystemBase {
         leftCamera = new PhotonCamera("Arducam_OV9281_USB_Camera");
         rightCamera = new PhotonCamera("Arducam_OV9281_USB_Camera");
         targetPositions = Map.of(
-            leftCamera, Constants.AutoConstants.leftCameraOffsets,
-            rightCamera, Constants.AutoConstants.rightCameraOffsets
+            leftCamera, Constants.VisionConstants.leftCameraOffsets,
+            rightCamera, Constants.VisionConstants.rightCameraOffsets
         );
         
-        photonPoseEstimator = new PhotonPoseEstimator(
+        photonPoseEstimatorLeft = new PhotonPoseEstimator(
             AprilTagFields.k2025Reefscape.loadAprilTagLayoutField(),
             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-            new Transform3d() //adjust based on camera specific mounting
+            Constants.VisionConstants.leftTransform3d 
+        );
+
+        photonPoseEstimatorRight = new PhotonPoseEstimator(
+            AprilTagFields.k2025Reefscape.loadAprilTagLayoutField(),
+            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+            Constants.VisionConstants.rightTransform3d
         );
 
         poseEstimator = new SwerveDrivePoseEstimator(

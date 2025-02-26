@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Newton;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
@@ -30,8 +31,14 @@ import frc.robot.util.motor.MotorConfig;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
+
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -272,11 +279,16 @@ public class Constants {
     
         public static final double kPTranslationController = 1;
         public static final double kPThetaController = 1;
+    }
+
+    public static final class VisionConstants { //TODO: only tell pipeline to give pose when multiple tags detected
+        public static final Transform3d leftTransform3d = new Transform3d(new Translation3d(7.6724, 11.7981, 7.291), new Rotation3d(0, 20, -36.5));
+        public static final Transform3d rightTransform3d = new Transform3d(new Translation3d(7.6724, -11.7981, 7.291), new Rotation3d(0, 20, 36.5));
 
         /* Constraint for the motion profilied robot angle controller */
         public static final TrapezoidProfile.Constraints kThetaControllerConstraints =
             new TrapezoidProfile.Constraints(
-                kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);
+                AutoConstants.kMaxAngularSpeedRadiansPerSecond, AutoConstants.kMaxAngularSpeedRadiansPerSecondSquared);
 
         public static final Map<AlignmentPosition, Double> leftCameraOffsets = Map.of(
             AlignmentPosition.LEFT, 0.,
@@ -290,4 +302,5 @@ public class Constants {
             AlignmentPosition.CENTER, 0.
         );
     }
+
 }
