@@ -3,6 +3,7 @@ package frc.robot;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 
@@ -48,6 +49,15 @@ public class SwerveModule {
         mDriveMotor = new TalonFX(moduleConstants.driveMotorID);
         mDriveMotor.getConfigurator().apply(Robot.ctreConfigs.swerveDriveFXConfig);
         mDriveMotor.getConfigurator().setPosition(0.0);
+    }
+
+    //made helper methods for sysid since module drive and angle motors aren't visible
+    public void setDriveVoltage(double volts) {
+        mDriveMotor.setControl(new VoltageOut(volts));
+    }
+
+    public void setSteerVoltage(double volts) {
+        mAngleMotor.setControl(new VoltageOut(volts));
     }
 
     public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop){

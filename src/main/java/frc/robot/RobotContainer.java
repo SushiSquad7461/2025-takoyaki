@@ -6,6 +6,7 @@ package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
 
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -100,6 +101,12 @@ public class RobotContainer {
         operatorController.back().onTrue(idle);
         operatorController.leftTrigger().onTrue(stateMachine.changeState(RobotState.KNOCK_ALGAE)).onFalse(idle);
 
+        // odometry autoalign testing
+        operatorController.povUp().whileTrue(swerve.runOdometryAlign())
+            .onFalse(Commands.runOnce(() -> swerve.drive(Translation2d.kZero, 0, true, true), swerve));
+        operatorController.povUp().whileTrue(swerve.runTrajectoryOdomAlign())
+            .onFalse(Commands.runOnce(() -> swerve.drive(Translation2d.kZero, 0, true, true), swerve));;
+
 
         programmerController.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
         programmerController.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
@@ -113,6 +120,16 @@ public class RobotContainer {
         programmerController.b().and(programmerController.leftTrigger()).whileTrue(intake.sysIdQuasistatic(Direction.kReverse));
         programmerController.x().and(programmerController.leftTrigger()).whileTrue(intake.sysIdDynamic(Direction.kForward));
         programmerController.y().and(programmerController.leftTrigger()).whileTrue(intake.sysIdDynamic(Direction.kReverse));
+
+        programmerController.a().and(programmerController.povLeft()).whileTrue(swerve.sysIdDriveQuasistatic(Direction.kForward));
+        programmerController.b().and(programmerController.povLeft()).whileTrue(swerve.sysIdDriveQuasistatic(Direction.kReverse));
+        programmerController.x().and(programmerController.povLeft()).whileTrue(swerve.sysIdDriveDynamic(Direction.kForward));
+        programmerController.y().and(programmerController.povLeft()).whileTrue(swerve.sysIdDriveDynamic(Direction.kReverse));
+
+        programmerController.a().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kForward));
+        programmerController.b().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kReverse));
+        programmerController.x().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kForward));
+        programmerController.y().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kReverse));
 
         programmerController.povUp().whileTrue(elevator.goUp());
         programmerController.povDown().whileTrue(elevator.goDown());
