@@ -48,27 +48,19 @@ public class CoralManipulator extends SubsystemBase {
     }
 
     public Command changeState(ManipulatorState state) {
-        if (state == ManipulatorState.IDLE) {
-            return stopRollers();
-        }
-
-        if (state == ManipulatorState.INTAKE) {
-            // for intake, run until detect coral
-            return runRollers(state.getRollerSpeed())
+        return switch(state) {
+            case IDLE -> stopRollers();
+            case INTAKE -> runRollers(state.getRollerSpeed())
                 .andThen(Commands.waitUntil(this::coralInputted))
                 .andThen(Commands.waitUntil(this::hasCoral))
-                .andThen(Commands.waitTime(Seconds.of(0.25)))
                 .andThen(stopRollers())
                 .unless(this::hasCoral);
-        }
-
-        // for scoring, only run if coral piece is detected
-        if (state == ManipulatorState.SCORE && !hasCoral()) {
-            return Commands.none();
-        }
-
-        // else, default to running rollers
-        return runRollers(state.getRollerSpeed());
+            case KNOCK -> runRollers(state.getRollerSpeed()).unless(() -> !hasCoral());
+            case SCORE -> runRollers(state.getRollerSpeed())
+                .andThen(Commands.waitUntil(() -> !hasCoral()))
+                .andThen(Commands.waitSeconds(0.5))
+                .unless(() -> !hasCoral());
+        };
     }
 
     public Command runRollers(double speed) {

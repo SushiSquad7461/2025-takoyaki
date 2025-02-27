@@ -3,6 +3,8 @@ package frc.robot.util.motor;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -140,8 +142,8 @@ public class MotorConfig {
      TalonFXConfiguration config = getTalonConfig();
      
      MotionMagicConfigs motionMagic = new MotionMagicConfigs();
-     motionMagic.MotionMagicCruiseVelocity = velocityLimit.in(RadiansPerSecond);
-     motionMagic.MotionMagicAcceleration = accelerationLimit.in(RadiansPerSecondPerSecond);
+     motionMagic.MotionMagicCruiseVelocity = velocityLimit.in(RotationsPerSecond);
+     motionMagic.MotionMagicAcceleration = accelerationLimit.in(RotationsPerSecondPerSecond);
      
      config.MotionMagic = motionMagic;
      motor.getConfigurator().apply(config);

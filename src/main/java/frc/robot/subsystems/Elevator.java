@@ -10,7 +10,7 @@ import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.PositionDutyCycle;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 
@@ -33,6 +33,7 @@ public class Elevator extends SubsystemBase {
   private final TalonFX leftMotor;
   private final TalonFX rightMotor;
   private final DigitalInput limitSwitch;
+  private final MotionMagicVoltage motionMagic;
 
   private final NetworkTable elevatorTable;
   private final DoublePublisher positionPub;
@@ -50,7 +51,8 @@ public class Elevator extends SubsystemBase {
     limitSwitch = new DigitalInput(Constants.Ports.LIMIT_SWITCH_PORT);
     elevatorRightPID = Constants.Elevator.ELEVATOR_LEFT.genPIDTuning("Elevator", Constants.TUNING_MODE);
     leftMotor = Constants.Elevator.ELEVATOR_LEFT.createTalon();
-    rightMotor = Constants.Elevator.ELEVATOR_RIGHT.createTalon();
+    rightMotor = Constants.Elevator.ELEVATOR_RIGHT.createTalonForMotionMagic();
+    motionMagic = new MotionMagicVoltage(0);
 
     // network table variables
     elevatorTable = NetworkTableInstance.getDefault().getTable("Elevator");
@@ -94,7 +96,7 @@ public class Elevator extends SubsystemBase {
   public Command changeState(ElevatorState state) {
     return run(() -> {
       elevatorTable.getDoubleTopic("Setpoint").publish().set(state.getPos().in(Inches));
-      rightMotor.setControl(new PositionDutyCycle(heightToMotor(state.position)));
+      rightMotor.setControl(motionMagic.withPosition(heightToMotor(state.position)));
       if(state != ElevatorState.IDLE) reset = false;
     }).until(elevatorInPosition(state))
         .andThen(state == ElevatorState.IDLE && !reset ? resetElevator() : Commands.none());

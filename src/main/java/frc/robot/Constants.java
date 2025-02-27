@@ -214,7 +214,7 @@ public class Constants {
             Ports.ELEVATOR_RIGHT_ID,
             35,
             true,
-            PIDConfig.getElevatorPid(.022479, 0.0, 0.02, .15891, 0.060976, 0.11353, 0.0014317),
+            PIDConfig.getElevatorPid(0.0051095, 0.0, 0.02, .15891, 0.060976, 0.11353, 0.0014317),
             MotorConfig.Mode.BRAKE,
             null, //MOTOR_MAX_HEIGHT, 
             null //Degrees.of(0)e
@@ -238,7 +238,7 @@ public class Constants {
         );
         
         // roller speeds for diff states (should be in range [-1, 1])
-        public static final double INTAKE_SPEED = 0.2;
+        public static final double INTAKE_SPEED = 0.15;
         public static final double SCORE_SPEED = 0.2;
         public static final double HOLD_SPEED = 0;
     }
