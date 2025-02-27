@@ -104,10 +104,10 @@ public class Elevator extends SubsystemBase {
 
   // checks if elevator has reached target position
   private BooleanSupplier elevatorInPosition(ElevatorState state) {
-    var maxErr = state == ElevatorState.IDLE && currentSpike() ? Constants.Elevator.RELAXED_MAX_ERROR.in(Rotations) : Constants.Elevator.MAX_ERROR.in(Rotations);
+    var maxErr = state == ElevatorState.IDLE && currentSpike() ? Constants.Elevator.RELAXED_MAX_ERROR : Constants.Elevator.MAX_ERROR;    
     Angle targetAngle = heightToMotor(state.position); //converts target position into angle
     return () -> Math.abs(rightMotor.getPosition().getValue().in(Rotations)
-        - targetAngle.in(Rotations)) < maxErr;
+        - targetAngle.in(Rotations)) < maxErr.in(Rotations);
   }
 
   public static Angle heightToMotor(Distance distance) {

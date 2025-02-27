@@ -245,6 +245,7 @@ public class Constants {
         public static final Angle MAX_ERROR = Degrees.of(5.0).times(INTAKE_GEAR_RATIO);
         public static final Angle RAISED_POS = Degrees.of(12).times(INTAKE_GEAR_RATIO);
         public static final Angle LOWERED_POS = Degrees.of(53).times(INTAKE_GEAR_RATIO);
+        public static final Angle INTAKE_ANGLE = Degrees.of(56.85).times(INTAKE_GEAR_RATIO);
 
         public static final Current CURRENT_SPIKE_LIMIT_DOWN = Amps.of(5);
         public static final Current CURRENT_SPIKE_LIMIT_UP = Amps.of(5);
@@ -277,8 +278,8 @@ public class Constants {
     }
 
     public static final class VisionConstants { //TODO: only tell pipeline to give pose when multiple tags detected
-        public static final Transform3d leftTransform3d = new Transform3d(new Translation3d(7.6724, 11.7981, 7.291), new Rotation3d(0, 20, -36.5));
-        public static final Transform3d rightTransform3d = new Transform3d(new Translation3d(7.6724, -11.7981, 7.291), new Rotation3d(0, 20, 36.5));
+        public static final Transform3d leftCamera = new Transform3d(new Translation3d(7.6724, 11.7981, 7.291), new Rotation3d(0, 20, -36.5));
+        public static final Transform3d rightCamera = new Transform3d(new Translation3d(7.6724, -11.7981, 7.291), new Rotation3d(0, 20, 36.5));
 
         /* Constraint for the motion profilied robot angle controller */
         public static final TrapezoidProfile.Constraints kThetaControllerConstraints =

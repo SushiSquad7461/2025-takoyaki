@@ -78,8 +78,8 @@ public class Swerve extends SubsystemBase {
     private List<PhotonPipelineResult> rightCameraResults;
     private final Map<PhotonCamera, Map<AlignmentPosition, Double>> targetPositions;
 
-    private PhotonPoseEstimator photonPoseEstimatorLeft = new PhotonPoseEstimator(null, null, null);
-    private PhotonPoseEstimator photonPoseEstimatorRight = new PhotonPoseEstimator(null, null, null);
+    private PhotonPoseEstimator photonPoseEstimatorLeft;
+    private PhotonPoseEstimator photonPoseEstimatorRight;
 
     private AlignmentPosition currentAlignmentPosition = AlignmentPosition.CENTER;
 
@@ -119,7 +119,7 @@ public class Swerve extends SubsystemBase {
         mSwerveMods = new SwerveModule[] {
             new SwerveModule(0, Constants.Swerve.Mod0.constants),
             new SwerveModule(1, Constants.Swerve.Mod1.constants),
-            new SwerveModule( 2, Constants.Swerve.Mod2.constants),
+            new SwerveModule(2, Constants.Swerve.Mod2.constants),
             new SwerveModule(3, Constants.Swerve.Mod3.constants)
         };
 
@@ -138,18 +138,18 @@ public class Swerve extends SubsystemBase {
             new Pose2d()
         );
     
-        try {
+        try { //TODO: ELASTIC NOTIF POP UP IF FILE NOT FOUND
             AprilTagFieldLayout weldedLayout = AprilTagFieldLayout.loadFromResource(WELDED_LAYOUT.m_resourceFile);
             photonPoseEstimatorLeft = new PhotonPoseEstimator(
                 weldedLayout,
                 PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-                Constants.VisionConstants.leftTransform3d 
+                Constants.VisionConstants.leftCamera 
             );
 
             photonPoseEstimatorRight = new PhotonPoseEstimator(
                 weldedLayout,
                 PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-                Constants.VisionConstants.rightTransform3d
+                Constants.VisionConstants.rightCamera
             );
         } catch (IOException e) {
             e.printStackTrace();

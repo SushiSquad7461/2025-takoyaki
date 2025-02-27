@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.util.Set;
+
 import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.math.geometry.Translation2d;
@@ -95,17 +97,20 @@ public class RobotContainer {
         operatorController.x().onTrue(Commands.runOnce(() -> targetScoreCommand = scoreCommands[1]));
         operatorController.y().onTrue(Commands.runOnce(() -> targetScoreCommand = scoreCommands[2]));
         operatorController.b().onTrue(Commands.runOnce(() -> targetScoreCommand = scoreCommands[3]));
-        operatorController.rightBumper().onTrue(Commands.runOnce(() -> CommandScheduler.getInstance().schedule(targetScoreCommand))).onFalse(idle);
-        operatorController.rightTrigger().onTrue(manipulator.runRollers(0.1)).onFalse(Commands.runOnce(() -> manipulator.runRollers(0)));
+
+        //operatorController.rightBumper().onTrue(Commands.runOnce(() -> CommandScheduler.getInstance().schedule(targetScoreCommand))).onFalse(idle);
+        //operatorController.rightTrigger().onTrue(manipulator.runRollers(0.1)).onFalse(Commands.runOnce(() -> manipulator.runRollers(0)));
+
+        operatorController.rightBumper().onTrue(Commands.defer(() -> targetScoreCommand, Set.of(swerve, elevator, manipulator, intake))).onFalse(idle);
+        operatorController.rightTrigger().onTrue(manipulator.runRollers(0.1)).onFalse(manipulator.runRollers(0));        
+        
         // special state => override and resetting to idle, and knocking algae
         operatorController.back().onTrue(idle);
         operatorController.leftTrigger().onTrue(stateMachine.changeState(RobotState.KNOCK_ALGAE)).onFalse(idle);
 
         // odometry autoalign testing
-        operatorController.povUp().whileTrue(swerve.runOdometryAlign())
-            .onFalse(Commands.runOnce(() -> swerve.drive(Translation2d.kZero, 0, true, true), swerve));
-        operatorController.povUp().whileTrue(swerve.runTrajectoryOdomAlign())
-            .onFalse(Commands.runOnce(() -> swerve.drive(Translation2d.kZero, 0, true, true), swerve));;
+        operatorController.povUp().whileTrue(swerve.runOdometryAlign());
+        operatorController.povDown().whileTrue(swerve.runTrajectoryOdomAlign());
 
 
         programmerController.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
@@ -133,7 +138,7 @@ public class RobotContainer {
 
         programmerController.povUp().whileTrue(elevator.goUp());
         programmerController.povDown().whileTrue(elevator.goDown());
-        programmerController.povLeft().whileTrue(elevator.resetElevator());
+        programmerController.a().whileTrue(elevator.resetElevator());
     }
 
 

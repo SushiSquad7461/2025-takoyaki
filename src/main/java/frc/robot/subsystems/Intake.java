@@ -90,9 +90,8 @@ public class Intake extends SubsystemBase {
                 .andThen(Commands.waitUntil(this::currentSpikeDown))
                 .andThen(() -> {
                     pivotMotor.stopMotor();
-                    //TODO: MAKE A VAR FOR THE DEGREES
-                    pivotMotor.setPosition(Degrees.of(56.85).times(Constants.AlgaeIntake.INTAKE_GEAR_RATIO));
-                    pivotMotor.setControl(positionDutyCycle.withPosition(Degrees.of(56.85).times(Constants.AlgaeIntake.INTAKE_GEAR_RATIO)));
+                    pivotMotor.setPosition(Constants.AlgaeIntake.INTAKE_ANGLE);
+                    pivotMotor.setControl(positionDutyCycle.withPosition(Constants.AlgaeIntake.INTAKE_ANGLE));
                 });
     }
 
