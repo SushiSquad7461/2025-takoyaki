@@ -7,6 +7,7 @@ public enum IntakeState {
     //All Intake states 
     IDLE(false, Direction.OFF),
     INTAKE(true, Direction.FORWARD),
+    INTAKE_CORAL(false, Direction.REVERSE),
     REVERSE(true, Direction.REVERSE);
 
     public boolean intakeExtended;

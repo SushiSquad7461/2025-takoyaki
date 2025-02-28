@@ -24,7 +24,7 @@ public class StateMachine extends SubsystemBase {
     public enum RobotState {
         IDLE(IntakeState.IDLE, ManipulatorState.IDLE, ElevatorState.IDLE),
         INTAKE_ALGAE(IntakeState.INTAKE, ManipulatorState.IDLE, ElevatorState.IDLE),
-        INTAKE_CORAL(IntakeState.IDLE, ManipulatorState.INTAKE, ElevatorState.IDLE),
+        INTAKE_CORAL(IntakeState.INTAKE_CORAL, ManipulatorState.INTAKE, ElevatorState.IDLE),
         SCORE_ALGAE(IntakeState.REVERSE, ManipulatorState.IDLE, ElevatorState.IDLE),
         
         // prepare states for different levels
