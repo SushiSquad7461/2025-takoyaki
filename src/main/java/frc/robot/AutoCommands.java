@@ -16,8 +16,6 @@ import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
 import frc.robot.subsystems.CoralManipulator;
 import frc.robot.subsystems.Elevator;
-import frc.robot.subsystems.ElevatorState;
-import frc.robot.subsystems.ManipulatorState;
 import frc.robot.subsystems.Swerve;
 
 /* Notes for Auto Maker:
@@ -38,7 +36,6 @@ public class AutoCommands {
     private final StringPublisher selectedAutoPublisher;
     private final StringSubscriber autoSubscriber;
     private final Map<String, Command> autoCommands = new HashMap<>();
-    private String selectedAuto = "Nothing";
 
     public AutoCommands(Swerve swerve, Elevator elevator, CoralManipulator manipulator, StateMachine stateMachine) {
         autoTable = NetworkTableInstance.getDefault().getTable("Auto");
@@ -72,38 +69,6 @@ public class AutoCommands {
 
         NamedCommands.registerCommand("scoreL4", 
             stateMachine.changeState(RobotState.SCORE_L4)
-        );
-
-        // use if preload is loaded into manipulator
-        NamedCommands.registerCommand("scoreManipulator", 
-            manipulator.runRollers(Constants.CoralManipulator.SCORE_SPEED)
-                .until(() -> !manipulator.hasCoral())
-                .withTimeout(5.0) 
-                .andThen(manipulator.stopRollers())
-        );
-
-        NamedCommands.registerCommand("triggerScore", 
-            manipulator.runRollers(Constants.CoralManipulator.SCORE_SPEED)
-                .withTimeout(2.0)
-                .andThen(manipulator.stopRollers())
-        );
-
-        // use if preload is loaded into intake manipulator handoff OR trying to intake from hp station
-        NamedCommands.registerCommand("runManipulator",
-            manipulator.runRollers(Constants.CoralManipulator.INTAKE_SPEED)
-                .until(manipulator::hasCoral)  // run until beam break detects coral
-                .withTimeout(5.0)  // timeout after 5 seconds if no coral detected
-                .andThen(manipulator.stopRollers())
-        );
-
-        // algae intake commands (TODO: expand on intake functionalities)
-        NamedCommands.registerCommand("prepareAlgaeIntake",
-            elevator.changeState(ElevatorState.IDLE)  // grounding elevator bec intake
-        );
-
-        NamedCommands.registerCommand("knockAlgae",
-            elevator.changeState(ElevatorState.L3_KNOCK)
-            .andThen(manipulator.changeState(ManipulatorState.KNOCK))
         );
     
         // reset state

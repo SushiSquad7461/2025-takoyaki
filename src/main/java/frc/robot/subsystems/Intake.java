@@ -13,6 +13,8 @@ import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Current;
+
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.VoltageOut;
 
@@ -24,10 +26,13 @@ import static edu.wpi.first.units.Units.Volts;
 import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusSignal;
 
 public class Intake extends SubsystemBase {
     
     private final TalonFX pivotMotor;
+    /** getValueAsDouble returns in Amps */
+    private final StatusSignal<Current> pivotMotorCurrent;
     private final TalonFX wheelMotor;
     private PIDTuning pivotPID;
     private SysIdRoutine routine;
@@ -41,6 +46,7 @@ public class Intake extends SubsystemBase {
         super();
 
         pivotMotor = Constants.AlgaeIntake.PIVOT_CONFIG.createTalon();
+        pivotMotorCurrent = pivotMotor.getSupplyCurrent();
         wheelMotor = Constants.AlgaeIntake.INTAKE_CONFIG.createTalon();
         pivotPID = Constants.AlgaeIntake.PIVOT_CONFIG.genPIDTuning("Pivot Intake", Constants.TUNING_MODE);
         
@@ -100,11 +106,11 @@ public class Intake extends SubsystemBase {
     }
     
     private boolean currentSpikeUp() {
-        return (pivotMotor.getSupplyCurrent().getValue().compareTo(Constants.AlgaeIntake.CURRENT_SPIKE_LIMIT_UP) > 0);
+        return pivotMotorCurrent.getValueAsDouble() > Constants.AlgaeIntake.CURRENT_SPIKE_LIMIT_UP_AMPS;
     }
 
     private boolean currentSpikeDown() {
-        return (pivotMotor.getSupplyCurrent().getValue().compareTo(Constants.AlgaeIntake.CURRENT_SPIKE_LIMIT_DOWN) > 0);
+        return pivotMotorCurrent.getValueAsDouble() > Constants.AlgaeIntake.CURRENT_SPIKE_LIMIT_DOWN_AMPS;
     }
 
     private Command reverseIntake() {
@@ -141,6 +147,7 @@ public class Intake extends SubsystemBase {
     }
 
     public void periodic() {
+        pivotMotorCurrent.refresh();
         posPub.set(pivotMotor.getPosition().getValue().in(Rotations));
         currentPub.set(pivotMotor.getSupplyCurrent().getValue().in(Amps));
         pivotPID.updatePID(pivotMotor);

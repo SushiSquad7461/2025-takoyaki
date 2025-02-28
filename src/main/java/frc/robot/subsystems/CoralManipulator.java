@@ -1,8 +1,6 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
-import com.ctre.phoenix6.controls.VelocityDutyCycle;
-import static edu.wpi.first.units.Units.Seconds;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.networktables.NetworkTable;

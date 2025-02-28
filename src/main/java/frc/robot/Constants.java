@@ -1,6 +1,5 @@
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
@@ -14,13 +13,11 @@ import java.util.Map;
 import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.AngularAccelerationUnit;
 import edu.wpi.first.units.DistanceUnit;
-import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.PerUnit;
 import edu.wpi.first.units.TimeUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Per;
@@ -258,40 +255,31 @@ public class Constants {
             null //Degrees.of(0)
         ).withMotionMagic(MOTION_MAGIC_VELOCITY, MOTION_MAGIC_ACCELERATION);
 
-        public static final Angle MAX_ERROR = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(1.0));
-        public static final Angle RELAXED_MAX_ERROR = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(4.0));
+        public static final double MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(1.0)).in(Rotations);
+        public static final double RELAXED_MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(4.0)).in(Rotations);
     }
 
     public static final class CoralManipulator {
         // motion and position control w/ pivot
-        public static final Angle MAX_ANGLE = Degrees.of(199.5);
-        public static final Angle MIN_ANGLE = Degrees.of(0);
-        public static final Angle ANGLE_TOLERANCE = Degrees.of(5.0);
-                        
         public static final MotorConfig ROLLER_CONFIG = new MotorConfig(
             Ports.ROLLER_MOTOR_ID,
             35,
             false,
             MotorConfig.Mode.BRAKE
         );
-        
-        // roller speeds for diff states (should be in range [-1, 1])
-        public static final double INTAKE_SPEED = .1; //2;
-        public static final double SCORE_SPEED = 0.2;
-        public static final double HOLD_SPEED = 0;
     }
   
     public static class AlgaeIntake {
-        public static final Dimensionless INTAKE_GEAR_RATIO = Rotations.of(15).div(Rotations.of(1)); // output over input
+        public static final double INTAKE_GEAR_RATIO = 15; // output over input
         public static final double INTAKE_SPEED = 0.2;
 
-        public static final Angle MAX_ERROR = Degrees.of(5.0).times(INTAKE_GEAR_RATIO);
-        public static final Angle RAISED_POS = Degrees.of(12).times(INTAKE_GEAR_RATIO);
-        public static final Angle LOWERED_POS = Degrees.of(53).times(INTAKE_GEAR_RATIO);
-        public static final Angle INTAKE_ANGLE = Degrees.of(56.85).times(INTAKE_GEAR_RATIO);
+        public static final Angle MAX_ERROR = Degrees.of(5.0 * INTAKE_GEAR_RATIO);
+        public static final Angle RAISED_POS = Degrees.of(12 * INTAKE_GEAR_RATIO);
+        public static final Angle LOWERED_POS = Degrees.of(53 * INTAKE_GEAR_RATIO);
+        public static final Angle INTAKE_ANGLE = Degrees.of(56.85 * INTAKE_GEAR_RATIO);
 
-        public static final Current CURRENT_SPIKE_LIMIT_DOWN = Amps.of(5);
-        public static final Current CURRENT_SPIKE_LIMIT_UP = Amps.of(5);
+        public static final double CURRENT_SPIKE_LIMIT_DOWN_AMPS = 5;
+        public static final double CURRENT_SPIKE_LIMIT_UP_AMPS = 5;
 
         //TODO: use sysid and set all of these values
         public static final MotorConfig INTAKE_CONFIG = new MotorConfig(
