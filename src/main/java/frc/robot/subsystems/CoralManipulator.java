@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Seconds;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.networktables.NetworkTable;
@@ -48,7 +50,9 @@ public class CoralManipulator extends SubsystemBase {
         if (state == ManipulatorState.INTAKE) {
             // for intake, run until detect coral
             return runRollers(state.getRollerSpeed())
-                    .until(this::hasCoral);
+                    .until(this::hasCoral)
+                    .andThen(Commands.waitTime(Seconds.of(0.5))
+                    .andThen(stopRollers()));
         }
 
         // for scoring, only run if coral piece is detected
@@ -75,7 +79,7 @@ public class CoralManipulator extends SubsystemBase {
     @Override
     public void periodic() {
         beambreakPub.set(hasCoral());
-        currentPub.set(rollerMotor.getSupplyCurrent().getValueAsDouble());
+        currentPub.set(rollerMotor.getSupplyCurrent().getValue().in(Amps));
     }
 
 }

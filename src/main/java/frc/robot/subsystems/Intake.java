@@ -11,10 +11,11 @@ import frc.robot.Constants;
 import frc.robot.Direction;
 import frc.robot.util.control.nt.PIDTuning;
 import frc.robot.util.control.nt.TunableNumber;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.VoltageOut;
+
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -33,7 +34,7 @@ public class Intake extends SubsystemBase {
 
         pivotMotor = Constants.AlgaeIntake.PIVOT_CONFIG.createTalon();
         wheelMotor = Constants.AlgaeIntake.INTAKE_CONFIG.createTalon();
-        pivotPos = new TunableNumber("Intake Pos", Constants.AlgaeIntake.RAISED_POS.magnitude(), Constants.TUNING_MODE);
+        pivotPos = new TunableNumber("Intake Pos", Constants.AlgaeIntake.RAISED_POS.in(Degrees), Constants.TUNING_MODE);
         pivotPID = Constants.AlgaeIntake.PIVOT_CONFIG.genPIDTuning("Pivot Intake", Constants.TUNING_MODE);
         
         routine = new SysIdRoutine(
@@ -61,27 +62,13 @@ public class Intake extends SubsystemBase {
         return routine.dynamic(direction);
     }
     
-    //retrieving position and other related values
-    private void resetToAbsolutePosition() {
-        pivotMotor.setPosition(getAbsolutePosition());
+    private Angle getPosition() {
+        return pivotMotor.getPosition().getValue();
     }
 
-    private double getAbsolutePosition() {
-        return MathUtil.inputModulus(getPosition(), -180, 180);
+    private Angle getError(Angle setpoint) {
+        return getPosition().minus(setpoint);
     }
-
-    private double getPosition() {
-        return pivotMotor.getPosition().getValueAsDouble();
-    }
-
-    private double getError(Angle setpoint) {
-        return Math.abs(getPosition() - setpoint.magnitude());
-    }
-
-    private double getAbsoluteError() {
-        return Math.abs(getPosition() - getAbsolutePosition());
-    }
-
 
     //Commands for the intake 
     private Command lowerIntake() {
@@ -89,11 +76,22 @@ public class Intake extends SubsystemBase {
     }
 
     private Command raiseIntake() {
-        return changePivotPos(Constants.AlgaeIntake.RAISED_POS);
+        return changePivotPos(Constants.AlgaeIntake.RAISED_POS)
+            .andThen(() -> pivotMotor.set(0.1))
+            .until(this::intakeAtTop)
+            .andThen(() -> pivotMotor.setPosition(Constants.AlgaeIntake.RAISED_POS));
     }
 
     private Command runIntake() {
         return runOnce(() -> wheelMotor.set(Constants.AlgaeIntake.INTAKE_SPEED));
+    }
+
+    private boolean intakeAtTop() {
+        return currentSpike();
+    }
+    
+    private boolean currentSpike() {
+        return (pivotMotor.getSupplyCurrent().getValue().compareTo(Constants.AlgaeIntake.CURRENT_LIMIT) > 0);
     }
 
     private Command reverseIntake() {
@@ -106,17 +104,13 @@ public class Intake extends SubsystemBase {
 
     //Changing the position of the intake
     private Command changePivotPos(Angle position) {
-        if (getAbsoluteError() > Constants.AlgaeIntake.ERROR_LIMIT) {
-            resetToAbsolutePosition();
-        }
-
         pivotMotor.setControl(
             new PositionDutyCycle(position.div(Constants.AlgaeIntake.INTAKE_GEAR_RATIO))
         );
 
         return run(() -> {
-            pivotPos.setDefault(position.magnitude());
-        }).until(() -> getError(position) < Constants.AlgaeIntake.MAX_ERROR);
+            pivotPos.setDefault(position.in(Degrees));
+        }).until(() -> getError(position).abs(Degrees) < Constants.AlgaeIntake.MAX_ERROR.in(Degrees));
     }
 
     //Changes the state of the intake
@@ -131,10 +125,6 @@ public class Intake extends SubsystemBase {
     }
 
     public void periodic() {
-        if (getAbsoluteError() > Constants.AlgaeIntake.ERROR_LIMIT) {
-            resetToAbsolutePosition();
-        }
-
         pivotPID.updatePID(pivotMotor);
     }
 }
