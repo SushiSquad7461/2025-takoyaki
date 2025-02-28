@@ -48,7 +48,6 @@ public class RobotContainer {
         stateMachine.changeState(RobotState.SCORE_L2),
         stateMachine.changeState(RobotState.SCORE_L3),
         stateMachine.changeState(RobotState.SCORE_L4)
-        // TODO add L4 when energy chain fixed
     };
     private Command targetScoreCommand = scoreCommands[0];
     

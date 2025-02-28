@@ -56,7 +56,6 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringArrayPublisher;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.NetworkTableEvent;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -91,9 +90,6 @@ public class Swerve extends SubsystemBase {
     private static final double ALIGNMENT_TOLERANCE = 25; //pixels
     
     private final NetworkTable table;
-    private final DoublePublisher[] cancoderPubs;
-    private final DoublePublisher[] anglePubs;
-    private final DoublePublisher[] velocityPubs;
     private final StringPublisher alignmentPositionPub;
     private final BooleanPublisher isAlignedPub;
     private final DoublePublisher targetCenterXPub;
@@ -170,19 +166,8 @@ public class Swerve extends SubsystemBase {
         targetRotPub = table.getDoubleTopic("Alignment/OdomTarget/Rotation").publish();
 
         reefScorePositionPub = table.getStringTopic("Alignment/Trajectory/ReefScorePosition").publish();
-
-        cancoderPubs = new DoublePublisher[4];
-        anglePubs = new DoublePublisher[4];
-        velocityPubs = new DoublePublisher[4];
-
         selectedPositionPub = table.getStringTopic("AutoAlign/SelectedPosition").publish();
         selectedScorePosition = ReefScorePosition.FRONT;
-
-        for (int i = 0; i < 4; i++) {
-            cancoderPubs[i] = table.getDoubleTopic("Module " + i + "/CANcoder").publish();
-            anglePubs[i] = table.getDoubleTopic("Module " + i + "/Angle").publish();
-            velocityPubs[i] = table.getDoubleTopic("Module " + i + "/Velocity").publish();
-        }
 
         fieldLayoutPub = table.getStringTopic("FieldLayout/Current").publish();
         fieldLayoutOptionsPub = table.getStringArrayTopic("FieldLayout/Options").publish();
@@ -768,12 +753,6 @@ public class Swerve extends SubsystemBase {
 
         Pose2d currentPose = getPose();
         field.setRobotPose(currentPose);
-
-        for(SwerveModule mod : mSwerveMods){
-            cancoderPubs[mod.moduleNumber].set(mod.getCANcoder().getDegrees());
-            anglePubs[mod.moduleNumber].set(mod.getPosition().angle.getDegrees());
-            velocityPubs[mod.moduleNumber].set(mod.getState().speedMetersPerSecond);
-        }
 
         alignmentPositionPub.set(currentAlignmentPosition.toString());
         isAlignedPub.set(isAligned(currentAlignmentPosition).getAsBoolean());
