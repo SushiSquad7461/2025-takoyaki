@@ -149,7 +149,7 @@ public class Constants {
             public static final int driveMotorID = 1;
             public static final int angleMotorID = 2;
             public static final int canCoderID = 3;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(169.628906);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(169.365234); //point bevel to right
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -159,7 +159,7 @@ public class Constants {
             public static final int driveMotorID = 4;
             public static final int angleMotorID = 5;
             public static final int canCoderID = 6;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(168.925781); //168.925781
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-27.509766); //168.925781
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -169,7 +169,7 @@ public class Constants {
             public static final int driveMotorID = 7;
             public static final int angleMotorID = 8;
             public static final int canCoderID = 9;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-15.732422);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-13.183594); //-15.732422
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -179,7 +179,7 @@ public class Constants {
             public static final int driveMotorID = 10;
             public static final int angleMotorID = 11;
             public static final int canCoderID = 12;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-144.228516);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-143.964844); //-144.228516)
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -233,7 +233,7 @@ public class Constants {
         );
         
         // roller speeds for diff states (should be in range [-1, 1])
-        public static final double INTAKE_SPEED = 0.15;
+        public static final double INTAKE_SPEED = .1; //2;
         public static final double SCORE_SPEED = 0.2;
         public static final double HOLD_SPEED = 0;
     }
@@ -286,16 +286,16 @@ public class Constants {
             new TrapezoidProfile.Constraints(
                 AutoConstants.kMaxAngularSpeedRadiansPerSecond, AutoConstants.kMaxAngularSpeedRadiansPerSecondSquared);
 
-        public static final Map<AlignmentPosition, Double> leftCameraOffsets = Map.of(
+        public static final Map<AlignmentPosition, Double> leftCameraOffsets = Map.of( 
             AlignmentPosition.LEFT, 0.,
             AlignmentPosition.RIGHT, -(double)Swerve.CAMERA_RESOLUTIONX, // TODO verify target offscreen in this case
-            AlignmentPosition.CENTER, 0.
+            AlignmentPosition.CENTER, 739.
         );
 
         public static final Map<AlignmentPosition, Double> rightCameraOffsets = Map.of(
             AlignmentPosition.LEFT, 2.*Swerve.CAMERA_RESOLUTIONX, // TODO verify target offscreen in this case
-            AlignmentPosition.RIGHT, 0.,
-            AlignmentPosition.CENTER, 0.
+            AlignmentPosition.RIGHT, 344.8, //.40, .12
+            AlignmentPosition.CENTER, 543.8 //.29
         );
     }
 

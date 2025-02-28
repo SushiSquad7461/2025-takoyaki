@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+
+import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.networktables.NetworkTable;
@@ -62,11 +64,13 @@ public class CoralManipulator extends SubsystemBase {
     }
 
     public Command runRollers(double speed) {
+        // return runOnce(() -> rollerMotor.setControl(veloDutyCycle.withVelocity(speed)));
         return runOnce(() -> rollerMotor.set(speed));
+
     }
 
     public Command stopRollers() {
-        return runOnce(() -> rollerMotor.set(0));
+        return runRollers(0);
     }
 
     public boolean hasCoral() {

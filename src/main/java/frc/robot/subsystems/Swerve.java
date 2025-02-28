@@ -57,6 +57,8 @@ import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -84,7 +86,7 @@ public class Swerve extends SubsystemBase {
 
     private AlignmentPosition currentAlignmentPosition = AlignmentPosition.CENTER;
 
-    private static final double ALIGNMENT_TOLERANCE = 5; //pixels
+    private static final double ALIGNMENT_TOLERANCE = 25; //pixels
     
     private final NetworkTable table;
     private final DoublePublisher poseXPub;
@@ -101,6 +103,7 @@ public class Swerve extends SubsystemBase {
     private final StringPublisher selectedPositionPub;
     private final DoublePublisher targetXPub;
     private final DoublePublisher targetYPub;
+    private final DoublePublisher centerXPub;
     private final DoublePublisher targetRotPub;
 
     private static final AprilTagFields WELDED_LAYOUT = AprilTagFields.k2025Reefscape;
@@ -125,8 +128,8 @@ public class Swerve extends SubsystemBase {
         };
 
         //TODO: rename cameras
-        leftCamera = new PhotonCamera("Arducam_OV9281_USB_Camera");
-        rightCamera = new PhotonCamera("Arducam_OV9782_USB_Camera");
+        leftCamera = new PhotonCamera("Arducam_OV9782_USB_Camera");
+        rightCamera = new PhotonCamera("Arducam_OV9281_USB_Camera"); //Arducam_OV9782_USB_Camera
         targetPositions = Map.of(
             leftCamera, Constants.VisionConstants.leftCameraOffsets,
             rightCamera, Constants.VisionConstants.rightCameraOffsets
@@ -164,6 +167,7 @@ public class Swerve extends SubsystemBase {
         isAlignedPub = table.getBooleanTopic("Alignment/IsAligned").publish();
         targetCenterXPub = table.getDoubleTopic("Alignment/TargetCenterX").publish();
         desiredXPub = table.getDoubleTopic("Alignment/DesiredX").publish();
+        centerXPub = table.getDoubleTopic("Alignment/CenterX").publish();
         targetXPub = table.getDoubleTopic("Alignment/OdomTarget/X").publish();
         targetYPub = table.getDoubleTopic("Alignment/OdomTarget/Y").publish();
         targetRotPub = table.getDoubleTopic("Alignment/OdomTarget/Rotation").publish();
@@ -439,6 +443,7 @@ public class Swerve extends SubsystemBase {
         double centerX = 0;
         for (var corner : corners) {
             centerX += corner.x;
+
         }
         centerX /= corners.size();
         return centerX;
@@ -489,7 +494,7 @@ public class Swerve extends SubsystemBase {
                     desiredCenterX = targetPositions.get(secondCam).get(position);
                 }
 
-                offset = actualCenterX - desiredCenterX;
+                offset = desiredCenterX - actualCenterX;
                 targetCenterXPub.set(actualCenterX);
                 desiredXPub.set(desiredCenterX);
 
@@ -497,7 +502,7 @@ public class Swerve extends SubsystemBase {
                     new Translation2d(0, 0.25 * Math.signum(offset)),
                     0,
                     true,
-                    false
+                    true
                 );
             }
         ).until(isAligned(position)).withTimeout(5);
@@ -807,6 +812,9 @@ public class Swerve extends SubsystemBase {
     public void periodic(){
         leftCameraResults = leftCamera.getAllUnreadResults();
         rightCameraResults = rightCamera.getAllUnreadResults();
+        if (!rightCameraResults.isEmpty() && rightCameraResults.get(rightCameraResults.size()-1).hasTargets()) {
+            centerXPub.set(getCenterX(rightCameraResults.get(rightCameraResults.size()-1).getBestTarget().detectedCorners));
+        }
 
         poseEstimator.update(getGyroYaw(), getModulePositions());
 
