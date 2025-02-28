@@ -48,7 +48,6 @@ public class Robot extends TimedRobot {
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
     CameraServer.startAutomaticCapture();
-    SmartDashboard.putData("Field", m_field);
 
     //Adds a trajectory onto the field widget in elastic
     m_trajectory =

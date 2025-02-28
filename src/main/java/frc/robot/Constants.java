@@ -304,8 +304,8 @@ public class Constants {
         public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
         public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
     
-        public static final double kPTranslationController = .2;
-        public static final double kPThetaController = .2;
+        public static final double kPTranslationController = 0;
+        public static final double kPThetaController = 0;
     }
 
     public static final class VisionConstants { //TODO: only tell pipeline to give pose when multiple tags detected
