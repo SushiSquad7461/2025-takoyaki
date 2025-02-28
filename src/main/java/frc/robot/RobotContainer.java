@@ -8,12 +8,10 @@ import java.util.Set;
 
 import com.ctre.phoenix6.SignalLogger;
 
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.StateMachine;
@@ -77,9 +75,9 @@ public class RobotContainer {
 
         swerve.setDefaultCommand(new TeleopSwerve(
             swerve,
-            () -> -Math.pow(driverController.getLeftY(), 3),
-            () -> -Math.pow(driverController.getLeftX(), 3),
-            () -> -Math.pow(driverController.getRightX(), 3), 
+            () -> -driverController.getLeftY(),
+            () -> -driverController.getLeftX(),
+            () -> -driverController.getRightX(), 
             () -> driverController.a().getAsBoolean())); // allows you to drive as robot relative only while holding down the button
         
         // Driver handles robot positioning, alignment, and algae
