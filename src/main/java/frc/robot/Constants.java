@@ -149,7 +149,11 @@ public class Constants {
             public static final int driveMotorID = 1;
             public static final int angleMotorID = 2;
             public static final int canCoderID = 3;
+<<<<<<< HEAD
             public static final Rotation2d angleOffset = Rotation2d.fromDegrees(169.365234); //point bevel to right
+=======
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(169.628906); //have bevel gears face right 
+>>>>>>> 49d1d9854bc269dadb856647e8c0efa03511d186
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -184,6 +188,36 @@ public class Constants {
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
     }
+
+    public static final class DriveCharacterization {
+        /* Module 0 - Front Left */
+        public static final class Mod0 {
+            public static final double driveKS = 0.32;
+            public static final double driveKV = 1.51;
+            public static final double driveKA = 0.27;
+        }
+    
+        /* Module 1 - Front Right */
+        public static final class Mod1 {
+            public static final double driveKS = 0.32;
+            public static final double driveKV = 1.51;
+            public static final double driveKA = 0.27;
+        }
+    
+        /* Module 2 - Back Left */
+        public static final class Mod2 {
+            public static final double driveKS = 0.32;
+            public static final double driveKV = 1.51;
+            public static final double driveKA = 0.27;
+        }
+    
+        /* Module 3 - Back Right */
+        public static final class Mod3 {
+            public static final double driveKS = 0.32;
+            public static final double driveKV = 1.51;
+            public static final double driveKA = 0.27;
+        }
+    }    
 
     public static class Elevator {
         public static final Distance MAX_HEIGHT = Inches.of(28.0); 
