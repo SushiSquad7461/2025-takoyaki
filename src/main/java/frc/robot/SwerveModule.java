@@ -39,9 +39,6 @@ public class SwerveModule {
 
         /* Angle Motor Config */
         mAngleMotor = new TalonFX(moduleConstants.angleMotorID);
-        mAngleMotor.getConfigurator().apply(Robot.ctreConfigs.swerveAngleFXConfig);
-        resetToAbsolute();
-
         /* Drive Motor Config */
         mDriveMotor = new TalonFX(moduleConstants.driveMotorID);
 
@@ -50,25 +47,40 @@ public class SwerveModule {
                 Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kS = Constants.DriveCharacterization.Mod0.driveKS;
                 Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kV = Constants.DriveCharacterization.Mod0.driveKV;
                 Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kA = Constants.DriveCharacterization.Mod0.driveKA;
+                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kS = Constants.DriveCharacterization.Mod0.angleKS;
+                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kV = Constants.DriveCharacterization.Mod0.angleKV;
+                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kA = Constants.DriveCharacterization.Mod0.angleKA;
             }
             case 1 -> {
                 Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kS = Constants.DriveCharacterization.Mod1.driveKS;
                 Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kV = Constants.DriveCharacterization.Mod1.driveKV;
                 Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kA = Constants.DriveCharacterization.Mod1.driveKA;
+                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kS = Constants.DriveCharacterization.Mod1.angleKS;
+                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kV = Constants.DriveCharacterization.Mod1.angleKV;
+                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kA = Constants.DriveCharacterization.Mod1.angleKA;
 
             }
             case 2 -> {
                 Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kS = Constants.DriveCharacterization.Mod2.driveKS;
                 Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kV = Constants.DriveCharacterization.Mod2.driveKV;
                 Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kA = Constants.DriveCharacterization.Mod2.driveKA;
+                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kS = Constants.DriveCharacterization.Mod2.angleKS;
+                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kV = Constants.DriveCharacterization.Mod2.angleKV;
+                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kA = Constants.DriveCharacterization.Mod2.angleKA;
             }
             case 3 -> {
                 Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kS = Constants.DriveCharacterization.Mod3.driveKS;
                 Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kV = Constants.DriveCharacterization.Mod3.driveKV;
                 Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kA = Constants.DriveCharacterization.Mod3.driveKA;
+                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kS = Constants.DriveCharacterization.Mod3.angleKS;
+                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kV = Constants.DriveCharacterization.Mod3.angleKV;
+                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kA = Constants.DriveCharacterization.Mod3.angleKA;
             }
         }
         
+        mAngleMotor.getConfigurator().apply(Robot.ctreConfigs.swerveAngleFXConfig);
+        resetToAbsolute();
+
         mDriveMotor.getConfigurator().apply(Robot.ctreConfigs.swerveDriveFXConfig);
         mDriveMotor.getConfigurator().setPosition(0.0);
 

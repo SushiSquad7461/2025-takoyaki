@@ -192,6 +192,9 @@ public class Constants {
             public static final double driveKS = 0.19;
             public static final double driveKV = 0.71;
             public static final double driveKA = 0.066;
+            public static final double angleKS = 0;
+            public static final double angleKV = 0;
+            public static final double angleKA = 0;
         }
     
         /* Module 1 - Front Right */
@@ -199,6 +202,9 @@ public class Constants {
             public static final double driveKS = 0.18879;
             public static final double driveKV = 0.70816;
             public static final double driveKA = 0.066208;
+            public static final double angleKS = 0;
+            public static final double angleKV = 0;
+            public static final double angleKA = 0;
         }
     
         /* Module 2 - Back Left */
@@ -206,6 +212,9 @@ public class Constants {
             public static final double driveKS = 0.1812;
             public static final double driveKV = 0.68313;
             public static final double driveKA = 0.031761;
+            public static final double angleKS = 0;
+            public static final double angleKV = 0;
+            public static final double angleKA = 0;
         }
     
         /* Module 3 - Back Right */
@@ -213,6 +222,9 @@ public class Constants {
             public static final double driveKS = 0.15286;
             public static final double driveKV = 1.72792;
             public static final double driveKA = 0.059573;
+            public static final double angleKS = 0;
+            public static final double angleKV = 0;
+            public static final double angleKA = 0;
         }
     }    
 
@@ -309,8 +321,8 @@ public class Constants {
     }
 
     public static final class VisionConstants { //TODO: only tell pipeline to give pose when multiple tags detected
-        public static final Transform3d leftCamera = new Transform3d(new Translation3d(7.6724, 11.7981, 7.291), new Rotation3d(0, 20, -36.5));
-        public static final Transform3d rightCamera = new Transform3d(new Translation3d(7.6724, -11.7981, 7.291), new Rotation3d(0, 20, 36.5));
+        public static final Transform3d leftCamera = new Transform3d(new Translation3d(8.69, 10.7684, 7.5325), new Rotation3d(0, 17.75, -50.5));
+        public static final Transform3d rightCamera = new Transform3d(new Translation3d(8.69, -10.7684, 7.5325), new Rotation3d(0, 17.75, 50.5));
 
         /* Constraint for the motion profilied robot angle controller */
         public static final TrapezoidProfile.Constraints kThetaControllerConstraints =
