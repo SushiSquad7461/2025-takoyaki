@@ -3,6 +3,8 @@ package frc.robot.util.motor;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -76,9 +78,9 @@ public class MotorConfig {
    public MotorConfig(int canId, int currentLimit, Boolean inversion, PIDConfig pid, Mode mode) { this(canId, "rio", currentLimit, inversion, pid, mode, RadiansPerSecond.zero(), RadiansPerSecondPerSecond.zero(), null, null); }
 
 
-public PIDTuning genPIDTuning(String motorName, boolean tuningMode) {
-        return new PIDTuning(motorName, pid, tuningMode);
-   }
+     public PIDTuning genPIDTuning(String motorName, boolean tuningMode) {
+          return new PIDTuning(motorName, pid, tuningMode);
+     }
 
    public TalonFXConfiguration getTalonConfig() {
         TalonFXConfiguration talonConfig = new TalonFXConfiguration();
@@ -97,7 +99,6 @@ public PIDTuning genPIDTuning(String motorName, boolean tuningMode) {
 
         talonConfig.MotorOutput.NeutralMode = mode.getTalonMode();
         talonConfig.MotorOutput.Inverted = inversion ? InvertedValue.CounterClockwise_Positive : InvertedValue.Clockwise_Positive;
-
         pid.updatePidConfig(talonConfig);
 
         return talonConfig;
@@ -141,8 +142,8 @@ public PIDTuning genPIDTuning(String motorName, boolean tuningMode) {
      TalonFXConfiguration config = getTalonConfig();
      
      MotionMagicConfigs motionMagic = new MotionMagicConfigs();
-     motionMagic.MotionMagicCruiseVelocity = velocityLimit.in(RadiansPerSecond);
-     motionMagic.MotionMagicAcceleration = accelerationLimit.in(RadiansPerSecondPerSecond);
+     motionMagic.MotionMagicCruiseVelocity = velocityLimit.in(RotationsPerSecond);
+     motionMagic.MotionMagicAcceleration = accelerationLimit.in(RotationsPerSecondPerSecond);
      
      config.MotionMagic = motionMagic;
      motor.getConfigurator().apply(config);

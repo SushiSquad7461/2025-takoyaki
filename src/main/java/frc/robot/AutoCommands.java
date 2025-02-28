@@ -100,7 +100,7 @@ public class AutoCommands {
         );
 
         NamedCommands.registerCommand("knockAlgae",
-            elevator.changeState(ElevatorState.KNOCK)
+            elevator.changeState(ElevatorState.L3_KNOCK)
             .andThen(manipulator.changeState(ManipulatorState.KNOCK))
         );
     

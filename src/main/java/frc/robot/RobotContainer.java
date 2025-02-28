@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.util.Set;
+
 import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.wpilibj.GenericHID;
@@ -41,13 +43,23 @@ public class RobotContainer {
     private final Intake intake = new Intake();
 
     private final StateMachine stateMachine = new StateMachine(intake, manipulator, elevator);
-    private final AutoCommands autos = new AutoCommands(swerve, elevator, manipulator, stateMachine);
-    private RobotState targetScoreState = RobotState.SCORE_L1;
-
+    //private final AutoCommands autos = new AutoCommands(swerve, elevator, manipulator, stateMachine);
+    private Command[] scoreCommands = {
+        stateMachine.changeState(RobotState.SCORE_L1),
+        stateMachine.changeState(RobotState.SCORE_L2),
+        stateMachine.changeState(RobotState.SCORE_L3),
+        stateMachine.changeState(RobotState.SCORE_L4)
+        // TODO add L4 when energy chain fixed
+    };
+    private Command targetScoreCommand = scoreCommands[0];
+    
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         // Configure the button bindings
         configureButtonBindings();
+
+        elevator.setDefaultCommand(elevator.resetElevator().andThen(() -> elevator.removeDefaultCommand()));
+        intake.setDefaultCommand(intake.reset(true).andThen(() -> intake.removeDefaultCommand()));
     }
 
     /**
@@ -59,6 +71,8 @@ public class RobotContainer {
     private void configureButtonBindings() {
         /* Driver Buttons */
 
+        final var idle = stateMachine.changeState(RobotState.IDLE);
+
         swerve.setDefaultCommand(new TeleopSwerve(
             swerve,
             () -> -driverController.getLeftY(),
@@ -68,52 +82,64 @@ public class RobotContainer {
         
         // Driver handles robot positioning, alignment, and algae
         driverController.y().onTrue(swerve.resetHeading());
+        driverController.a().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL)).onFalse(idle);
+        driverController.b().whileTrue(swerve.runAutoAlign(AlignmentPosition.CENTER));
+        driverController.leftTrigger().whileTrue(swerve.runAutoAlign(AlignmentPosition.LEFT));
+        driverController.rightTrigger().whileTrue(swerve.runAutoAlign(AlignmentPosition.RIGHT));
 
-        var autoAlignCenter = swerve.runAutoAlign(AlignmentPosition.CENTER);
-        driverController.b().onTrue(autoAlignCenter);
-        SmartDashboard.putData(autoAlignCenter);
-
-        var autoAlignLeft = swerve.runAutoAlign(AlignmentPosition.LEFT);
-        driverController.leftTrigger().onTrue(autoAlignLeft);
-        SmartDashboard.putData(autoAlignLeft);
-
-        var autoAlignRight = swerve.runAutoAlign(AlignmentPosition.RIGHT);
-        driverController.rightTrigger().onTrue(autoAlignRight);
-        SmartDashboard.putData(autoAlignRight);
-
-        driverController.leftBumper().whileTrue(stateMachine.changeState(RobotState.INTAKE_ALGAE));  // intake wheels rolled in regular direction
-        driverController.leftBumper().onFalse(stateMachine.changeState(RobotState.IDLE)); // raise intake
-        driverController.rightBumper().whileTrue(stateMachine.changeState(RobotState.SCORE_ALGAE)); // intake wheels rolled in reverse
+        driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_ALGAE)).onFalse(idle);  // intake wheels rolled in regular direction
+        driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.SCORE_ALGAE)).onFalse(idle); // intake wheels rolled in reverse
 
         // Operator controls coral scoring
-        operatorController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL));
-        operatorController.a().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L1));
-        operatorController.x().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L2));
-        operatorController.y().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L3));
-        operatorController.b().onTrue(Commands.runOnce(() -> targetScoreState = RobotState.SCORE_L4));
+        operatorController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL)).onFalse(idle);
+        operatorController.a().onTrue(Commands.runOnce(() -> targetScoreCommand = scoreCommands[0]));
+        operatorController.x().onTrue(Commands.runOnce(() -> targetScoreCommand = scoreCommands[1]));
+        operatorController.y().onTrue(Commands.runOnce(() -> targetScoreCommand = scoreCommands[2]));
+        operatorController.b().onTrue(Commands.runOnce(() -> targetScoreCommand = scoreCommands[3]));
 
-        var scoreState = stateMachine.changeState(targetScoreState);
-        operatorController.rightBumper().onTrue(scoreState);
-        SmartDashboard.putData(scoreState);
+        //operatorController.rightBumper().onTrue(Commands.runOnce(() -> CommandScheduler.getInstance().schedule(targetScoreCommand))).onFalse(idle);
+        //operatorController.rightTrigger().onTrue(manipulator.runRollers(0.1)).onFalse(Commands.runOnce(() -> manipulator.runRollers(0)));
 
+        operatorController.rightBumper().onTrue(Commands.defer(() -> targetScoreCommand, Set.of(swerve, elevator, manipulator, intake))).onFalse(idle);
+        operatorController.rightTrigger().onTrue(manipulator.runRollers(0.1)).onFalse(manipulator.runRollers(0));        
+        
         // special state => override and resetting to idle, and knocking algae
-        operatorController.back().onTrue(stateMachine.changeState(RobotState.IDLE));
-        operatorController.leftTrigger().onTrue(stateMachine.changeState(RobotState.KNOCK_ALGAE));
+        operatorController.back().onTrue(idle);
+        operatorController.leftTrigger().onTrue(stateMachine.changeState(RobotState.KNOCK_ALGAE)).onFalse(idle);
+
+        // odometry autoalign testing
+        operatorController.povUp().whileTrue(swerve.runOdometryAlign());
+        operatorController.povDown().whileTrue(swerve.runTrajectoryOdomAlign());
 
 
         programmerController.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
         programmerController.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
 
-        programmerController.a().whileTrue(elevator.sysIdQuasistatic(Direction.kForward));
-        programmerController.b().whileTrue(elevator.sysIdQuasistatic(Direction.kReverse));
-        programmerController.x().whileTrue(elevator.sysIdDynamic(Direction.kForward));
-        programmerController.y().whileTrue(elevator.sysIdDynamic(Direction.kReverse));
+        programmerController.a().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdQuasistatic(Direction.kForward));
+        programmerController.b().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdQuasistatic(Direction.kReverse));
+        programmerController.x().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdDynamic(Direction.kForward));
+        programmerController.y().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdDynamic(Direction.kReverse));
 
         programmerController.a().and(programmerController.leftTrigger()).whileTrue(intake.sysIdQuasistatic(Direction.kForward));
         programmerController.b().and(programmerController.leftTrigger()).whileTrue(intake.sysIdQuasistatic(Direction.kReverse));
         programmerController.x().and(programmerController.leftTrigger()).whileTrue(intake.sysIdDynamic(Direction.kForward));
         programmerController.y().and(programmerController.leftTrigger()).whileTrue(intake.sysIdDynamic(Direction.kReverse));
+
+        programmerController.a().and(programmerController.povLeft()).whileTrue(swerve.sysIdDriveQuasistatic(Direction.kForward));
+        programmerController.b().and(programmerController.povLeft()).whileTrue(swerve.sysIdDriveQuasistatic(Direction.kReverse));
+        programmerController.x().and(programmerController.povLeft()).whileTrue(swerve.sysIdDriveDynamic(Direction.kForward));
+        programmerController.y().and(programmerController.povLeft()).whileTrue(swerve.sysIdDriveDynamic(Direction.kReverse));
+
+        programmerController.a().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kForward));
+        programmerController.b().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kReverse));
+        programmerController.x().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kForward));
+        programmerController.y().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kReverse));
+
+        programmerController.povUp().whileTrue(elevator.goUp());
+        programmerController.povDown().whileTrue(elevator.goDown());
+        programmerController.a().whileTrue(elevator.resetElevator());
     }
+
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -121,6 +147,6 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return autos.getAuto();
+        return Commands.none();
     }
 }

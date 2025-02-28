@@ -9,6 +9,8 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
+import java.util.Map;
+
 import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.AngularAccelerationUnit;
 import edu.wpi.first.units.DistanceUnit;
@@ -22,14 +24,19 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Per;
+import frc.robot.subsystems.Swerve.AlignmentPosition;
 import frc.robot.util.control.PIDConfig;
 import frc.robot.util.motor.MotorConfig;
 
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
+
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -37,7 +44,7 @@ import frc.lib.util.COTSTalonFXSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
 
 public class Constants {
-    public static boolean TUNING_MODE;
+    public static boolean TUNING_MODE = false;
     public static final double stickDeadband = 0.1;
 
     public static class Ports {
@@ -45,15 +52,16 @@ public class Constants {
         public static final int OPERATOR_PORT = 1;
         public static final int PROG_PORT = 2;
 
-        public static final int INTAKE_ROLLER_ID = 0;
-        public static final int INTAKE_PIVOT_ID = 0;
-        public static final int ROLLER_MOTOR_ID = 0;
+        public static final int ALGAE_INTAKE_ROLLER_ID = 15;
+        public static final int INTAKE_PIVOT_ID = 17;
+        public static final int ROLLER_MOTOR_ID = 16;
 
-        public static final int ELEVATOR_LEFT_ID = 0;
-        public static final int ELEVATOR_RIGHT_ID = 0;
+        public static final int ELEVATOR_LEFT_ID = 14;
+        public static final int ELEVATOR_RIGHT_ID = 18;
 
-        public static final int LIMIT_SWITCH_PORT = 1; 
-        public static final int BEAM_BREAK_PORT = 2; 
+        public static final int LIMIT_SWITCH_PORT = 2; 
+        public static final int BEAM_BREAK_PORT = 1;
+        public static final int ELEV_BEAM_BREAK_PORT = 3; 
     }
 
     public static class CustomUnits {
@@ -142,7 +150,7 @@ public class Constants {
             public static final int driveMotorID = 1;
             public static final int angleMotorID = 2;
             public static final int canCoderID = 3;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(169.628906);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(169.365234); //point bevel to right
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -152,7 +160,7 @@ public class Constants {
             public static final int driveMotorID = 4;
             public static final int angleMotorID = 5;
             public static final int canCoderID = 6;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(168.925781); //168.925781
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-27.509766); //168.925781
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -162,7 +170,7 @@ public class Constants {
             public static final int driveMotorID = 7;
             public static final int angleMotorID = 8;
             public static final int canCoderID = 9;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-15.732422);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-13.183594); //-15.732422
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -172,43 +180,74 @@ public class Constants {
             public static final int driveMotorID = 10;
             public static final int angleMotorID = 11;
             public static final int canCoderID = 12;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-144.228516);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-143.964844); //-144.228516)
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
     }
 
+    public static final class DriveCharacterization {
+        /* Module 0 - Front Left */
+        public static final class Mod0 {
+            public static final double driveKS = 0.19;
+            public static final double driveKV = 0.71;
+            public static final double driveKA = 0.066;
+        }
+    
+        /* Module 1 - Front Right */
+        public static final class Mod1 {
+            public static final double driveKS = 0.18879;
+            public static final double driveKV = 0.70816;
+            public static final double driveKA = 0.066208;
+        }
+    
+        /* Module 2 - Back Left */
+        public static final class Mod2 {
+            public static final double driveKS = 0.1812;
+            public static final double driveKV = 0.68313;
+            public static final double driveKA = 0.031761;
+        }
+    
+        /* Module 3 - Back Right */
+        public static final class Mod3 {
+            public static final double driveKS = 0.15286;
+            public static final double driveKV = 1.72792;
+            public static final double driveKA = 0.059573;
+        }
+    }    
+
     public static class Elevator {
         public static final Distance MAX_HEIGHT = Inches.of(28.0); 
-        public static final Distance ELEVATOR_EXTENSION_PER_ROTATION = Meters.of(0.1); //TODO: measure elevator height and divide by gear ratio (repeat 5x)
+        public static final Distance ELEVATOR_EXTENSION_PER_ROTATION = Inches.of(3.994); 
         public static final Dimensionless GEAR_RATIO = Rotations.of(52*60).div(Rotations.of(18*18)); //output over input
         public static final Angle MOTOR_MAX_HEIGHT = frc.robot.subsystems.Elevator.heightToMotor(MAX_HEIGHT);
 
-        // for motion magic, TODO: set and add jerk to motor config
         public static final AngularVelocity MOTION_MAGIC_VELOCITY = RotationsPerSecond.of(80);
         public static final AngularAcceleration MOTION_MAGIC_ACCELERATION = RotationsPerSecondPerSecond.of(160);
         public static final Per<AngularAccelerationUnit, TimeUnit> MOTION_MAGIC_JERK = Per.ofBaseUnits(0.0, PerUnit.combine(RotationsPerSecondPerSecond, Seconds)); //add towards end of tuning
         
-        //TODO: use sysid and set all of these values
         public static final MotorConfig ELEVATOR_LEFT = new MotorConfig(
             Ports.ELEVATOR_LEFT_ID,
             35,
-            true,
+            false,
             PIDConfig.getElevatorPid(0.0, 0.0, 0, 0, 0, 0, 0),
             MotorConfig.Mode.BRAKE, 
-            MOTOR_MAX_HEIGHT, 
-            Degrees.of(0)).withMotionMagic(MOTION_MAGIC_VELOCITY, MOTION_MAGIC_ACCELERATION);
+            null, //MOTOR_MAX_HEIGHT, 
+            null //Degrees.of(0)
+        ).withMotionMagic(MOTION_MAGIC_VELOCITY, MOTION_MAGIC_ACCELERATION);
 
         public static final MotorConfig ELEVATOR_RIGHT = new MotorConfig(
             Ports.ELEVATOR_RIGHT_ID,
             35,
-            false,
-            PIDConfig.getElevatorPid(0.0, 0.0, 0, 0, 0, 0, 0),
+            true,
+            PIDConfig.getElevatorPid(0.0051095, 0.0, 0.02, .15891, 0.060976, 0.11353, 0.0014317),
             MotorConfig.Mode.BRAKE,
-            MOTOR_MAX_HEIGHT, 
-            Degrees.of(0)).withMotionMagic(MOTION_MAGIC_VELOCITY, MOTION_MAGIC_ACCELERATION);
+            null, //MOTOR_MAX_HEIGHT, 
+            null //Degrees.of(0)
+        ).withMotionMagic(MOTION_MAGIC_VELOCITY, MOTION_MAGIC_ACCELERATION);
 
-        public static final Angle MAX_ERROR = Degrees.of(1.0);
+        public static final Angle MAX_ERROR = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(1.0));
+        public static final Angle RELAXED_MAX_ERROR = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(4.0));
     }
 
     public static final class CoralManipulator {
@@ -225,50 +264,70 @@ public class Constants {
         );
         
         // roller speeds for diff states (should be in range [-1, 1])
-        public static final double INTAKE_SPEED = 0.5;
-        public static final double SCORE_SPEED = 0.8;
+        public static final double INTAKE_SPEED = .1; //2;
+        public static final double SCORE_SPEED = 0.2;
         public static final double HOLD_SPEED = 0;
     }
   
     public static class AlgaeIntake {
         public static final Dimensionless INTAKE_GEAR_RATIO = Rotations.of(15).div(Rotations.of(1)); // output over input
-        public static final double INTAKE_SPEED = 0.9;
+        public static final double INTAKE_SPEED = 0.2;
 
-        public static final Angle MAX_ERROR = Degrees.of(5.0);
-        public static final Angle RAISED_POS = Degrees.of(199.5).div(INTAKE_GEAR_RATIO);
-        public static final Angle LOWERED_POS = Degrees.of(0);
+        public static final Angle MAX_ERROR = Degrees.of(5.0).times(INTAKE_GEAR_RATIO);
+        public static final Angle RAISED_POS = Degrees.of(12).times(INTAKE_GEAR_RATIO);
+        public static final Angle LOWERED_POS = Degrees.of(53).times(INTAKE_GEAR_RATIO);
+        public static final Angle INTAKE_ANGLE = Degrees.of(56.85).times(INTAKE_GEAR_RATIO);
 
-        public static final Current CURRENT_LIMIT = Amps.of(35.0);
+        public static final Current CURRENT_SPIKE_LIMIT_DOWN = Amps.of(5);
+        public static final Current CURRENT_SPIKE_LIMIT_UP = Amps.of(5);
 
         //TODO: use sysid and set all of these values
         public static final MotorConfig INTAKE_CONFIG = new MotorConfig(
-            Ports.INTAKE_ROLLER_ID,
-            0,
+            Ports.ALGAE_INTAKE_ROLLER_ID,
+            35,
             true, 
             MotorConfig.Mode.COAST
         );
 
         public static final MotorConfig PIVOT_CONFIG = new MotorConfig(
             Ports.INTAKE_PIVOT_ID,
-            0,
+            35,
             true,
-            PIDConfig.getArmPid(0.0, 0.0, 0.0, 0, 0, 0, 0),
+            PIDConfig.getArmPid(0.2, 0.0, 0.0, 0, 0, 0, 0),
             MotorConfig.Mode.BRAKE
         );
     }
     
-    public static final class AutoConstants { //TODO: Need to tune constants
+    public static final class AutoConstants { //TODO: Need to tune constants!
         public static final double kMaxSpeedMetersPerSecond = 3;
         public static final double kMaxAccelerationMetersPerSecondSquared = 3;
         public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
         public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
     
-        public static final double kPTranslationController = 1;
-        public static final double kPThetaController = 1;
+        public static final double kPTranslationController = .2;
+        public static final double kPThetaController = .2;
+    }
+
+    public static final class VisionConstants { //TODO: only tell pipeline to give pose when multiple tags detected
+        public static final Transform3d leftCamera = new Transform3d(new Translation3d(7.6724, 11.7981, 7.291), new Rotation3d(0, 20, -36.5));
+        public static final Transform3d rightCamera = new Transform3d(new Translation3d(7.6724, -11.7981, 7.291), new Rotation3d(0, 20, 36.5));
 
         /* Constraint for the motion profilied robot angle controller */
         public static final TrapezoidProfile.Constraints kThetaControllerConstraints =
             new TrapezoidProfile.Constraints(
-                kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);
+                AutoConstants.kMaxAngularSpeedRadiansPerSecond, AutoConstants.kMaxAngularSpeedRadiansPerSecondSquared);
+
+        public static final Map<AlignmentPosition, Double> leftCameraOffsets = Map.of( 
+            AlignmentPosition.LEFT, 0.,
+            AlignmentPosition.RIGHT, -(double)Swerve.CAMERA_RESOLUTIONX, // TODO verify target offscreen in this case
+            AlignmentPosition.CENTER, 739.
+        );
+
+        public static final Map<AlignmentPosition, Double> rightCameraOffsets = Map.of(
+            AlignmentPosition.LEFT, 2.*Swerve.CAMERA_RESOLUTIONX, // TODO verify target offscreen in this case
+            AlignmentPosition.RIGHT, 344.8, //.40, .12
+            AlignmentPosition.CENTER, 543.8 //.29
+        );
     }
+
 }

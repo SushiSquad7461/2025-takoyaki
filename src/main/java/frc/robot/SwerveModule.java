@@ -3,6 +3,7 @@ package frc.robot;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 
@@ -22,7 +23,7 @@ public class SwerveModule {
     private TalonFX mDriveMotor;
     private CANcoder angleEncoder;
 
-    private final SimpleMotorFeedforward driveFeedForward = new SimpleMotorFeedforward(Constants.Swerve.driveKS, Constants.Swerve.driveKV, Constants.Swerve.driveKA);
+    private SimpleMotorFeedforward driveFeedForward = new SimpleMotorFeedforward(Constants.Swerve.driveKS, Constants.Swerve.driveKV, Constants.Swerve.driveKA);
 
     /* drive motor control requests */
     private final DutyCycleOut driveDutyCycle = new DutyCycleOut(0);
@@ -48,6 +49,35 @@ public class SwerveModule {
         mDriveMotor = new TalonFX(moduleConstants.driveMotorID);
         mDriveMotor.getConfigurator().apply(Robot.ctreConfigs.swerveDriveFXConfig);
         mDriveMotor.getConfigurator().setPosition(0.0);
+
+        switch(moduleNumber) {
+            case 0 -> driveFeedForward = new SimpleMotorFeedforward(
+                    Constants.DriveCharacterization.Mod0.driveKS,
+                    Constants.DriveCharacterization.Mod0.driveKV,
+                    Constants.DriveCharacterization.Mod0.driveKA);
+            case 1 -> driveFeedForward = new SimpleMotorFeedforward(
+                    Constants.DriveCharacterization.Mod1.driveKS,
+                    Constants.DriveCharacterization.Mod1.driveKV,
+                    Constants.DriveCharacterization.Mod1.driveKA);
+            case 2 -> driveFeedForward = new SimpleMotorFeedforward(
+                    Constants.DriveCharacterization.Mod2.driveKS,
+                    Constants.DriveCharacterization.Mod2.driveKV,
+                    Constants.DriveCharacterization.Mod2.driveKA);
+            case 3 -> driveFeedForward = new SimpleMotorFeedforward(
+                    Constants.DriveCharacterization.Mod3.driveKS,
+                    Constants.DriveCharacterization.Mod3.driveKV,
+                    Constants.DriveCharacterization.Mod3.driveKA);
+        }
+    
+    }
+
+    //made helper methods for sysid since module drive and angle motors aren't visible
+    public void setDriveVoltage(double volts) {
+        mDriveMotor.setControl(new VoltageOut(volts));
+    }
+
+    public void setSteerVoltage(double volts) {
+        mAngleMotor.setControl(new VoltageOut(volts));
     }
 
     public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop){
