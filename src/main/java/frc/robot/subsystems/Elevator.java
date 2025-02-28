@@ -27,7 +27,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
-import frc.robot.util.control.nt.PIDTuning;
 
 public class Elevator extends SubsystemBase {
   private final TalonFX leftMotor;
@@ -44,7 +43,6 @@ public class Elevator extends SubsystemBase {
   private final DoublePublisher positionPub;
   private final DoublePublisher currentPub;
   private final BooleanPublisher limitSwitchPub;
-  private PIDTuning elevatorRightPID;
   public SysIdRoutine routine;
   private boolean reset = false;
 
@@ -54,9 +52,10 @@ public class Elevator extends SubsystemBase {
 
   public Elevator() {
     limitSwitch = new DigitalInput(Constants.Ports.LIMIT_SWITCH_PORT);
-    elevatorRightPID = Constants.Elevator.ELEVATOR_LEFT.genPIDTuning("Elevator", Constants.TUNING_MODE);
-    leftMotor = Constants.Elevator.ELEVATOR_LEFT.createTalon();
-    rightMotor = Constants.Elevator.ELEVATOR_RIGHT.createTalonForMotionMagic();
+    leftMotor = new TalonFX(Constants.Ports.ELEVATOR_LEFT_ID);
+    leftMotor.getConfigurator().apply(Constants.Elevator.ELEVATOR_LEFT);
+    rightMotor = new TalonFX(Constants.Ports.ELEVATOR_RIGHT_ID);
+    rightMotor.getConfigurator().apply(Constants.Elevator.ELEVATOR_RIGHT);
     rightMotorCurrent = rightMotor.getSupplyCurrent();
     rightMotorPosition = rightMotor.getPosition();
     statusSignals = new StatusSignal[]{rightMotorCurrent, rightMotorPosition};
@@ -69,8 +68,10 @@ public class Elevator extends SubsystemBase {
     limitSwitchPub = elevatorTable.getBooleanTopic("LimitSwitch").publish();
 
     // setting follower
-    leftMotor.setControl(new Follower(rightMotor.getDeviceID(),
-        Constants.Elevator.ELEVATOR_LEFT.inversion != Constants.Elevator.ELEVATOR_RIGHT.inversion));
+    leftMotor.setControl(new Follower(
+      rightMotor.getDeviceID(), 
+      Constants.Elevator.ELEVATOR_LEFT.MotorOutput.Inverted != Constants.Elevator.ELEVATOR_RIGHT.MotorOutput.Inverted
+    ));
 
     routine = new SysIdRoutine(
       new SysIdRoutine.Config(
@@ -163,8 +164,6 @@ public class Elevator extends SubsystemBase {
     final var pos = rightMotor.getPosition();
     final var current = rightMotor.getSupplyCurrent();
     
-    elevatorRightPID.updatePID(rightMotor);
-
     if (!pos.getStatus().isError() && !current.getStatus().isError()) {
       positionPub.set(pos.getValue().in(Rotations));
       currentPub.set(current.getValue().in(Amp));

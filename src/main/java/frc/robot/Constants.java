@@ -6,25 +6,24 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Map;
 
 import edu.wpi.first.units.AngleUnit;
-import edu.wpi.first.units.AngularAccelerationUnit;
 import edu.wpi.first.units.DistanceUnit;
 import edu.wpi.first.units.PerUnit;
-import edu.wpi.first.units.TimeUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.Per;
 import frc.robot.subsystems.Swerve.AlignmentPosition;
-import frc.robot.util.control.PIDConfig;
-import frc.robot.util.motor.MotorConfig;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
@@ -41,8 +40,15 @@ import frc.lib.util.COTSTalonFXSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
 
 public class Constants {
-    public static boolean TUNING_MODE = false;
     public static final double stickDeadband = 0.1;
+
+    public static final CurrentLimitsConfigs BASIC_CURRENT_LIMIT = new CurrentLimitsConfigs().withSupplyCurrentLimit(35);
+    public static final MotorOutputConfigs MOTOR_OUTPUT_CW = new MotorOutputConfigs()
+        .withInverted(InvertedValue.Clockwise_Positive)
+        .withNeutralMode(NeutralModeValue.Brake);
+    public static final MotorOutputConfigs MOTOR_OUTPUT_CCW = new MotorOutputConfigs()
+        .withInverted(InvertedValue.CounterClockwise_Positive)
+        .withNeutralMode(NeutralModeValue.Brake);
 
     public static class Ports {
         public static final int DRIVER_PORT = 0;
@@ -51,7 +57,7 @@ public class Constants {
 
         public static final int ALGAE_INTAKE_ROLLER_ID = 15;
         public static final int INTAKE_PIVOT_ID = 17;
-        public static final int ROLLER_MOTOR_ID = 16;
+        public static final int CORAL_ROLLER_MOTOR_ID = 16;
 
         public static final int ELEVATOR_LEFT_ID = 14;
         public static final int ELEVATOR_RIGHT_ID = 18;
@@ -233,27 +239,25 @@ public class Constants {
 
         public static final AngularVelocity MOTION_MAGIC_VELOCITY = RotationsPerSecond.of(80);
         public static final AngularAcceleration MOTION_MAGIC_ACCELERATION = RotationsPerSecondPerSecond.of(160);
-        public static final Per<AngularAccelerationUnit, TimeUnit> MOTION_MAGIC_JERK = Per.ofBaseUnits(0.0, PerUnit.combine(RotationsPerSecondPerSecond, Seconds)); //add towards end of tuning
         
-        public static final MotorConfig ELEVATOR_LEFT = new MotorConfig(
-            Ports.ELEVATOR_LEFT_ID,
-            35,
-            false,
-            PIDConfig.getElevatorPid(0.0, 0.0, 0, 0, 0, 0, 0),
-            MotorConfig.Mode.BRAKE, 
-            null, //MOTOR_MAX_HEIGHT, 
-            null //Degrees.of(0)
-        ).withMotionMagic(MOTION_MAGIC_VELOCITY, MOTION_MAGIC_ACCELERATION);
+        public static final TalonFXConfiguration ELEVATOR_LEFT = new TalonFXConfiguration()
+            .withCurrentLimits(BASIC_CURRENT_LIMIT)
+            .withMotorOutput(MOTOR_OUTPUT_CW);
 
-        public static final MotorConfig ELEVATOR_RIGHT = new MotorConfig(
-            Ports.ELEVATOR_RIGHT_ID,
-            35,
-            true,
-            PIDConfig.getElevatorPid(0.0051095, 0.0, 0.02, .15891, 0.060976, 0.11353, 0.0014317),
-            MotorConfig.Mode.BRAKE,
-            null, //MOTOR_MAX_HEIGHT, 
-            null //Degrees.of(0)
-        ).withMotionMagic(MOTION_MAGIC_VELOCITY, MOTION_MAGIC_ACCELERATION);
+        public static final TalonFXConfiguration ELEVATOR_RIGHT = new TalonFXConfiguration()
+            .withCurrentLimits(BASIC_CURRENT_LIMIT)
+            .withMotorOutput(MOTOR_OUTPUT_CCW)
+            .withSlot0(new Slot0Configs()
+                .withKP(0.0051095)
+                .withKD(0.02)
+                .withKG(0.15891)
+                .withKS(0.060976)
+                .withKV(0.11353)
+                .withKA(0.0014317)
+            ).withMotionMagic(new MotionMagicConfigs()
+                .withMotionMagicCruiseVelocity(MOTION_MAGIC_VELOCITY)
+                .withMotionMagicAcceleration(MOTION_MAGIC_ACCELERATION)
+            );
 
         public static final double MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(1.0)).in(Rotations);
         public static final double RELAXED_MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(4.0)).in(Rotations);
@@ -261,12 +265,9 @@ public class Constants {
 
     public static final class CoralManipulator {
         // motion and position control w/ pivot
-        public static final MotorConfig ROLLER_CONFIG = new MotorConfig(
-            Ports.ROLLER_MOTOR_ID,
-            35,
-            false,
-            MotorConfig.Mode.BRAKE
-        );
+        public static final TalonFXConfiguration ROLLER_CONFIG = new TalonFXConfiguration()
+            .withCurrentLimits(BASIC_CURRENT_LIMIT)
+            .withMotorOutput(MOTOR_OUTPUT_CW);
     }
   
     public static class AlgaeIntake {
@@ -281,21 +282,14 @@ public class Constants {
         public static final double CURRENT_SPIKE_LIMIT_DOWN_AMPS = 5;
         public static final double CURRENT_SPIKE_LIMIT_UP_AMPS = 5;
 
-        //TODO: use sysid and set all of these values
-        public static final MotorConfig INTAKE_CONFIG = new MotorConfig(
-            Ports.ALGAE_INTAKE_ROLLER_ID,
-            35,
-            true, 
-            MotorConfig.Mode.COAST
-        );
+        public static final TalonFXConfiguration INTAKE_CONFIG = new TalonFXConfiguration()
+            .withCurrentLimits(BASIC_CURRENT_LIMIT)
+            .withMotorOutput(MOTOR_OUTPUT_CCW);
 
-        public static final MotorConfig PIVOT_CONFIG = new MotorConfig(
-            Ports.INTAKE_PIVOT_ID,
-            35,
-            true,
-            PIDConfig.getArmPid(0.2, 0.0, 0.0, 0, 0, 0, 0),
-            MotorConfig.Mode.BRAKE
-        );
+        public static final TalonFXConfiguration PIVOT_CONFIG = new TalonFXConfiguration()
+            .withCurrentLimits(BASIC_CURRENT_LIMIT)
+            .withMotorOutput(MOTOR_OUTPUT_CCW)
+            .withSlot0(new Slot0Configs().withKP(0.2));
     }
     
     public static final class AutoConstants { //TODO: Need to tune constants!

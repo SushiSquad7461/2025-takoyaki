@@ -1,6 +1,5 @@
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.Seconds;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;

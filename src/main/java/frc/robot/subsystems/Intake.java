@@ -8,7 +8,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
-import frc.robot.util.control.nt.PIDTuning;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -34,7 +33,6 @@ public class Intake extends SubsystemBase {
     /** getValueAsDouble returns in Amps */
     private final StatusSignal<Current> pivotMotorCurrent;
     private final TalonFX wheelMotor;
-    private PIDTuning pivotPID;
     private SysIdRoutine routine;
     private final VoltageOut m_voltReq = new VoltageOut(0.0);
     private final NetworkTable intakeTable = NetworkTableInstance.getDefault().getTable("Algae Intake");
@@ -45,10 +43,11 @@ public class Intake extends SubsystemBase {
     public Intake() {
         super();
 
-        pivotMotor = Constants.AlgaeIntake.PIVOT_CONFIG.createTalon();
+        pivotMotor = new TalonFX(Constants.Ports.INTAKE_PIVOT_ID);
+        pivotMotor.getConfigurator().apply(Constants.AlgaeIntake.PIVOT_CONFIG);
         pivotMotorCurrent = pivotMotor.getSupplyCurrent();
-        wheelMotor = Constants.AlgaeIntake.INTAKE_CONFIG.createTalon();
-        pivotPID = Constants.AlgaeIntake.PIVOT_CONFIG.genPIDTuning("Pivot Intake", Constants.TUNING_MODE);
+        wheelMotor = new TalonFX(Constants.Ports.ALGAE_INTAKE_ROLLER_ID);
+        wheelMotor.getConfigurator().apply(Constants.AlgaeIntake.INTAKE_CONFIG);
         
         routine = new SysIdRoutine(
             new SysIdRoutine.Config(
@@ -150,6 +149,5 @@ public class Intake extends SubsystemBase {
         pivotMotorCurrent.refresh();
         posPub.set(pivotMotor.getPosition().getValue().in(Rotations));
         currentPub.set(pivotMotor.getSupplyCurrent().getValue().in(Amps));
-        pivotPID.updatePID(pivotMotor);
     }
 }
