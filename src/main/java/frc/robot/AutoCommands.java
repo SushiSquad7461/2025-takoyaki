@@ -9,6 +9,7 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.networktables.StringSubscriber;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.commands.StateMachine;
@@ -35,6 +36,7 @@ import frc.robot.subsystems.Swerve;
 public class AutoCommands {
     private final NetworkTable autoTable;
     private final StringPublisher selectedAutoPublisher;
+    private final StringSubscriber autoSubscriber;
     private final Map<String, Command> autoCommands = new HashMap<>();
     private String selectedAuto = "Nothing";
 
@@ -106,24 +108,25 @@ public class AutoCommands {
     
         // reset state
         NamedCommands.registerCommand("resetToIdle",
-            elevator.changeState(ElevatorState.IDLE)
-                .andThen(manipulator.stopRollers())
+            stateMachine.changeState(RobotState.IDLE)
         );
 
         registerAutoCommand("Nothing", new InstantCommand());
 
         
-        // TODO: need to make autos
-        // one piece autos
-        for (int position = 1; position <= 3; position++) {
-            for (int level = 1; level <= 4; level++) {
-                String name = String.format("B%d_Score_L%d", position, level);
-                registerAutoCommand(name, makeAuto(name));
-            }
-        }
+        // // TODO: need to make autos
+        // // one piece autos
+        // for (int position = 1; position <= 3; position++) {
+        //     for (int level = 1; level <= 4; level++) {
+        //         String name = String.format("B%d_Score_L%d", position, level);
+        //         registerAutoCommand(name, makeAuto(name));
+        //     }
+        // }
 
-        var autoSubscriber = autoTable.getStringTopic("selectedAuto").subscribe("Nothing");
-        selectedAuto = autoSubscriber.get();
+        registerAutoCommand("B1_Score_L2", makeAuto("B1_Score_L2"));
+
+        registerAutoCommand("Leaving_B2", makeAuto("Leaving_B2"));
+        autoSubscriber = autoTable.getStringTopic("selectedAuto").subscribe("Nothing");
     }
 
     private void registerAutoCommand(String name, Command command) {
@@ -138,6 +141,6 @@ public class AutoCommands {
     }
 
     public Command getAuto() {
-        return autoCommands.getOrDefault(selectedAuto, new InstantCommand());
+        return autoCommands.getOrDefault(autoSubscriber.get(), new InstantCommand());
     }
 }

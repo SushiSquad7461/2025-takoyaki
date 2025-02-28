@@ -43,7 +43,7 @@ public class RobotContainer {
     private final Intake intake = new Intake();
 
     private final StateMachine stateMachine = new StateMachine(intake, manipulator, elevator);
-    //private final AutoCommands autos = new AutoCommands(swerve, elevator, manipulator, stateMachine);
+    private final AutoCommands autos = new AutoCommands(swerve, elevator, manipulator, stateMachine);
     private Command[] scoreCommands = {
         stateMachine.changeState(RobotState.SCORE_L1),
         stateMachine.changeState(RobotState.SCORE_L2),
@@ -147,6 +147,6 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return Commands.none();
+        return autos.getAuto();
     }
 }

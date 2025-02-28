@@ -9,6 +9,18 @@
           "data": {
             "pathName": "B1_Score_L2"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreL2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetToIdle"
+          }
         }
       ]
     }
