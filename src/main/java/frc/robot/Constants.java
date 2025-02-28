@@ -149,11 +149,7 @@ public class Constants {
             public static final int driveMotorID = 1;
             public static final int angleMotorID = 2;
             public static final int canCoderID = 3;
-<<<<<<< HEAD
             public static final Rotation2d angleOffset = Rotation2d.fromDegrees(169.365234); //point bevel to right
-=======
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(169.628906); //have bevel gears face right 
->>>>>>> 49d1d9854bc269dadb856647e8c0efa03511d186
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -192,30 +188,30 @@ public class Constants {
     public static final class DriveCharacterization {
         /* Module 0 - Front Left */
         public static final class Mod0 {
-            public static final double driveKS = 0.32;
-            public static final double driveKV = 1.51;
-            public static final double driveKA = 0.27;
+            public static final double driveKS = 0.19;
+            public static final double driveKV = 0.71;
+            public static final double driveKA = 0.066;
         }
     
         /* Module 1 - Front Right */
         public static final class Mod1 {
-            public static final double driveKS = 0.32;
-            public static final double driveKV = 1.51;
-            public static final double driveKA = 0.27;
+            public static final double driveKS = 0.18879;
+            public static final double driveKV = 0.70816;
+            public static final double driveKA = 0.066208;
         }
     
         /* Module 2 - Back Left */
         public static final class Mod2 {
-            public static final double driveKS = 0.32;
-            public static final double driveKV = 1.51;
-            public static final double driveKA = 0.27;
+            public static final double driveKS = 0.1812;
+            public static final double driveKV = 0.68313;
+            public static final double driveKA = 0.031761;
         }
     
         /* Module 3 - Back Right */
         public static final class Mod3 {
-            public static final double driveKS = 0.32;
-            public static final double driveKV = 1.51;
-            public static final double driveKA = 0.27;
+            public static final double driveKS = 0.15286;
+            public static final double driveKV = 1.72792;
+            public static final double driveKA = 0.059573;
         }
     }    
 
