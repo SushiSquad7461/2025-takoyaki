@@ -224,7 +224,7 @@ public class Constants {
         );
         
         // roller speeds for diff states (should be in range [-1, 1])
-        public static final double INTAKE_SPEED = 0.5;
+        public static final double INTAKE_SPEED = 0.3;
         public static final double SCORE_SPEED = 0.8;
         public static final double HOLD_SPEED = 0;
     }
