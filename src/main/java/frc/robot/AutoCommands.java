@@ -45,15 +45,6 @@ public class AutoCommands {
         selectedAutoPublisher = autoTable.getStringTopic("selectedAuto").publish();
         selectedAutoPublisher.set("Nothing");
 
-        // prepare commands for different levels: moves elevator to right position for scoring
-        NamedCommands.registerCommand("prepareL2", 
-            stateMachine.changeState(RobotState.PREPARE_L2)
-        );
-
-        NamedCommands.registerCommand("prepareL3", 
-            stateMachine.changeState(RobotState.PREPARE_L3)
-        );
-
         NamedCommands.registerCommand("prepareL4", 
             stateMachine.changeState(RobotState.PREPARE_L4)
         );
@@ -79,12 +70,6 @@ public class AutoCommands {
             manipulator.runRollers(Constants.CoralManipulator.SCORE_SPEED)
                 .until(() -> !manipulator.hasCoral())
                 .withTimeout(5.0) 
-                .andThen(manipulator.stopRollers())
-        );
-
-        NamedCommands.registerCommand("triggerScore", 
-            manipulator.runRollers(Constants.CoralManipulator.SCORE_SPEED)
-                .withTimeout(2.0)
                 .andThen(manipulator.stopRollers())
         );
 

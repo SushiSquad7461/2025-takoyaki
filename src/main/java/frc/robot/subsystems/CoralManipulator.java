@@ -1,13 +1,9 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import com.ctre.phoenix6.controls.VelocityDutyCycle;
-import static edu.wpi.first.units.Units.Seconds;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -25,7 +21,6 @@ public class CoralManipulator extends SubsystemBase {
     private final NetworkTable manipulatorTable;
     private final BooleanPublisher coralInManipulatorPub;
     private final BooleanPublisher coralInputtedPub;
-    private final DoublePublisher currentPub;
 
     public CoralManipulator() {
         rollerMotor = Constants.CoralManipulator.ROLLER_CONFIG.createTalon();
@@ -36,7 +31,6 @@ public class CoralManipulator extends SubsystemBase {
         manipulatorTable = NetworkTableInstance.getDefault().getTable("Manipulator");
         coralInManipulatorPub = manipulatorTable.getBooleanTopic("BeamBreak").publish();
         coralInputtedPub = manipulatorTable.getBooleanTopic("Elevator BeamBreak").publish();
-        currentPub = manipulatorTable.getDoubleTopic("Current").publish();
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
@@ -86,7 +80,6 @@ public class CoralManipulator extends SubsystemBase {
     public void periodic() {
         coralInManipulatorPub.set(!beambreak.get());
         coralInputtedPub.set(!elevBeambreak.get());
-        currentPub.set(rollerMotor.getSupplyCurrent().getValue().in(Amps));
     }
 
 }

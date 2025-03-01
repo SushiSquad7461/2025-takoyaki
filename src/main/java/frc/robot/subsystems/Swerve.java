@@ -1,7 +1,6 @@
 package frc.robot.subsystems;
 
 import frc.robot.SwerveModule;
-import frc.lib.util.AprilTagFields;
 import frc.robot.Constants;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -38,6 +37,7 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -95,21 +95,14 @@ public class Swerve extends SubsystemBase {
     private final DoublePublisher targetCenterXPub;
     private final DoublePublisher desiredXPub;
 
-    private final StringPublisher selectedPositionPub;
     private final DoublePublisher targetXPub;
     private final DoublePublisher targetYPub;
     private final DoublePublisher targetRotPub;
     private final Field2d field;
 
-    private final StringPublisher reefScorePositionPub;
-    private static final AprilTagFields WELDED_LAYOUT = AprilTagFields.k2025Reefscape;
-    private static final AprilTagFields ANDYMARK_LAYOUT = AprilTagFields.k2025ReefscapeAndymark;
-    private String currentFieldLayout = WELDED_LAYOUT.toString();
-    private final StringPublisher fieldLayoutPub;
-    private final StringArrayPublisher fieldLayoutOptionsPub;
-    private int fieldLayoutListener;
-
-    private ReefScorePosition selectedScorePosition;
+    private final DoublePublisher[] cancoderPubs;
+    private final DoublePublisher[] anglePubs;
+    private final DoublePublisher[] velocityPubs;
 
     public Swerve() {
         field = new Field2d();
@@ -139,22 +132,18 @@ public class Swerve extends SubsystemBase {
             new Pose2d()
         );
     
-        try { //TODO: ELASTIC NOTIF POP UP IF FILE NOT FOUND
-            AprilTagFieldLayout weldedLayout = AprilTagFieldLayout.loadFromResource(WELDED_LAYOUT.m_resourceFile);
-            photonPoseEstimatorLeft = new PhotonPoseEstimator(
-                weldedLayout,
-                PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-                Constants.VisionConstants.leftCamera 
-            );
+        AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
+        photonPoseEstimatorLeft = new PhotonPoseEstimator(
+            aprilTagFieldLayout,
+            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+            Constants.VisionConstants.leftCamera 
+        );
 
-            photonPoseEstimatorRight = new PhotonPoseEstimator(
-                weldedLayout,
-                PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-                Constants.VisionConstants.rightCamera
-            );
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        photonPoseEstimatorRight = new PhotonPoseEstimator(
+            aprilTagFieldLayout,
+            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+            Constants.VisionConstants.rightCamera
+        );
         
         table = NetworkTableInstance.getDefault().getTable("Swerve");
         alignmentPositionPub = table.getStringTopic("Alignment/Position").publish();
@@ -165,30 +154,16 @@ public class Swerve extends SubsystemBase {
         targetYPub = table.getDoubleTopic("Alignment/OdomTarget/Y").publish();
         targetRotPub = table.getDoubleTopic("Alignment/OdomTarget/Rotation").publish();
 
-        reefScorePositionPub = table.getStringTopic("Alignment/Trajectory/ReefScorePosition").publish();
-        selectedPositionPub = table.getStringTopic("AutoAlign/SelectedPosition").publish();
-        selectedScorePosition = ReefScorePosition.FRONT;
-
-        fieldLayoutPub = table.getStringTopic("FieldLayout/Current").publish();
-        fieldLayoutOptionsPub = table.getStringArrayTopic("FieldLayout/Options").publish();
-
-        String[] layoutOptions = {WELDED_LAYOUT.toString(), ANDYMARK_LAYOUT.toString()};
-        fieldLayoutOptionsPub.set(layoutOptions);
-        fieldLayoutPub.set(WELDED_LAYOUT.toString());
-        table.getStringTopic("FieldLayout/Selected").publish().set(WELDED_LAYOUT.toString());
-        
-        fieldLayoutListener = NetworkTableInstance.getDefault().addListener(
-            table.getTopic("FieldLayout/Selected"), 
-            EnumSet.of(NetworkTableEvent.Kind.kValueRemote),
-            event -> {
-                if (event.valueData.equals(null)) {
-                    String selectedLayout = event.valueData.value.getString();
-                    setFieldLayout(selectedLayout);
-                }
-            }
-        );
-        
         initializeScorePositions();
+
+        cancoderPubs = new DoublePublisher[4];
+        anglePubs = new DoublePublisher[4];
+        velocityPubs = new DoublePublisher[4];
+        for (int i = 0; i < 4; i++) {
+            cancoderPubs[i] = table.getDoubleTopic("Module " + i + "/CANcoder").publish();
+            anglePubs[i] = table.getDoubleTopic("Module " + i + "/Angle").publish();
+            velocityPubs[i] = table.getDoubleTopic("Module " + i + "/Velocity").publish();
+        }
 
         driveSysIdRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(
@@ -399,32 +374,6 @@ public class Swerve extends SubsystemBase {
         }
     }
 
-    private void setFieldLayout(String layoutName) {
-        if (layoutName.equals(currentFieldLayout)) {
-            return;
-        }
-        
-        AprilTagFieldLayout fieldLayout;
-        try {
-            if (layoutName.equals(ANDYMARK_LAYOUT.toString())) {
-                fieldLayout = AprilTagFieldLayout.loadFromResource(ANDYMARK_LAYOUT.m_resourceFile);
-                currentFieldLayout = ANDYMARK_LAYOUT.toString();
-            } else {
-                fieldLayout = AprilTagFieldLayout.loadFromResource(WELDED_LAYOUT.m_resourceFile);
-                currentFieldLayout = WELDED_LAYOUT.toString();
-            }
-            
-            photonPoseEstimatorLeft.setFieldTags(fieldLayout);
-            photonPoseEstimatorRight.setFieldTags(fieldLayout);
-            
-            fieldLayoutPub.set(currentFieldLayout);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-        
-
-
     private static double getCenterX(List<TargetCorner> corners) {
         double centerX = 0;
         for (var corner : corners) {
@@ -439,7 +388,7 @@ public class Swerve extends SubsystemBase {
      * Aligns the robot to the target based on the given position
      */
     public Command runAutoAlign(AlignmentPosition position) {
-        return new RunCommand(
+        return run(
             () -> {
                 currentAlignmentPosition = position;
                 PhotonCamera firstCam = leftCamera;
@@ -485,7 +434,7 @@ public class Swerve extends SubsystemBase {
                 desiredXPub.set(desiredCenterX);
 
                 drive(
-                    new Translation2d(0, 0.25 * Math.signum(offset)),
+                    new Translation2d(0, 0.5 * Math.signum(offset)),
                     0,
                     true,
                     true
@@ -735,28 +684,32 @@ public class Swerve extends SubsystemBase {
         rightCameraResults = rightCamera.getAllUnreadResults();
         poseEstimator.update(getGyroYaw(), getModulePositions());
 
-        if (!rightCameraResults.isEmpty()) {
-            var photonRightUpdate = photonPoseEstimatorRight.update(rightCameraResults.get(rightCameraResults.size() - 1));
-            if (photonRightUpdate.isPresent()) {
-                EstimatedRobotPose visionPose = photonRightUpdate.get();
-                poseEstimator.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
-            }
-        }
-
-        if (!leftCameraResults.isEmpty()) {
-            var photonLeftUpdate = photonPoseEstimatorLeft.update(leftCameraResults.get(leftCameraResults.size() - 1));
-            if (photonLeftUpdate.isPresent()) {
-                EstimatedRobotPose visionPose = photonLeftUpdate.get();
-                poseEstimator.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
-            }
-        }
+        // if (!rightCameraResults.isEmpty()) {
+        //     var photonRightUpdate = photonPoseEstimatorRight.update(rightCameraResults.get(rightCameraResults.size() - 1));
+        //     if (photonRightUpdate.isPresent()) {
+        //         EstimatedRobotPose visionPose = photonRightUpdate.get();
+        //         poseEstimator.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
+        //     }
+        // }
+        // if (!leftCameraResults.isEmpty()) {
+        //     var photonLeftUpdate = photonPoseEstimatorLeft.update(leftCameraResults.get(leftCameraResults.size() - 1));
+        //     if (photonLeftUpdate.isPresent()) {
+        //         EstimatedRobotPose visionPose = photonLeftUpdate.get();
+        //         poseEstimator.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
+        //     }
+        // }
 
         Pose2d currentPose = getPose();
         field.setRobotPose(currentPose);
 
         alignmentPositionPub.set(currentAlignmentPosition.toString());
         isAlignedPub.set(isAligned(currentAlignmentPosition).getAsBoolean());
-        selectedPositionPub.set(selectedScorePosition.toString());
+
+        for(SwerveModule mod : mSwerveMods){
+            cancoderPubs[mod.moduleNumber].set(mod.getCANcoder().getDegrees());
+            anglePubs[mod.moduleNumber].set(mod.getPosition().angle.getDegrees());
+            velocityPubs[mod.moduleNumber].set(mod.getState().speedMetersPerSecond);
+        }
     }
 
     

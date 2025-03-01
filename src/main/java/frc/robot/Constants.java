@@ -160,7 +160,7 @@ public class Constants {
             public static final int driveMotorID = 4;
             public static final int angleMotorID = 5;
             public static final int canCoderID = 6;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-56.953125); //168.925781
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(1.757812); //168.925781
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -318,15 +318,15 @@ public class Constants {
                 AutoConstants.kMaxAngularSpeedRadiansPerSecond, AutoConstants.kMaxAngularSpeedRadiansPerSecondSquared);
 
         public static final Map<AlignmentPosition, Double> leftCameraOffsets = Map.of( 
-            AlignmentPosition.LEFT, 0.,
+            AlignmentPosition.LEFT, 1095.,
             AlignmentPosition.RIGHT, -(double)Swerve.CAMERA_RESOLUTIONX, // TODO verify target offscreen in this case
-            AlignmentPosition.CENTER, 739.
+            AlignmentPosition.CENTER, 839.
         );
 
         public static final Map<AlignmentPosition, Double> rightCameraOffsets = Map.of(
             AlignmentPosition.LEFT, 2.*Swerve.CAMERA_RESOLUTIONX, // TODO verify target offscreen in this case
-            AlignmentPosition.RIGHT, 344.8, //.40, .12
-            AlignmentPosition.CENTER, 543.8 //.29
+            AlignmentPosition.RIGHT, 318., //.40, .12
+            AlignmentPosition.CENTER, 571. //.29
         );
     }
 

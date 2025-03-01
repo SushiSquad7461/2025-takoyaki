@@ -8,17 +8,11 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
-import frc.robot.util.control.nt.PIDTuning;
-import edu.wpi.first.networktables.DoublePublisher;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.VoltageOut;
 
-import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.BooleanSupplier;
@@ -29,12 +23,8 @@ public class Intake extends SubsystemBase {
     
     private final TalonFX pivotMotor;
     private final TalonFX wheelMotor;
-    private PIDTuning pivotPID;
     private SysIdRoutine routine;
     private final VoltageOut m_voltReq = new VoltageOut(0.0);
-    private final NetworkTable intakeTable = NetworkTableInstance.getDefault().getTable("Algae Intake");
-    private final DoublePublisher posPub = intakeTable.getDoubleTopic("Position").publish();
-    private final DoublePublisher currentPub = intakeTable.getDoubleTopic("Current").publish();
     private final PositionDutyCycle positionDutyCycle = new PositionDutyCycle(0);
 
     public Intake() {
@@ -42,7 +32,6 @@ public class Intake extends SubsystemBase {
 
         pivotMotor = Constants.AlgaeIntake.PIVOT_CONFIG.createTalon();
         wheelMotor = Constants.AlgaeIntake.INTAKE_CONFIG.createTalon();
-        pivotPID = Constants.AlgaeIntake.PIVOT_CONFIG.genPIDTuning("Pivot Intake", Constants.TUNING_MODE);
         
         routine = new SysIdRoutine(
             new SysIdRoutine.Config(
@@ -140,9 +129,5 @@ public class Intake extends SubsystemBase {
         return pivotCommand.andThen(intakeCommand);
     }
 
-    public void periodic() {
-        posPub.set(pivotMotor.getPosition().getValue().in(Rotations));
-        currentPub.set(pivotMotor.getSupplyCurrent().getValue().in(Amps));
-        pivotPID.updatePID(pivotMotor);
-    }
+    public void periodic() {}
 }
