@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Amp;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
@@ -154,23 +152,18 @@ public class Elevator extends SubsystemBase {
     return rightMotorCurrent.getValueAsDouble() > CURRENT_LIMIT_AMPS;
   }
 
-  @Override
-  public void periodic() {
-    BaseStatusSignal.refreshAll(statusSignals);
-    final var pos = rightMotor.getPosition();
-    final var current = rightMotor.getSupplyCurrent();
-    
-    
-    limitSwitchPub.set(limitSwitch.get());
-  }
-
   public Command goUp() {
     return run(() -> rightMotor.set(.1)).finallyDo(() -> rightMotor.set(0));
   }
 
 
-public Command goDown() {
-  return run(() -> rightMotor.set(-.2)).finallyDo(() -> rightMotor.set(0));
-}
+  public Command goDown() {
+    return run(() -> rightMotor.set(-.1)).finallyDo(() -> rightMotor.set(0));
+  }
 
+  @Override
+  public void periodic() {
+    BaseStatusSignal.refreshAll(statusSignals);
+    limitSwitchPub.set(limitSwitch.get());
+  }
 }

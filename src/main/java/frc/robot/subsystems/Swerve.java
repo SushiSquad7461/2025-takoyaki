@@ -11,15 +11,11 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Volts;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BooleanSupplier;
 
-import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
@@ -51,9 +47,7 @@ import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StringArrayPublisher;
 import edu.wpi.first.networktables.StringPublisher;
-import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -62,7 +56,6 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -80,8 +73,8 @@ public class Swerve extends SubsystemBase {
     private List<PhotonPipelineResult> rightCameraResults;
     private final Map<PhotonCamera, Map<AlignmentPosition, Double>> targetPositions;
 
-    private PhotonPoseEstimator photonPoseEstimatorLeft;
-    private PhotonPoseEstimator photonPoseEstimatorRight;
+    private final PhotonPoseEstimator photonPoseEstimatorLeft;
+    private final PhotonPoseEstimator photonPoseEstimatorRight;
 
     private AlignmentPosition currentAlignmentPosition = AlignmentPosition.CENTER;
 
@@ -117,7 +110,7 @@ public class Swerve extends SubsystemBase {
 
         //TODO: rename cameras
         leftCamera = new PhotonCamera("Arducam_OV9782_USB_Camera");
-        rightCamera = new PhotonCamera("Arducam_OV9281_USB_Camera"); //Arducam_OV9782_USB_Camera
+        rightCamera = new PhotonCamera("Arducam_OV9281_USB_Camera");
         targetPositions = Map.of(
             leftCamera, Constants.VisionConstants.leftCameraOffsets,
             rightCamera, Constants.VisionConstants.rightCameraOffsets
@@ -130,7 +123,7 @@ public class Swerve extends SubsystemBase {
             new Pose2d()
         );
     
-        AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
+        final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
         photonPoseEstimatorLeft = new PhotonPoseEstimator(
             aprilTagFieldLayout,
             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
@@ -228,7 +221,8 @@ public class Swerve extends SubsystemBase {
                 this
             );
         } catch (Exception e) {
-          e.printStackTrace();
+            // TODO send elastic notification
+            e.printStackTrace();
         }
     
         SmartDashboard.putData("Field", field);
@@ -438,28 +432,26 @@ public class Swerve extends SubsystemBase {
                     true
                 );
             }
-        ).until(isAligned(position)).withTimeout(5);
+        ).until(() -> isAligned(position)).withTimeout(5);
     }
 
     /*
      * Checks if robot is aligned with the target and switches cameras if no targets in view.
      */
-    private BooleanSupplier isAligned(AlignmentPosition position) {
-        return () -> {
-            final PhotonCamera cam = position == AlignmentPosition.RIGHT
-                ? rightCamera
-                : leftCamera;
-            final List<PhotonPipelineResult> results = position == AlignmentPosition.RIGHT
-                ? rightCameraResults
-                : leftCameraResults;
-            final double targetAprilTagX = targetPositions.get(cam).get(position);
-            if(results.isEmpty()) return false;
-            var last = results.get(results.size() - 1);
-            if(last.hasTargets()) {
-                return Math.abs(getCenterX(last.getBestTarget().detectedCorners) - targetAprilTagX) < ALIGNMENT_TOLERANCE;
-            }
-            return false;
-        };
+    private boolean isAligned(AlignmentPosition position) {
+        final PhotonCamera cam = position == AlignmentPosition.RIGHT
+            ? rightCamera
+            : leftCamera;
+        final List<PhotonPipelineResult> results = position == AlignmentPosition.RIGHT
+            ? rightCameraResults
+            : leftCameraResults;
+        final double targetAprilTagX = targetPositions.get(cam).get(position);
+        if(results.isEmpty()) return false;
+        var last = results.get(results.size() - 1);
+        if(last.hasTargets()) {
+            return Math.abs(getCenterX(last.getBestTarget().detectedCorners) - targetAprilTagX) < ALIGNMENT_TOLERANCE;
+        }
+        return false;
     }
 
     private boolean isAprilTagVisible() {
@@ -682,6 +674,7 @@ public class Swerve extends SubsystemBase {
         rightCameraResults = rightCamera.getAllUnreadResults();
         poseEstimator.update(getGyroYaw(), getModulePositions());
 
+        // TODO re-enable at least one camera after verifying no memory issues
         // if (!rightCameraResults.isEmpty()) {
         //     var photonRightUpdate = photonPoseEstimatorRight.update(rightCameraResults.get(rightCameraResults.size() - 1));
         //     if (photonRightUpdate.isPresent()) {
@@ -701,7 +694,7 @@ public class Swerve extends SubsystemBase {
         field.setRobotPose(currentPose);
 
         alignmentPositionPub.set(currentAlignmentPosition.toString());
-        isAlignedPub.set(isAligned(currentAlignmentPosition).getAsBoolean());
+        isAlignedPub.set(isAligned(currentAlignmentPosition));
 
         for(SwerveModule mod : mSwerveMods){
             cancoderPubs[mod.moduleNumber].set(mod.getCANcoder().getDegrees());

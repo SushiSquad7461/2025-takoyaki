@@ -8,9 +8,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
-import edu.wpi.first.networktables.DoublePublisher;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 
@@ -36,9 +33,6 @@ public class Intake extends SubsystemBase {
     private final PositionDutyCycle positionDutyCycle = new PositionDutyCycle(0);
 
     public Intake() {
-        super();
-
-
         pivotMotor = new TalonFX(Constants.Ports.INTAKE_PIVOT_ID);
         pivotMotor.getConfigurator().apply(Constants.AlgaeIntake.PIVOT_CONFIG);
         pivotMotorCurrent = pivotMotor.getSupplyCurrent();
@@ -144,6 +138,5 @@ public class Intake extends SubsystemBase {
     
     public void periodic() {
         pivotMotorCurrent.refresh();
-        
     }
 }
