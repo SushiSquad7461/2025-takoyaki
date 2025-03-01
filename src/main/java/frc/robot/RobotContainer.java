@@ -76,7 +76,7 @@ public class RobotContainer {
             () -> -driverController.getLeftY(),
             () -> -driverController.getLeftX(),
             () -> -driverController.getRightX(), 
-            () -> driverController.a().getAsBoolean())); // allows you to drive as robot relative only while holding down the button
+            () -> driverController.x().getAsBoolean())); // allows you to drive as robot relative only while holding down the button
         
         // Driver handles robot positioning, alignment, and algae
         driverController.y().onTrue(swerve.resetHeading());

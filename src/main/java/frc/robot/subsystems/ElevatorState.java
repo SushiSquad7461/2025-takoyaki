@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Rotations;
 
 import edu.wpi.first.units.measure.Distance;
 
@@ -13,13 +14,11 @@ public enum ElevatorState {
     L4(Inches.of(27)),       
     L3_KNOCK(Inches.of(17));         
 
-    Distance position;
+    final Distance position;
+    final double targetMotorRotations;
     
     private ElevatorState(Distance position) {
         this.position = position;
-    }
-
-    public Distance getPos() {
-        return position;
+        this.targetMotorRotations = Elevator.heightToMotor(position).in(Rotations);
     }
 }

@@ -1,13 +1,15 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Amp;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 
-import java.util.function.BooleanSupplier;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -29,6 +31,11 @@ import frc.robot.Constants;
 public class Elevator extends SubsystemBase {
   private final TalonFX leftMotor;
   private final TalonFX rightMotor;
+  /** getValueAsDouble returns in Amps */
+  private final StatusSignal<Current> rightMotorCurrent;
+  /** getValueAsDouble returns in Rotations */
+  private final StatusSignal<Angle> rightMotorPosition;
+  private final BaseStatusSignal[] statusSignals;
   private final DigitalInput limitSwitch;
   private final MotionMagicVoltage motionMagic;
 
@@ -37,14 +44,19 @@ public class Elevator extends SubsystemBase {
   public SysIdRoutine routine;
   private boolean reset = false;
 
-  private static final Current CURRENT_LIMIT = Amps.of(5);
+  private static final double CURRENT_LIMIT_AMPS = 5;
 
-  private final VoltageOut m_voltReq = new VoltageOut(Volts.of(0));
+  private final VoltageOut voltReq = new VoltageOut(0);
 
   public Elevator() {
     limitSwitch = new DigitalInput(Constants.Ports.LIMIT_SWITCH_PORT);
-    leftMotor = Constants.Elevator.ELEVATOR_LEFT.createTalon();
-    rightMotor = Constants.Elevator.ELEVATOR_RIGHT.createTalonForMotionMagic();
+    leftMotor = new TalonFX(Constants.Ports.ELEVATOR_LEFT_ID);
+    leftMotor.getConfigurator().apply(Constants.Elevator.ELEVATOR_LEFT);
+    rightMotor = new TalonFX(Constants.Ports.ELEVATOR_RIGHT_ID);
+    rightMotor.getConfigurator().apply(Constants.Elevator.ELEVATOR_RIGHT);
+    rightMotorCurrent = rightMotor.getSupplyCurrent();
+    rightMotorPosition = rightMotor.getPosition();
+    statusSignals = new StatusSignal[]{rightMotorCurrent, rightMotorPosition};
     motionMagic = new MotionMagicVoltage(0);
 
     // network table variables
@@ -52,8 +64,10 @@ public class Elevator extends SubsystemBase {
     limitSwitchPub = elevatorTable.getBooleanTopic("LimitSwitch").publish();
 
     // setting follower
-    leftMotor.setControl(new Follower(rightMotor.getDeviceID(),
-        Constants.Elevator.ELEVATOR_LEFT.inversion != Constants.Elevator.ELEVATOR_RIGHT.inversion));
+    leftMotor.setControl(new Follower(
+      rightMotor.getDeviceID(), 
+      Constants.Elevator.ELEVATOR_LEFT.MotorOutput.Inverted != Constants.Elevator.ELEVATOR_RIGHT.MotorOutput.Inverted
+    ));
 
     routine = new SysIdRoutine(
       new SysIdRoutine.Config(
@@ -64,8 +78,8 @@ public class Elevator extends SubsystemBase {
         (state) -> SignalLogger.writeString("state", state.toString())),
       new SysIdRoutine.Mechanism(
         (volts) -> {
-          leftMotor.setControl(m_voltReq.withOutput(volts.in(Volts)));
-          rightMotor.setControl(m_voltReq.withOutput(volts.in(Volts)));
+          leftMotor.setControl(voltReq.withOutput(volts.in(Volts)));
+          rightMotor.setControl(voltReq.withOutput(volts.in(Volts)));
         },
         null,
         this
@@ -86,19 +100,17 @@ public class Elevator extends SubsystemBase {
   // checked for elevator idle state
   public Command changeState(ElevatorState state) {
     return run(() -> {
-      elevatorTable.getDoubleTopic("Setpoint").publish().set(state.getPos().in(Inches));
-      rightMotor.setControl(motionMagic.withPosition(heightToMotor(state.position)));
+      elevatorTable.getDoubleTopic("Setpoint").publish().set(state.position.in(Inches));
+      rightMotor.setControl(motionMagic.withPosition(state.targetMotorRotations));
       if(state != ElevatorState.IDLE) reset = false;
-    }).until(elevatorInPosition(state))
+    }).until(() -> elevatorInPosition(state))
         .andThen(state == ElevatorState.IDLE && !reset ? resetElevator() : Commands.none());
   }
 
   // checks if elevator has reached target position
-  private BooleanSupplier elevatorInPosition(ElevatorState state) {
-    var maxErr = state == ElevatorState.IDLE && currentSpike() ? Constants.Elevator.RELAXED_MAX_ERROR : Constants.Elevator.MAX_ERROR;    
-    Angle targetAngle = heightToMotor(state.position); //converts target position into angle
-    return () -> Math.abs(rightMotor.getPosition().getValue().in(Rotations)
-        - targetAngle.in(Rotations)) < maxErr.in(Rotations);
+  private boolean elevatorInPosition(ElevatorState state) {
+    var maxErr = state == ElevatorState.IDLE && currentSpike() ? Constants.Elevator.RELAXED_MAX_ERROR_ROTATIONS : Constants.Elevator.MAX_ERROR_ROTATIONS;    
+    return Math.abs(rightMotorPosition.getValueAsDouble() - state.targetMotorRotations) < maxErr;
   }
 
   public static Angle heightToMotor(Distance distance) {
@@ -139,11 +151,16 @@ public class Elevator extends SubsystemBase {
   }
 
   private boolean currentSpike() {
-    return (rightMotor.getSupplyCurrent().getValue().compareTo(CURRENT_LIMIT) > 0);
+    return rightMotorCurrent.getValueAsDouble() > CURRENT_LIMIT_AMPS;
   }
 
   @Override
   public void periodic() {
+    BaseStatusSignal.refreshAll(statusSignals);
+    final var pos = rightMotor.getPosition();
+    final var current = rightMotor.getSupplyCurrent();
+    
+    
     limitSwitchPub.set(limitSwitch.get());
   }
 

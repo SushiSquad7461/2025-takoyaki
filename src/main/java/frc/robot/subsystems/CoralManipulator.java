@@ -23,7 +23,8 @@ public class CoralManipulator extends SubsystemBase {
     private final BooleanPublisher coralInputtedPub;
 
     public CoralManipulator() {
-        rollerMotor = Constants.CoralManipulator.ROLLER_CONFIG.createTalon();
+        rollerMotor = new TalonFX(Constants.Ports.CORAL_ROLLER_MOTOR_ID);
+        rollerMotor.getConfigurator().apply(Constants.CoralManipulator.ROLLER_CONFIG);
         beambreak = new DigitalInput(Constants.Ports.BEAM_BREAK_PORT);
         elevBeambreak = new DigitalInput(Constants.Ports.ELEV_BEAM_BREAK_PORT);
 

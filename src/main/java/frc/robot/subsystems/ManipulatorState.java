@@ -1,12 +1,12 @@
 package frc.robot.subsystems;
-import frc.robot.Constants;
 
     public enum ManipulatorState {
         IDLE(0),
-        SCORE(Constants.CoralManipulator.SCORE_SPEED),
-        KNOCK(Constants.CoralManipulator.SCORE_SPEED),
-        INTAKE(Constants.CoralManipulator.INTAKE_SPEED);
+        SCORE(0.2),
+        KNOCK(0.2),
+        INTAKE(0.1);
 
+        /** Duty cycle in range [-1,1] */
         private final double speed;
 
         private ManipulatorState(double speed) {

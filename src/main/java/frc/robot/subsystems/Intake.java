@@ -8,7 +8,12 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Current;
+
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.VoltageOut;
 
@@ -18,10 +23,13 @@ import static edu.wpi.first.units.Units.Volts;
 import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusSignal;
 
 public class Intake extends SubsystemBase {
     
     private final TalonFX pivotMotor;
+    /** getValueAsDouble returns in Amps */
+    private final StatusSignal<Current> pivotMotorCurrent;
     private final TalonFX wheelMotor;
     private SysIdRoutine routine;
     private final VoltageOut m_voltReq = new VoltageOut(0.0);
@@ -30,8 +38,12 @@ public class Intake extends SubsystemBase {
     public Intake() {
         super();
 
-        pivotMotor = Constants.AlgaeIntake.PIVOT_CONFIG.createTalon();
-        wheelMotor = Constants.AlgaeIntake.INTAKE_CONFIG.createTalon();
+
+        pivotMotor = new TalonFX(Constants.Ports.INTAKE_PIVOT_ID);
+        pivotMotor.getConfigurator().apply(Constants.AlgaeIntake.PIVOT_CONFIG);
+        pivotMotorCurrent = pivotMotor.getSupplyCurrent();
+        wheelMotor = new TalonFX(Constants.Ports.ALGAE_INTAKE_ROLLER_ID);
+        wheelMotor.getConfigurator().apply(Constants.AlgaeIntake.INTAKE_CONFIG);
         
         routine = new SysIdRoutine(
             new SysIdRoutine.Config(
@@ -89,11 +101,11 @@ public class Intake extends SubsystemBase {
     }
     
     private boolean currentSpikeUp() {
-        return (pivotMotor.getSupplyCurrent().getValue().compareTo(Constants.AlgaeIntake.CURRENT_SPIKE_LIMIT_UP) > 0);
+        return pivotMotorCurrent.getValueAsDouble() > Constants.AlgaeIntake.CURRENT_SPIKE_LIMIT_UP_AMPS;
     }
 
     private boolean currentSpikeDown() {
-        return (pivotMotor.getSupplyCurrent().getValue().compareTo(Constants.AlgaeIntake.CURRENT_SPIKE_LIMIT_DOWN) > 0);
+        return pivotMotorCurrent.getValueAsDouble() > Constants.AlgaeIntake.CURRENT_SPIKE_LIMIT_DOWN_AMPS;
     }
 
     private Command reverseIntake() {
@@ -129,5 +141,9 @@ public class Intake extends SubsystemBase {
         return pivotCommand.andThen(intakeCommand);
     }
 
-    public void periodic() {}
+    
+    public void periodic() {
+        pivotMotorCurrent.refresh();
+        
+    }
 }
