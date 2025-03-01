@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
 import frc.robot.SwerveModule;
+import frc.robot.util.Elastic;
+import frc.robot.util.Elastic.Notification.NotificationLevel;
 import frc.robot.Constants;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -221,7 +223,12 @@ public class Swerve extends SubsystemBase {
                 this
             );
         } catch (Exception e) {
-            // TODO send elastic notification
+            Elastic.sendNotification(new Elastic.Notification(
+                NotificationLevel.ERROR, 
+                "RobotConfig Error", 
+                "Failed to get PathPlanner robot config from GUI settings, please ensure this file is present and restart the robot code",
+                120000 // 2min
+            ));
             e.printStackTrace();
         }
     
