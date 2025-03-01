@@ -8,7 +8,7 @@
         "layouts": [
           {
             "title": "SubsystemStates",
-            "x": 384.0,
+            "x": 640.0,
             "y": 0.0,
             "width": 256.0,
             "height": 256.0,
@@ -60,131 +60,6 @@
                 }
               }
             ]
-          },
-          {
-            "title": "Auto",
-            "x": 640.0,
-            "y": 0.0,
-            "width": 256.0,
-            "height": 256.0,
-            "type": "List Layout",
-            "properties": {
-              "label_position": "TOP"
-            },
-            "children": [
-              {
-                "title": "availableAutos",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Auto/availableAutos",
-                  "period": 0.06,
-                  "data_type": "string[]",
-                  "show_submit_button": false
-                }
-              },
-              {
-                "title": "selectedAuto",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Auto/selectedAuto",
-                  "period": 0.06,
-                  "data_type": "string",
-                  "show_submit_button": false
-                }
-              }
-            ]
-          },
-          {
-            "title": "USB Camera 0",
-            "x": 1152.0,
-            "y": 0.0,
-            "width": 384.0,
-            "height": 256.0,
-            "type": "List Layout",
-            "properties": {
-              "label_position": "TOP"
-            },
-            "children": [
-              {
-                "title": "connected",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Boolean Box",
-                "properties": {
-                  "topic": "/CameraPublisher/USB Camera 0/connected",
-                  "period": 0.06,
-                  "data_type": "boolean",
-                  "true_color": 4283215696,
-                  "false_color": 4294198070,
-                  "true_icon": "None",
-                  "false_icon": "None"
-                }
-              },
-              {
-                "title": "streams",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Multi Color View",
-                "properties": {
-                  "topic": "/CameraPublisher/USB Camera 0/streams",
-                  "period": 0.06,
-                  "data_type": "string[]"
-                }
-              }
-            ]
-          },
-          {
-            "title": "Auto",
-            "x": 0.0,
-            "y": 384.0,
-            "width": 384.0,
-            "height": 256.0,
-            "type": "List Layout",
-            "properties": {
-              "label_position": "TOP"
-            },
-            "children": [
-              {
-                "title": "availableAutos",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Auto/availableAutos",
-                  "period": 0.06,
-                  "data_type": "string[]",
-                  "show_submit_button": false
-                }
-              },
-              {
-                "title": "selectedAuto",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Auto/selectedAuto",
-                  "period": 0.06,
-                  "data_type": "string",
-                  "show_submit_button": false
-                }
-              }
-            ]
           }
         ],
         "containers": [
@@ -202,8 +77,8 @@
           },
           {
             "title": "Swerve Drive",
-            "x": 896.0,
-            "y": 0.0,
+            "x": 640.0,
+            "y": 256.0,
             "width": 256.0,
             "height": 256.0,
             "type": "SwerveDrive",
@@ -232,15 +107,15 @@
           },
           {
             "title": "Field",
-            "x": 384.0,
-            "y": 256.0,
+            "x": 896.0,
+            "y": 0.0,
             "width": 768.0,
             "height": 512.0,
             "type": "Field",
             "properties": {
               "topic": "/SmartDashboard/Field",
               "period": 0.06,
-              "field_game": "Reefscape",
+              "field_game": "Crescendo",
               "robot_width": 0.85,
               "robot_length": 0.85,
               "show_other_objects": true,
@@ -248,6 +123,31 @@
               "field_rotation": 0.0,
               "robot_color": 4294198070,
               "trajectory_color": 4294967295
+            }
+          },
+          {
+            "title": "Auto Chooser",
+            "x": 0.0,
+            "y": 384.0,
+            "width": 384.0,
+            "height": 128.0,
+            "type": "ComboBox Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Auto Chooser",
+              "period": 0.06,
+              "sort_options": false
+            }
+          },
+          {
+            "title": "Alerts",
+            "x": 384.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 512.0,
+            "type": "Alerts",
+            "properties": {
+              "topic": "/SmartDashboard/Alerts",
+              "period": 0.06
             }
           }
         ]
@@ -259,7 +159,7 @@
         "layouts": [
           {
             "title": "Elevator",
-            "x": 640.0,
+            "x": 256.0,
             "y": 256.0,
             "width": 256.0,
             "height": 384.0,
@@ -308,75 +208,6 @@
                 "type": "Text Display",
                 "properties": {
                   "topic": "/Elevator/Position",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              }
-            ]
-          },
-          {
-            "title": "PIDTuning",
-            "x": 896.0,
-            "y": 256.0,
-            "width": 256.0,
-            "height": 384.0,
-            "type": "List Layout",
-            "properties": {
-              "label_position": "TOP"
-            },
-            "children": [
-              {
-                "title": "kD",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/PIDTuning/kD",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              },
-              {
-                "title": "kF",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/PIDTuning/kF",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              },
-              {
-                "title": "kI",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/PIDTuning/kI",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              },
-              {
-                "title": "kP",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/PIDTuning/kP",
                   "period": 0.06,
                   "data_type": "double",
                   "show_submit_button": false
@@ -485,7 +316,7 @@
           },
           {
             "title": "Alignment",
-            "x": 384.0,
+            "x": 0.0,
             "y": 256.0,
             "width": 256.0,
             "height": 384.0,
@@ -554,49 +385,6 @@
                 }
               }
             ]
-          },
-          {
-            "title": "USB Camera 0",
-            "x": 0.0,
-            "y": 256.0,
-            "width": 384.0,
-            "height": 384.0,
-            "type": "List Layout",
-            "properties": {
-              "label_position": "TOP"
-            },
-            "children": [
-              {
-                "title": "connected",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Boolean Box",
-                "properties": {
-                  "topic": "/CameraPublisher/USB Camera 0/connected",
-                  "period": 0.06,
-                  "data_type": "boolean",
-                  "true_color": 4283215696,
-                  "false_color": 4294198070,
-                  "true_icon": "None",
-                  "false_icon": "None"
-                }
-              },
-              {
-                "title": "streams",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Multi Color View",
-                "properties": {
-                  "topic": "/CameraPublisher/USB Camera 0/streams",
-                  "period": 0.06,
-                  "data_type": "string[]"
-                }
-              }
-            ]
           }
         ],
         "containers": [
@@ -629,8 +417,8 @@
           },
           {
             "title": "Auto Align Right",
-            "x": 1024.0,
-            "y": 128.0,
+            "x": 768.0,
+            "y": 384.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Command",
@@ -655,8 +443,8 @@
           },
           {
             "title": "Auto Align Left",
-            "x": 1024.0,
-            "y": 0.0,
+            "x": 768.0,
+            "y": 256.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Command",
@@ -664,6 +452,18 @@
               "topic": "/SmartDashboard/Auto Align Left",
               "period": 0.06,
               "show_type": true
+            }
+          },
+          {
+            "title": "Alerts",
+            "x": 512.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 384.0,
+            "type": "Alerts",
+            "properties": {
+              "topic": "/SmartDashboard/Alerts",
+              "period": 0.06
             }
           }
         ]

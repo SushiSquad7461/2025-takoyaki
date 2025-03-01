@@ -4,38 +4,40 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.wpilibj2.command.Command;
-
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
-import frc.robot.Direction;
-import frc.robot.util.control.nt.PIDTuning;
-import frc.robot.util.control.nt.TunableNumber;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Current;
+
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.VoltageOut;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.function.BooleanSupplier;
+
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusSignal;
 
 public class Intake extends SubsystemBase {
     
     private final TalonFX pivotMotor;
+    /** getValueAsDouble returns in Amps */
+    private final StatusSignal<Current> pivotMotorCurrent;
     private final TalonFX wheelMotor;
-    private TunableNumber pivotPos;
-    private PIDTuning pivotPID;
     private SysIdRoutine routine;
     private final VoltageOut m_voltReq = new VoltageOut(0.0);
+    private final PositionDutyCycle positionDutyCycle = new PositionDutyCycle(0);
 
     public Intake() {
-        super();
-
-        pivotMotor = Constants.AlgaeIntake.PIVOT_CONFIG.createTalon();
-        wheelMotor = Constants.AlgaeIntake.INTAKE_CONFIG.createTalon();
-        pivotPos = new TunableNumber("Intake Pos", Constants.AlgaeIntake.RAISED_POS.in(Degrees), Constants.TUNING_MODE);
-        pivotPID = Constants.AlgaeIntake.PIVOT_CONFIG.genPIDTuning("Pivot Intake", Constants.TUNING_MODE);
+        pivotMotor = new TalonFX(Constants.Ports.INTAKE_PIVOT_ID);
+        pivotMotor.getConfigurator().apply(Constants.AlgaeIntake.PIVOT_CONFIG);
+        pivotMotorCurrent = pivotMotor.getSupplyCurrent();
+        wheelMotor = new TalonFX(Constants.Ports.ALGAE_INTAKE_ROLLER_ID);
+        wheelMotor.getConfigurator().apply(Constants.AlgaeIntake.INTAKE_CONFIG);
         
         routine = new SysIdRoutine(
             new SysIdRoutine.Config(
@@ -70,28 +72,34 @@ public class Intake extends SubsystemBase {
         return getPosition().minus(setpoint);
     }
 
-    //Commands for the intake 
-    private Command lowerIntake() {
-        return changePivotPos(Constants.AlgaeIntake.LOWERED_POS);
-    }
-
-    private Command raiseIntake() {
-        return changePivotPos(Constants.AlgaeIntake.RAISED_POS)
-            .andThen(() -> pivotMotor.set(0.1))
-            .until(this::intakeAtTop)
-            .andThen(() -> pivotMotor.setPosition(Constants.AlgaeIntake.RAISED_POS));
+    public Command reset(boolean up) {
+        return up
+            ? runOnce(() -> pivotMotor.set(-0.1))
+                .andThen(Commands.waitUntil(this::currentSpikeUp))
+                .andThen(() -> {
+                    pivotMotor.stopMotor();
+                    pivotMotor.setPosition(0);
+                    pivotMotor.setControl(positionDutyCycle.withPosition(0));
+                })
+            : runOnce(() -> pivotMotor.set(0.1))
+                .andThen(Commands.waitUntil(this::currentSpikeDown))
+                .andThen(() -> {
+                    pivotMotor.stopMotor();
+                    pivotMotor.setPosition(Constants.AlgaeIntake.INTAKE_ANGLE);
+                    pivotMotor.setControl(positionDutyCycle.withPosition(Constants.AlgaeIntake.INTAKE_ANGLE));
+                });
     }
 
     private Command runIntake() {
         return runOnce(() -> wheelMotor.set(Constants.AlgaeIntake.INTAKE_SPEED));
     }
-
-    private boolean intakeAtTop() {
-        return currentSpike();
-    }
     
-    private boolean currentSpike() {
-        return (pivotMotor.getSupplyCurrent().getValue().compareTo(Constants.AlgaeIntake.CURRENT_LIMIT) > 0);
+    private boolean currentSpikeUp() {
+        return pivotMotorCurrent.getValueAsDouble() > Constants.AlgaeIntake.CURRENT_SPIKE_LIMIT_UP_AMPS;
+    }
+
+    private boolean currentSpikeDown() {
+        return pivotMotorCurrent.getValueAsDouble() > Constants.AlgaeIntake.CURRENT_SPIKE_LIMIT_DOWN_AMPS;
     }
 
     private Command reverseIntake() {
@@ -102,29 +110,33 @@ public class Intake extends SubsystemBase {
         return runOnce(() -> wheelMotor.set(0.0));
     }
 
+    private BooleanSupplier intakeInPosition(Angle position) {
+        return () -> getError(position).abs(Degrees) < Constants.AlgaeIntake.MAX_ERROR.in(Degrees);
+    }
+
     //Changing the position of the intake
     private Command changePivotPos(Angle position) {
-        pivotMotor.setControl(
-            new PositionDutyCycle(position.div(Constants.AlgaeIntake.INTAKE_GEAR_RATIO))
-        );
-
-        return run(() -> {
-            pivotPos.setDefault(position.in(Degrees));
-        }).until(() -> getError(position).abs(Degrees) < Constants.AlgaeIntake.MAX_ERROR.in(Degrees));
+        return runOnce(() -> pivotMotor.setControl(positionDutyCycle.withPosition(position)))
+            .andThen(Commands.waitUntil(intakeInPosition(position)));
     }
 
     //Changes the state of the intake
     public Command changeState(IntakeState newState) {
         //Will check to see if intake is up, if it, lower intake, else, raise intake
-        Command pivotCommand = newState.intakeExtended ? lowerIntake() : raiseIntake();
+        final Command pivotCommand = newState.intakeExtended
+            ? changePivotPos(Constants.AlgaeIntake.LOWERED_POS).andThen(reset(false))
+            : changePivotPos(Constants.AlgaeIntake.RAISED_POS).andThen(reset(true));
         //Checks to see if state reverses intake, if it does then reverse intake, if not run intake
-        Command intakeCommand = newState.intakeExtended ? (newState.direction == Direction.REVERSED ? reverseIntake() : runIntake())
-                //Will stop the intake if not extended
-                : stopIntake();
+        final Command intakeCommand = switch(newState.direction) {
+            case REVERSE -> reverseIntake();
+            case FORWARD -> runIntake();
+            case OFF -> stopIntake();
+        };
         return pivotCommand.andThen(intakeCommand);
     }
 
+    
     public void periodic() {
-        pivotPID.updatePID(pivotMotor);
+        pivotMotorCurrent.refresh();
     }
 }

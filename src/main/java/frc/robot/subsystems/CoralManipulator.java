@@ -1,12 +1,9 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Seconds;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -18,20 +15,23 @@ import frc.robot.Constants;
 public class CoralManipulator extends SubsystemBase {
     private final TalonFX rollerMotor;
     private final DigitalInput beambreak;
+    private final DigitalInput elevBeambreak;
     public SysIdRoutine routine;
 
     private final NetworkTable manipulatorTable;
-    private final BooleanPublisher beambreakPub;
-    private final DoublePublisher currentPub;
+    private final BooleanPublisher coralInManipulatorPub;
+    private final BooleanPublisher coralInputtedPub;
 
     public CoralManipulator() {
-        rollerMotor = Constants.CoralManipulator.ROLLER_CONFIG.createTalon();
+        rollerMotor = new TalonFX(Constants.Ports.CORAL_ROLLER_MOTOR_ID);
+        rollerMotor.getConfigurator().apply(Constants.CoralManipulator.ROLLER_CONFIG);
         beambreak = new DigitalInput(Constants.Ports.BEAM_BREAK_PORT);
+        elevBeambreak = new DigitalInput(Constants.Ports.ELEV_BEAM_BREAK_PORT); //plugged in different from before, so swapped values
 
         // network table setup
         manipulatorTable = NetworkTableInstance.getDefault().getTable("Manipulator");
-        beambreakPub = manipulatorTable.getBooleanTopic("BeamBreak").publish();
-        currentPub = manipulatorTable.getDoubleTopic("Current").publish();
+        coralInManipulatorPub = manipulatorTable.getBooleanTopic("BeamBreak").publish();
+        coralInputtedPub = manipulatorTable.getBooleanTopic("Elevator BeamBreak").publish();
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
@@ -43,43 +43,45 @@ public class CoralManipulator extends SubsystemBase {
     }
 
     public Command changeState(ManipulatorState state) {
-        if (state == ManipulatorState.IDLE) {
-            return stopRollers();
-        }
-
-        if (state == ManipulatorState.INTAKE) {
-            // for intake, run until detect coral
-            return runRollers(state.getRollerSpeed())
-                    .until(this::hasCoral)
-                    .andThen(Commands.waitTime(Seconds.of(0.5))
-                    .andThen(stopRollers()));
-        }
-
-        // for scoring, only run if coral piece is detected
-        if (state == ManipulatorState.SCORE && !hasCoral()) {
-            return Commands.none();
-        }
-
-        // else, default to running rollers
-        return runRollers(state.getRollerSpeed());
+        return switch(state) {
+            case IDLE -> stopRollers();
+            case INTAKE -> runRollers(state.getRollerSpeed())
+                .andThen(Commands.waitUntil(this::coralInputted))
+                .andThen(Commands.waitUntil(this::hasCoral))
+                .andThen(stopRollers())
+                .unless(this::hasCoral);
+            case KNOCK -> runRollers(state.getRollerSpeed()).unless(() -> !hasCoral());
+            case SCORE -> runRollers(state.getRollerSpeed())
+                .andThen(Commands.waitUntil(() -> !hasCoral()))
+                .andThen(Commands.waitSeconds(0.5))
+                .unless(() -> !hasCoral());
+        };
     }
 
     public Command runRollers(double speed) {
+        // return runOnce(() -> rollerMotor.setControl(veloDutyCycle.withVelocity(speed)));
         return runOnce(() -> rollerMotor.set(speed));
+
     }
 
     public Command stopRollers() {
-        return runOnce(() -> rollerMotor.set(0));
+        return runRollers(0);
     }
 
     public boolean hasCoral() {
-        return !beambreak.get(); // get() returns true when circuit is closed
+        return elevBeambreak.get() && !beambreak.get(); // get() returns true when circuit is closed
+    }
+
+
+    public boolean coralInputted(){
+        System.out.printf("coral inputted: %b", !elevBeambreak.get());
+        return !elevBeambreak.get();
     }
 
     @Override
     public void periodic() {
-        beambreakPub.set(hasCoral());
-        currentPub.set(rollerMotor.getSupplyCurrent().getValue().in(Amps));
+        coralInManipulatorPub.set(!beambreak.get());
+        coralInputtedPub.set(!elevBeambreak.get());
     }
 
 }

@@ -1,6 +1,5 @@
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.Seconds;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
@@ -20,7 +19,6 @@ public class StateMachine extends SubsystemBase {
     private final StringPublisher intakeStatePub;
     private final StringPublisher manipulatorStatePub;
     private final StringPublisher elevatorStatePub;
-    private RobotState targetScoreState = RobotState.SCORE_L1;
 
     public enum RobotState {
         IDLE(IntakeState.IDLE, ManipulatorState.IDLE, ElevatorState.IDLE),
@@ -41,7 +39,7 @@ public class StateMachine extends SubsystemBase {
         SCORE_L4(IntakeState.IDLE, ManipulatorState.SCORE, ElevatorState.L4),
         
         // special state
-        KNOCK_ALGAE(IntakeState.IDLE, ManipulatorState.KNOCK, ElevatorState.KNOCK);
+        KNOCK_ALGAE(IntakeState.IDLE, ManipulatorState.KNOCK, ElevatorState.L3_KNOCK);
 
         public final IntakeState intakeState;
         public final ManipulatorState manipulatorState;
@@ -96,9 +94,6 @@ public class StateMachine extends SubsystemBase {
                        Commands.none()
                    ), Commands.sequence(
                     manipulator.changeState(newState.manipulatorState)
-                        .until(() -> !manipulator.hasCoral())
-                        .andThen(Commands.waitTime(Seconds.of(0.5)))
-                        .andThen(changeState(RobotState.IDLE))
                 )
             );   
         } 
@@ -133,13 +128,4 @@ public class StateMachine extends SubsystemBase {
         intakeStatePub.set(state.intakeState.toString());
         manipulatorStatePub.set(state.manipulatorState.toString());
     }
-
-    public void setTargetScoreState(RobotState targetState) {
-        if (isScoreState(targetState)) {
-            this.targetScoreState = targetState;
-            System.out.println("Target score state set to: " + targetState);
-        }
-    }
-
-
 }
