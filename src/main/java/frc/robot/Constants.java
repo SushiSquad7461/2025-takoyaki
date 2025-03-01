@@ -265,9 +265,27 @@ public class Constants {
 
     public static final class CoralManipulator {
         // motion and position control w/ pivot
+<<<<<<< HEAD
         public static final TalonFXConfiguration ROLLER_CONFIG = new TalonFXConfiguration()
             .withCurrentLimits(BASIC_CURRENT_LIMIT)
             .withMotorOutput(MOTOR_OUTPUT_CW);
+=======
+        public static final Angle MAX_ANGLE = Degrees.of(199.5);
+        public static final Angle MIN_ANGLE = Degrees.of(0);
+        public static final Angle ANGLE_TOLERANCE = Degrees.of(5.0);
+                        
+        public static final MotorConfig ROLLER_CONFIG = new MotorConfig(
+            Ports.ROLLER_MOTOR_ID,
+            35,
+            false,
+            MotorConfig.Mode.BRAKE
+        );
+        
+        // roller speeds for diff states (should be in range [-1, 1])
+        public static final double INTAKE_SPEED = 0.3;
+        public static final double SCORE_SPEED = 0.8;
+        public static final double HOLD_SPEED = 0;
+>>>>>>> 66a79ba (updated auto paths)
     }
   
     public static class AlgaeIntake {
