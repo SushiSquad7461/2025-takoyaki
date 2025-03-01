@@ -77,10 +77,13 @@ public class Swerve extends SubsystemBase {
 
     private final PhotonPoseEstimator photonPoseEstimatorLeft;
     private final PhotonPoseEstimator photonPoseEstimatorRight;
+    private final PIDController alignmentPID;
 
     private AlignmentPosition currentAlignmentPosition = AlignmentPosition.CENTER;
+    private double lastValidCenterX = 0;
+    private double lastDesiredCenterX = 0;
 
-    private static final double ALIGNMENT_TOLERANCE = 25; //pixels
+    private static final double ALIGNMENT_TOLERANCE = 20; //pixels
     
     private final NetworkTable table;
     private final StringPublisher alignmentPositionPub;
@@ -106,6 +109,8 @@ public class Swerve extends SubsystemBase {
         gyro = new Pigeon2(Constants.Swerve.pigeonID);
         gyro.getConfigurator().apply(new Pigeon2Configuration());
         gyro.setYaw(0);
+        alignmentPID = new PIDController(0.002, 0, 0); 
+        alignmentPID.setTolerance(15, 10);
         
         mSwerveMods = new SwerveModule[] {
             new SwerveModule(0, Constants.Swerve.Mod0.constants),
@@ -431,22 +436,36 @@ public class Swerve extends SubsystemBase {
                         actualCenterX = getCenterX(firstRes.getBestTarget().detectedCorners);
                         desiredCenterX = targetPositions.get(firstCam).get(position);
                     }
+                    lastValidCenterX = actualCenterX;
+                    lastDesiredCenterX = desiredCenterX;
                 } else if(!secondCamResults.isEmpty() && secondCamResults.get(secondCamResults.size()-1).hasTargets()) {
                     // Only second camera sees
                     var secondRes = secondCamResults.get(secondCamResults.size()-1);
                     actualCenterX = getCenterX(secondRes.getBestTarget().detectedCorners);
                     desiredCenterX = targetPositions.get(secondCam).get(position);
+                    lastValidCenterX = actualCenterX;
+                    lastDesiredCenterX = desiredCenterX;
+                } else { 
+                    actualCenterX = lastValidCenterX; // No cameras see so use last valid center
+                    desiredCenterX = lastDesiredCenterX;
                 }
 
                 offset = desiredCenterX - actualCenterX;
                 targetCenterXPub.set(actualCenterX);
                 desiredXPub.set(desiredCenterX);
 
+                double correction = alignmentPID.calculate(actualCenterX, desiredCenterX);
+                double maxSpeed = 0.8;
+                correction = Math.max(-maxSpeed, Math.min(maxSpeed, correction));
+                if (Math.abs(offset) < ALIGNMENT_TOLERANCE) { //deadband so it doesn't keep correcting
+                    correction = 0;
+                }
+            
                 drive(
-                    new Translation2d(0, 0.5 * Math.signum(offset)),
+                    new Translation2d(0, correction),
                     0,
-                    true,
-                    true
+                    false,
+                    false
                 );
             }
         ).until(() -> isAligned(position)).withTimeout(5);
