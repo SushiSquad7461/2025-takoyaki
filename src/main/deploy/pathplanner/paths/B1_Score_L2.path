@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.1703217699899415,
-        "y": 7.213820422535211
+        "x": 7.2036516460092646,
+        "y": 6.809758607072625
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.345246478873239,
-        "y": 5.357218309859154
+        "x": 5.543661971830985,
+        "y": 5.258010563380281
       },
       "prevControl": {
-        "x": 4.997400208387692,
-        "y": 5.0093720393736065
+        "x": 5.136186958217146,
+        "y": 4.930780440364719
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,17 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-<<<<<<<< HEAD:src/main/deploy/pathplanner/paths/B1_Score_L2.path
-    "rotation": -119.99999999999999
-========
-    "rotation": -178.96793245693837
->>>>>>>> 66a79ba6dd94ee27de56cca27a27189a665f748d:src/main/deploy/pathplanner/paths/CenterLeave+L1.path
+    "rotation": -120.89894814096229
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -177.81168652162842
+    "rotation": 179.2244324578771
   },
   "useDefaultConstraints": true
 }
