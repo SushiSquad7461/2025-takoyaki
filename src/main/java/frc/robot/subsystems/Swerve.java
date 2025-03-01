@@ -1,8 +1,6 @@
 package frc.robot.subsystems;
 
 import frc.robot.SwerveModule;
-import frc.robot.util.Elastic;
-import frc.robot.util.Elastic.Notification.NotificationLevel;
 import frc.robot.Constants;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -53,7 +51,9 @@ import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -97,6 +97,10 @@ public class Swerve extends SubsystemBase {
     private final DoublePublisher[] anglePubs;
     private final DoublePublisher[] velocityPubs;
 
+    private final Alert robotConfigAlert;
+    private final Alert leftCameraAlert;
+    private final Alert rightCameraAlert;
+
     public Swerve() {
         field = new Field2d();
         gyro = new Pigeon2(Constants.Swerve.pigeonID);
@@ -111,8 +115,16 @@ public class Swerve extends SubsystemBase {
         };
 
         //TODO: rename cameras
-        leftCamera = new PhotonCamera("Arducam_OV9782_USB_Camera");
-        rightCamera = new PhotonCamera("Arducam_OV9281_USB_Camera");
+        final String lCamName = "Arducam_OV9782_USB_Camera";
+        leftCamera = new PhotonCamera(lCamName);
+        leftCameraAlert = new Alert(
+            String.format("Left camera %s is not connected", lCamName), 
+            AlertType.kError);
+        final String rCamName = "Arducam_OV9281_USB_Camera";
+        rightCamera = new PhotonCamera(rCamName);
+        rightCameraAlert = new Alert(
+            String.format("Right camera %s is not connected", rCamName), 
+            AlertType.kError);
         targetPositions = Map.of(
             leftCamera, Constants.VisionConstants.leftCameraOffsets,
             rightCamera, Constants.VisionConstants.rightCameraOffsets
@@ -198,6 +210,9 @@ public class Swerve extends SubsystemBase {
             )
         );
 
+        robotConfigAlert = new Alert(
+            "Failed to get PathPlanner robot config from GUI settings, please ensure this file is present and restart the robot code", 
+            AlertType.kError);
         try{
             RobotConfig config = RobotConfig.fromGUISettings();
             AutoBuilder.configure(
@@ -223,12 +238,7 @@ public class Swerve extends SubsystemBase {
                 this
             );
         } catch (Exception e) {
-            Elastic.sendNotification(new Elastic.Notification(
-                NotificationLevel.ERROR, 
-                "RobotConfig Error", 
-                "Failed to get PathPlanner robot config from GUI settings, please ensure this file is present and restart the robot code",
-                120000 // 2min
-            ));
+            robotConfigAlert.set(true);
             e.printStackTrace();
         }
     
@@ -677,6 +687,8 @@ public class Swerve extends SubsystemBase {
 
     @Override
     public void periodic(){
+        leftCameraAlert.set(!leftCamera.isConnected());
+        rightCameraAlert.set(!rightCamera.isConnected());
         leftCameraResults = leftCamera.getAllUnreadResults();
         rightCameraResults = rightCamera.getAllUnreadResults();
         poseEstimator.update(getGyroYaw(), getModulePositions());

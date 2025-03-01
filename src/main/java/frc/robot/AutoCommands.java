@@ -64,7 +64,7 @@ public class AutoCommands {
             stateMachine.changeState(RobotState.IDLE)
         );
 
-        autoChooser.addOption("Nothing", new InstantCommand());
+        autoChooser.setDefaultOption("Nothing", new InstantCommand());
 
         
         // // TODO: need to make autos
