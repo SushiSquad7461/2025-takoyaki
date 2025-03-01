@@ -42,13 +42,17 @@
   },
   "goalEndState": {
     "velocity": 0,
+<<<<<<<< HEAD:src/main/deploy/pathplanner/paths/B1_Score_L2.path
     "rotation": -119.99999999999999
+========
+    "rotation": -178.96793245693837
+>>>>>>>> 66a79ba6dd94ee27de56cca27a27189a665f748d:src/main/deploy/pathplanner/paths/CenterLeave+L1.path
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": -177.81168652162842
   },
   "useDefaultConstraints": true
 }
