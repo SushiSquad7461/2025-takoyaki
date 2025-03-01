@@ -121,12 +121,14 @@ public class Elevator extends SubsystemBase {
   // uses limit switch to zero elevator
   public Command resetElevator() {
     return runOnce(() -> {
+      System.out.print("resetElevator triggered");
       rightMotor.set(-0.1);
     }).andThen(Commands.waitUntil(this::elevatorAtBottom))
       .andThen(runOnce(() -> {
         rightMotor.set(0.0);
         rightMotor.setPosition(0.0); //zeroes
         reset = true;
+        System.out.print("elevator reached bottom ");
       })
     );
   }

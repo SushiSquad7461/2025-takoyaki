@@ -63,8 +63,8 @@ public class Constants {
         public static final int ELEVATOR_RIGHT_ID = 18;
 
         public static final int LIMIT_SWITCH_PORT = 2; 
-        public static final int BEAM_BREAK_PORT = 1;
-        public static final int ELEV_BEAM_BREAK_PORT = 3; 
+        public static final int BEAM_BREAK_PORT = 3;
+        public static final int ELEV_BEAM_BREAK_PORT = 6; 
     }
 
     public static class CustomUnits {
@@ -127,7 +127,7 @@ public class Constants {
         public static final double angleKD = chosenModule.angleKD;
 
         /* Drive Motor PID Values */
-        public static final double driveKP = 3.2;
+        public static final double driveKP = 0.4;
         public static final double driveKI = 0.0;
         public static final double driveKD = 0.0;
         public static final double driveKF = 0.0;
@@ -153,7 +153,7 @@ public class Constants {
             public static final int driveMotorID = 1;
             public static final int angleMotorID = 2;
             public static final int canCoderID = 3;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(170.156250); //point bevel to right
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(168.486328); //point bevel to right
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -163,7 +163,7 @@ public class Constants {
             public static final int driveMotorID = 4;
             public static final int angleMotorID = 5;
             public static final int canCoderID = 6;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(1.757812); //168.925781
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-43.066406); //168.925781
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -173,7 +173,7 @@ public class Constants {
             public static final int driveMotorID = 7;
             public static final int angleMotorID = 8;
             public static final int canCoderID = 9;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-15.908203); //-15.732422
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-16.699219); //-15.732422
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -183,7 +183,7 @@ public class Constants {
             public static final int driveMotorID = 10;
             public static final int angleMotorID = 11;
             public static final int canCoderID = 12;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-144.052734); //-144.228516)
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-144.228516); //-144.228516)
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -272,7 +272,7 @@ public class Constants {
   
     public static class AlgaeIntake {
         public static final double INTAKE_GEAR_RATIO = 15; // output over input
-        public static final double INTAKE_SPEED = 0.2;
+        public static final double INTAKE_SPEED = 0.3;
 
         public static final Angle MAX_ERROR = Degrees.of(5.0 * INTAKE_GEAR_RATIO);
         public static final Angle RAISED_POS = Degrees.of(12 * INTAKE_GEAR_RATIO);
@@ -298,8 +298,8 @@ public class Constants {
         public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
         public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
     
-        public static final double kPTranslationController = 0;
-        public static final double kPThetaController = 0;
+        public static final double kPTranslationController = 0.2;
+        public static final double kPThetaController = 0.2;
     }
 
     public static final class VisionConstants { //TODO: only tell pipeline to give pose when multiple tags detected

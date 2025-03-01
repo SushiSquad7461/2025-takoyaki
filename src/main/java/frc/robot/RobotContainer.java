@@ -11,6 +11,7 @@ import java.util.Set;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.StateMachine;
@@ -95,11 +96,11 @@ public class RobotContainer {
         operatorController.y().onTrue(Commands.runOnce(() -> targetScoreCommand = scoreCommands[2]));
         operatorController.b().onTrue(Commands.runOnce(() -> targetScoreCommand = scoreCommands[3]));
 
-        //operatorController.rightBumper().onTrue(Commands.runOnce(() -> CommandScheduler.getInstance().schedule(targetScoreCommand))).onFalse(idle);
-        //operatorController.rightTrigger().onTrue(manipulator.runRollers(0.1)).onFalse(Commands.runOnce(() -> manipulator.runRollers(0)));
+        operatorController.rightBumper().onTrue(Commands.runOnce(() -> CommandScheduler.getInstance().schedule(targetScoreCommand))).onFalse(idle);
+        operatorController.rightTrigger().onTrue(manipulator.runRollers(0.1)).onFalse(Commands.runOnce(() -> manipulator.runRollers(0)));
 
-        operatorController.rightBumper().onTrue(Commands.defer(() -> targetScoreCommand, Set.of(swerve, elevator, manipulator, intake))).onFalse(idle);
-        operatorController.rightTrigger().onTrue(manipulator.runRollers(0.1)).onFalse(manipulator.runRollers(0));        
+        //operatorController.rightBumper().onTrue(Commands.defer(() -> targetScoreCommand, Set.of(swerve, elevator, manipulator, intake))).onFalse(idle);
+        //operatorController.rightTrigger().onTrue(manipulator.runRollers(0.1)).onFalse(manipulator.runRollers(0));        
         
         // special state => override and resetting to idle, and knocking algae
         operatorController.back().onTrue(idle);

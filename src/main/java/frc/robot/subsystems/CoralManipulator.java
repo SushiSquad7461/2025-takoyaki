@@ -26,7 +26,7 @@ public class CoralManipulator extends SubsystemBase {
         rollerMotor = new TalonFX(Constants.Ports.CORAL_ROLLER_MOTOR_ID);
         rollerMotor.getConfigurator().apply(Constants.CoralManipulator.ROLLER_CONFIG);
         beambreak = new DigitalInput(Constants.Ports.BEAM_BREAK_PORT);
-        elevBeambreak = new DigitalInput(Constants.Ports.ELEV_BEAM_BREAK_PORT);
+        elevBeambreak = new DigitalInput(Constants.Ports.ELEV_BEAM_BREAK_PORT); //plugged in different from before, so swapped values
 
         // network table setup
         manipulatorTable = NetworkTableInstance.getDefault().getTable("Manipulator");
@@ -74,6 +74,7 @@ public class CoralManipulator extends SubsystemBase {
 
 
     public boolean coralInputted(){
+        System.out.printf("coral inputted: %b", !elevBeambreak.get());
         return !elevBeambreak.get();
     }
 
