@@ -248,18 +248,18 @@ public class Constants {
             .withCurrentLimits(BASIC_CURRENT_LIMIT)
             .withMotorOutput(MOTOR_OUTPUT_CCW)
             .withSlot0(new Slot0Configs()
-                .withKP(0.0055095)
-                .withKD(0.02)
-                .withKG(0.15891)
-                .withKS(0.060976)
-                .withKV(0.11353)
-                .withKA(0.0014317)
+                .withKP(0.00023899) //0.0055095
+                .withKD(0) //0.02
+                .withKG(0.17409)
+                .withKS(0.065134)
+                .withKV(0.11334)
+                .withKA(0.0014578)
             ).withMotionMagic(new MotionMagicConfigs()
                 .withMotionMagicCruiseVelocity(MOTION_MAGIC_VELOCITY)
                 .withMotionMagicAcceleration(MOTION_MAGIC_ACCELERATION)
             );
 
-        public static final double MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(1.0)).in(Rotations);
+        public static final double MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(.5)).in(Rotations);
         public static final double RELAXED_MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(4.0)).in(Rotations);
     }
 
@@ -272,7 +272,7 @@ public class Constants {
   
     public static class AlgaeIntake {
         public static final double INTAKE_GEAR_RATIO = 15; // output over input
-        public static final double INTAKE_SPEED = 0.3;
+        public static final double INTAKE_SPEED = 0.4;
 
         public static final Angle MAX_ERROR = Degrees.of(5.0 * INTAKE_GEAR_RATIO);
         public static final Angle RAISED_POS = Degrees.of(12 * INTAKE_GEAR_RATIO);

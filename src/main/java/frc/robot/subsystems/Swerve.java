@@ -460,7 +460,7 @@ public class Swerve extends SubsystemBase {
                 desiredXPub.set(desiredCenterX);
 
                 double correction = alignmentPID.calculate(actualCenterX, desiredCenterX);
-                double maxSpeed = 0.2;
+                double maxSpeed = 0.4;
                 correction = Math.max(-maxSpeed, Math.min(maxSpeed, correction));
                 if (Math.abs(offset) < ALIGNMENT_TOLERANCE) { //deadband so it doesn't keep correcting
                     correction = 0;

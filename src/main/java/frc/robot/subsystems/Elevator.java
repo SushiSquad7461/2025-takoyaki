@@ -98,7 +98,7 @@ public class Elevator extends SubsystemBase {
   // checked for elevator idle state
   public Command changeState(ElevatorState state) {
     return run(() -> {
-      elevatorTable.getDoubleTopic("Setpoint").publish().set(state.position.in(Inches));
+      // elevatorTable.getDoubleTopic("Setpoint").publish().set(state.position.in(Inches));
       rightMotor.setControl(motionMagic.withPosition(state.targetMotorRotations));
       if(state != ElevatorState.IDLE) reset = false;
     }).until(() -> elevatorInPosition(state))
