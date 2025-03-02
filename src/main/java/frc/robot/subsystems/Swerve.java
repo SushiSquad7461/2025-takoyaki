@@ -111,7 +111,7 @@ public class Swerve extends SubsystemBase {
         gyro = new Pigeon2(Constants.Swerve.pigeonID);
         gyro.getConfigurator().apply(new Pigeon2Configuration());
         gyro.setYaw(0);
-        alignmentPID = new PIDController(0.09, 0, 0); 
+        alignmentPID = new PIDController(0.15, 0, 0); 
         alignmentPID.setTolerance(10, 10);
         
         mSwerveMods = new SwerveModule[] {

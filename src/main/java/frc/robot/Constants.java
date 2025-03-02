@@ -248,8 +248,8 @@ public class Constants {
             .withCurrentLimits(BASIC_CURRENT_LIMIT)
             .withMotorOutput(MOTOR_OUTPUT_CCW)
             .withSlot0(new Slot0Configs()
-                .withKP(0.00023899) //0.0055095
-                .withKD(0) //0.02
+                .withKP(0.0055095) //0.0055095
+                .withKD(0.02) //0.02
                 .withKG(0.17409)
                 .withKS(0.065134)
                 .withKV(0.11334)
