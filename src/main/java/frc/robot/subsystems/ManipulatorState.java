@@ -2,7 +2,8 @@ package frc.robot.subsystems;
 
     public enum ManipulatorState {
         IDLE(0),
-        SCORE(0.2),
+        SCORE(0.15),
+        //SCORE_L4(0.2),
         KNOCK(0.2),
         INTAKE(0.1);
 

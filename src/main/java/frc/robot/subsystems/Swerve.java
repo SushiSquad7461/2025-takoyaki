@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
@@ -32,6 +33,7 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.cscore.HttpCamera;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -109,7 +111,7 @@ public class Swerve extends SubsystemBase {
         gyro = new Pigeon2(Constants.Swerve.pigeonID);
         gyro.getConfigurator().apply(new Pigeon2Configuration());
         gyro.setYaw(0);
-        alignmentPID = new PIDController(0.09, 0, 0); 
+        alignmentPID = new PIDController(0.15, 0, 0); 
         alignmentPID.setTolerance(10, 10);
         
         mSwerveMods = new SwerveModule[] {
@@ -458,7 +460,7 @@ public class Swerve extends SubsystemBase {
                 desiredXPub.set(desiredCenterX);
 
                 double correction = alignmentPID.calculate(actualCenterX, desiredCenterX);
-                double maxSpeed = 0.2;
+                double maxSpeed = 0.4;
                 correction = Math.max(-maxSpeed, Math.min(maxSpeed, correction));
                 if (Math.abs(offset) < ALIGNMENT_TOLERANCE) { //deadband so it doesn't keep correcting
                     correction = 0;

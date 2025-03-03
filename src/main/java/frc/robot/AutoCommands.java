@@ -39,6 +39,18 @@ public class AutoCommands {
         selectedAutoPublisher = autoTable.getStringTopic("selectedAuto").publish();
         selectedAutoPublisher.set("Nothing");
 
+        NamedCommands.registerCommand("prepareL1", 
+            stateMachine.changeState(RobotState.PREPARE_L1)
+        );
+
+        NamedCommands.registerCommand("prepareL2", 
+            stateMachine.changeState(RobotState.PREPARE_L2)
+        );
+
+        NamedCommands.registerCommand("prepareL3", 
+            stateMachine.changeState(RobotState.PREPARE_L3)
+        );
+        
         NamedCommands.registerCommand("prepareL4", 
             stateMachine.changeState(RobotState.PREPARE_L4)
         );
