@@ -344,10 +344,22 @@ public class Swerve extends SubsystemBase {
     }
 
     public Command resetHeading() {
+        var alliance = DriverStation.getAlliance();
+        if (alliance.isPresent()) {
+            if (alliance.get() == DriverStation.Alliance.Red) {
+                return runOnce(() -> setPose(
+                    new Pose2d(
+                        getPose().getTranslation(),
+                        new Rotation2d(Math.PI)
+                    )
+                ));
+            }
+        }
+
         return runOnce(() -> setPose(
             new Pose2d(
                 getPose().getTranslation(),
-                new Rotation2d()
+                new Rotation2d(0)
             )
         ));
     }
