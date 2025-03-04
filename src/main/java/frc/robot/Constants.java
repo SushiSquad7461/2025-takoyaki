@@ -15,7 +15,6 @@ import edu.wpi.first.units.PerUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Dimensionless;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.Swerve.AlignmentPosition;
 
@@ -40,6 +39,7 @@ import frc.lib.util.COTSTalonFXSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
 
 public class Constants {
+    public static final boolean IS_SIM = Robot.isSimulation();
     public static final double stickDeadband = 0.1;
 
     public static final CurrentLimitsConfigs BASIC_CURRENT_LIMIT = new CurrentLimitsConfigs().withSupplyCurrentLimit(35);
@@ -234,30 +234,29 @@ public class Constants {
     public static class Elevator {
         public static final Distance MAX_HEIGHT = Inches.of(28.0); 
         public static final Distance ELEVATOR_EXTENSION_PER_ROTATION = Inches.of(3.994); 
-        public static final Dimensionless GEAR_RATIO = Rotations.of(52*60).div(Rotations.of(18*18)); //output over input
+        public static final Double GEAR_RATIO = 52.*60./18./18.; //output over input
         public static final Angle MOTOR_MAX_HEIGHT = frc.robot.subsystems.Elevator.heightToMotor(MAX_HEIGHT);
 
         public static final AngularVelocity MOTION_MAGIC_VELOCITY = RotationsPerSecond.of(80);
         public static final AngularAcceleration MOTION_MAGIC_ACCELERATION = RotationsPerSecondPerSecond.of(160);
         
         public static final TalonFXConfiguration ELEVATOR_LEFT = new TalonFXConfiguration()
-            .withCurrentLimits(BASIC_CURRENT_LIMIT)
             .withMotorOutput(MOTOR_OUTPUT_CW);
 
         public static final TalonFXConfiguration ELEVATOR_RIGHT = new TalonFXConfiguration()
-            .withCurrentLimits(BASIC_CURRENT_LIMIT)
             .withMotorOutput(MOTOR_OUTPUT_CCW)
             .withSlot0(new Slot0Configs()
-                .withKP(0.0055095) //0.0055095
-                .withKD(0.02) //0.02
-                .withKG(0.17409)
-                .withKS(0.065134)
-                .withKV(0.11334)
-                .withKA(0.0014578)
+                .withKP(IS_SIM ? 0.14274      : 0.0055095)
+                .withKD(IS_SIM ? 0            : 0.02)
+                .withKG(IS_SIM ? 0.1494140625 : 0.17409)
+                .withKS(IS_SIM ? 0.001953125  : 0.065134)
+                .withKV(IS_SIM ? 0.146        : 0.11334)
+                .withKA(IS_SIM ? 0.00475      : 0.0014578)
             ).withMotionMagic(new MotionMagicConfigs()
                 .withMotionMagicCruiseVelocity(MOTION_MAGIC_VELOCITY)
                 .withMotionMagicAcceleration(MOTION_MAGIC_ACCELERATION)
             );
+        
 
         public static final double MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(.5)).in(Rotations);
         public static final double RELAXED_MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(4.0)).in(Rotations);

@@ -4,12 +4,11 @@
 
 package frc.robot;
 
-import java.util.Set;
-
 import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -57,8 +56,10 @@ public class RobotContainer {
         // Configure the button bindings
         configureButtonBindings();
 
-        elevator.setDefaultCommand(elevator.resetElevator().andThen(() -> elevator.removeDefaultCommand()));
-        intake.setDefaultCommand(intake.reset(true).andThen(() -> intake.removeDefaultCommand()));
+        if(Robot.isReal()) {
+            elevator.setDefaultCommand(elevator.resetElevator().andThen(() -> elevator.removeDefaultCommand()));
+            intake.setDefaultCommand(intake.reset(true).andThen(() -> intake.removeDefaultCommand()));
+        }
     }
 
     /**
@@ -112,6 +113,15 @@ public class RobotContainer {
 
         programmerController.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
         programmerController.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
+        SmartDashboard.putBoolean("SignalLogger Active", false);
+        SmartDashboard.putData("SignalLogger::start", Commands.runOnce(() -> {
+            SignalLogger.start();
+            SmartDashboard.putBoolean("SignalLogger Active", true);
+        }));
+        SmartDashboard.putData("SignalLogger::stop", Commands.runOnce(() -> {
+            SignalLogger.stop();
+            SmartDashboard.putBoolean("SignalLogger Active", false);
+        }));
 
         programmerController.a().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdQuasistatic(Direction.kForward));
         programmerController.b().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdQuasistatic(Direction.kReverse));
