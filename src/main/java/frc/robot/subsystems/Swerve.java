@@ -2,7 +2,7 @@ package frc.robot.subsystems;
 
 import frc.robot.SwerveModule;
 import frc.robot.Constants;
-
+import frc.robot.Robot;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -23,6 +23,7 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.TargetCorner;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
@@ -55,6 +56,7 @@ import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -67,14 +69,15 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 public class Swerve extends SubsystemBase {
     public SwerveDrivePoseEstimator poseEstimator;
     public SwerveModule[] mSwerveMods;
+    public BaseStatusSignal[] modStatusSignals;
     public Pigeon2 gyro;
     public SysIdRoutine driveSysIdRoutine;
     public SysIdRoutine steerSysIdRoutine;
 
     private final PhotonCamera leftCamera;
-    private List<PhotonPipelineResult> leftCameraResults;
+    private List<PhotonPipelineResult> leftCameraResults = List.of();
     private final PhotonCamera rightCamera;
-    private List<PhotonPipelineResult> rightCameraResults;
+    private List<PhotonPipelineResult> rightCameraResults = List.of();
     private final Map<PhotonCamera, Map<AlignmentPosition, Double>> targetPositions;
 
     private final PhotonPoseEstimator photonPoseEstimatorLeft;
@@ -107,6 +110,8 @@ public class Swerve extends SubsystemBase {
     private final Alert rightCameraAlert;
     //private final HttpCamera camStream;
 
+    private double simCurrentDrawAmps = 0;
+
     public Swerve() {
         field = new Field2d();
         gyro = new Pigeon2(Constants.Swerve.pigeonID);
@@ -120,6 +125,20 @@ public class Swerve extends SubsystemBase {
             new SwerveModule(1, Constants.Swerve.Mod1.constants),
             new SwerveModule(2, Constants.Swerve.Mod2.constants),
             new SwerveModule(3, Constants.Swerve.Mod3.constants)
+        };
+        modStatusSignals = new BaseStatusSignal[]{
+            mSwerveMods[0].getDrivePosition(),
+            mSwerveMods[0].getAnglePosition(),
+            mSwerveMods[0].getEncoderPosition(),
+            mSwerveMods[1].getDrivePosition(),
+            mSwerveMods[1].getAnglePosition(),
+            mSwerveMods[1].getEncoderPosition(),
+            mSwerveMods[2].getDrivePosition(),
+            mSwerveMods[2].getAnglePosition(),
+            mSwerveMods[2].getEncoderPosition(),
+            mSwerveMods[3].getDrivePosition(),
+            mSwerveMods[3].getAnglePosition(),
+            mSwerveMods[3].getEncoderPosition()
         };
 
         //TODO: rename cameras
@@ -723,10 +742,24 @@ public class Swerve extends SubsystemBase {
 
     @Override
     public void periodic(){
-        leftCameraAlert.set(!leftCamera.isConnected());
-        rightCameraAlert.set(!rightCamera.isConnected());
-        leftCameraResults = leftCamera.getAllUnreadResults();
-        rightCameraResults = rightCamera.getAllUnreadResults();
+        BaseStatusSignal.refreshAll(modStatusSignals);
+        for(SwerveModule mod : mSwerveMods){
+            cancoderPubs[mod.moduleNumber].set(mod.getCANcoder().getDegrees());
+            var modState = mod.getState();
+            anglePubs[mod.moduleNumber].set(modState.angle.getDegrees());
+            velocityPubs[mod.moduleNumber].set(modState.speedMetersPerSecond);
+        }
+
+        if(leftCamera.isConnected()) {
+            leftCameraResults = leftCamera.getAllUnreadResults();
+        } else {
+            leftCameraAlert.set(!leftCamera.isConnected());
+        }
+        if(rightCamera.isConnected()) {
+            rightCameraResults = rightCamera.getAllUnreadResults();
+        } else {
+            rightCameraAlert.set(!rightCamera.isConnected());
+        }
         poseEstimator.update(getGyroYaw(), getModulePositions());
 
         // TODO re-enable at least one camera after verifying no memory issues
@@ -752,12 +785,18 @@ public class Swerve extends SubsystemBase {
         alignmentPositionPub.set(currentAlignmentPosition.toString());
         isAlignedPub.set(isAligned(currentAlignmentPosition));
 
-        for(SwerveModule mod : mSwerveMods){
-            cancoderPubs[mod.moduleNumber].set(mod.getCANcoder().getDegrees());
-            anglePubs[mod.moduleNumber].set(mod.getPosition().angle.getDegrees());
-            velocityPubs[mod.moduleNumber].set(mod.getState().speedMetersPerSecond);
+        
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        simCurrentDrawAmps = 0;
+        for(var mod : mSwerveMods) {
+            simCurrentDrawAmps += mod.simulationPeriodic();
         }
     }
 
-    
+    public double getSimulatedCurrentDrawAmps() {
+        return simCurrentDrawAmps;
+      }
 }

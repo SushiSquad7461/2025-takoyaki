@@ -1,33 +1,62 @@
 package frc.robot;
 
+import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.units.Units;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.lib.math.Conversions;
 import frc.lib.util.SwerveModuleConstants;
 
 public class SwerveModule {
-    public int moduleNumber;
-    private Rotation2d angleOffset;
+    public final int moduleNumber;
+    private final Rotation2d angleOffset;
 
-    private TalonFX mAngleMotor;
-    private TalonFX mDriveMotor;
-    private CANcoder angleEncoder;
+    private final TalonFX angleMotor;
+    private final StatusSignal<Angle> anglePosition;
+    private final TalonFX driveMotor;
+    private final StatusSignal<Angle> drivePosition;
+    private final CANcoder angleEncoder;
+    private final StatusSignal<Angle> angleEncoderPosition;
 
     /* drive motor control requests */
     private final DutyCycleOut driveDutyCycle = new DutyCycleOut(0);
-    private final VelocityVoltage driveVelocity = new VelocityVoltage(0);
+    private final VelocityVoltage driveVelocityReq = new VelocityVoltage(0);
 
     /* angle motor control requests */
-    private final PositionVoltage anglePosition = new PositionVoltage(0);
+    private final PositionVoltage anglePositionReq = new PositionVoltage(0);
+
+    private final DCMotor driveMotorSimConstants = DCMotor.getKrakenX60(1);
+    private final DCMotor steerMotorSimConstants = DCMotor.getKrakenX60(1);
+    private final DCMotorSim driveSim = new DCMotorSim(
+        LinearSystemId.createDCMotorSystem(
+            driveMotorSimConstants, 
+            0.025,
+            Constants.Swerve.chosenModule.driveGearRatio),
+        driveMotorSimConstants);
+    private final DCMotorSim steerSim = new DCMotorSim(
+        LinearSystemId.createDCMotorSystem(
+            steerMotorSimConstants, 
+            0.004, 
+            Constants.Swerve.chosenModule.angleGearRatio), 
+        driveMotorSimConstants);
+    private final TalonFXSimState driveMotorSim;
+    private final TalonFXSimState angleMotorSim;
 
     public SwerveModule(int moduleNumber, SwerveModuleConstants moduleConstants){
         this.moduleNumber = moduleNumber;
@@ -38,100 +67,107 @@ public class SwerveModule {
         angleEncoder.getConfigurator().apply(Robot.ctreConfigs.swerveCANcoderConfig);
 
         /* Angle Motor Config */
-        mAngleMotor = new TalonFX(moduleConstants.angleMotorID);
+        angleMotor = new TalonFX(moduleConstants.angleMotorID);
         /* Drive Motor Config */
-        mDriveMotor = new TalonFX(moduleConstants.driveMotorID);
+        driveMotor = new TalonFX(moduleConstants.driveMotorID);
 
-        switch(moduleNumber) {
-            case 0 -> {
-                Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kS = Constants.DriveCharacterization.Mod0.driveKS;
-                Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kV = Constants.DriveCharacterization.Mod0.driveKV;
-                Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kA = Constants.DriveCharacterization.Mod0.driveKA;
-                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kS = Constants.DriveCharacterization.Mod0.angleKS;
-                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kV = Constants.DriveCharacterization.Mod0.angleKV;
-                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kA = Constants.DriveCharacterization.Mod0.angleKA;
-            }
-            case 1 -> {
-                Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kS = Constants.DriveCharacterization.Mod1.driveKS;
-                Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kV = Constants.DriveCharacterization.Mod1.driveKV;
-                Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kA = Constants.DriveCharacterization.Mod1.driveKA;
-                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kS = Constants.DriveCharacterization.Mod1.angleKS;
-                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kV = Constants.DriveCharacterization.Mod1.angleKV;
-                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kA = Constants.DriveCharacterization.Mod1.angleKA;
-
-            }
-            case 2 -> {
-                Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kS = Constants.DriveCharacterization.Mod2.driveKS;
-                Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kV = Constants.DriveCharacterization.Mod2.driveKV;
-                Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kA = Constants.DriveCharacterization.Mod2.driveKA;
-                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kS = Constants.DriveCharacterization.Mod2.angleKS;
-                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kV = Constants.DriveCharacterization.Mod2.angleKV;
-                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kA = Constants.DriveCharacterization.Mod2.angleKA;
-            }
-            case 3 -> {
-                Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kS = Constants.DriveCharacterization.Mod3.driveKS;
-                Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kV = Constants.DriveCharacterization.Mod3.driveKV;
-                Robot.ctreConfigs.swerveDriveFXConfig.Slot0.kA = Constants.DriveCharacterization.Mod3.driveKA;
-                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kS = Constants.DriveCharacterization.Mod3.angleKS;
-                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kV = Constants.DriveCharacterization.Mod3.angleKV;
-                Robot.ctreConfigs.swerveAngleFXConfig.Slot0.kA = Constants.DriveCharacterization.Mod3.angleKA;
-            }
-        }
+        Robot.ctreConfigs.swerveDriveFXConfig.Slot0 = Slot0Configs.from(moduleConstants.driveGains);
+        Robot.ctreConfigs.swerveAngleFXConfig.Slot0 = Slot0Configs.from(moduleConstants.angleGains);
         
-        mAngleMotor.getConfigurator().apply(Robot.ctreConfigs.swerveAngleFXConfig);
+        angleMotor.getConfigurator().apply(Robot.ctreConfigs.swerveAngleFXConfig);
+        driveMotor.getConfigurator().apply(Robot.ctreConfigs.swerveDriveFXConfig);
+        driveMotor.getConfigurator().setPosition(0.0);
+
+        drivePosition = driveMotor.getPosition();
+        anglePosition = angleMotor.getPosition();
+        angleEncoderPosition = angleEncoder.getAbsolutePosition();
+
+        driveMotorSim = driveMotor.getSimState();
+        angleMotorSim = angleMotor.getSimState();
+        angleEncoder.getSimState().setRawPosition(angleOffset.getRotations());
+
         resetToAbsolute();
-
-        mDriveMotor.getConfigurator().apply(Robot.ctreConfigs.swerveDriveFXConfig);
-        mDriveMotor.getConfigurator().setPosition(0.0);
-
     }
 
     //made helper methods for sysid since module drive and angle motors aren't visible
     public void setDriveVoltage(double volts) {
-        mDriveMotor.setControl(new VoltageOut(volts));
+        driveMotor.setControl(new VoltageOut(volts));
     }
 
     public void setSteerVoltage(double volts) {
-        mAngleMotor.setControl(new VoltageOut(volts));
+        angleMotor.setControl(new VoltageOut(volts));
     }
 
     public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop){
         desiredState.optimize(getState().angle);
-        mAngleMotor.setControl(anglePosition.withPosition(desiredState.angle.getRotations()));
+        angleMotor.setControl(anglePositionReq.withPosition(desiredState.angle.getRotations()));
         setSpeed(desiredState, isOpenLoop);
     }
 
     private void setSpeed(SwerveModuleState desiredState, boolean isOpenLoop){
         if(isOpenLoop){
             driveDutyCycle.Output = desiredState.speedMetersPerSecond / Constants.Swerve.maxSpeed;
-            mDriveMotor.setControl(driveDutyCycle);
+            driveMotor.setControl(driveDutyCycle);
         }
         else {
-            driveVelocity.Velocity = Conversions.MPSToRPS(desiredState.speedMetersPerSecond, Constants.Swerve.wheelCircumference);
-            mDriveMotor.setControl(driveVelocity);
+            driveVelocityReq.Velocity = Conversions.MPSToRPS(desiredState.speedMetersPerSecond, Constants.Swerve.wheelCircumference);
+            driveMotor.setControl(driveVelocityReq);
         }
     }
 
     public Rotation2d getCANcoder(){
-        return Rotation2d.fromRotations(angleEncoder.getAbsolutePosition().getValueAsDouble());
+        return Rotation2d.fromRotations(angleEncoderPosition.getValueAsDouble());
     }
 
     public void resetToAbsolute(){
         double absolutePosition = getCANcoder().getRotations() - angleOffset.getRotations();
-        mAngleMotor.setPosition(absolutePosition);
+        angleMotor.setPosition(absolutePosition);
+    }
+
+    /** Use this to obtain the drive position status signal of this module to be refreshed along with the signal from getAnglePosition every loop before using getState or getPosition */
+    public BaseStatusSignal getDrivePosition() {
+        return drivePosition;
+    }
+
+    /** Use this to obtain the angle position status signal of this module to be refreshed along with the signal from getDrivePosition every loop before using getState or getPosition */
+    public BaseStatusSignal getAnglePosition() {
+        return anglePosition;
+    }
+
+    /** Use this to obtain the encoder position status signal of this module to be refreshed every loop before using getCANcoder */
+    public BaseStatusSignal getEncoderPosition() {
+        return angleEncoderPosition;
     }
 
     public SwerveModuleState getState(){
         return new SwerveModuleState(
-            Conversions.RPSToMPS(mDriveMotor.getVelocity().getValueAsDouble(), Constants.Swerve.wheelCircumference), 
-            Rotation2d.fromRotations(mAngleMotor.getPosition().getValue().in(Units.Rotations))
+            Conversions.RPSToMPS(drivePosition.getValueAsDouble(), Constants.Swerve.wheelCircumference), 
+            Rotation2d.fromRotations(anglePosition.getValueAsDouble())
         );
     }
 
     public SwerveModulePosition getPosition(){
         return new SwerveModulePosition(
-            Conversions.rotationsToMeters(mDriveMotor.getPosition().getValueAsDouble(), Constants.Swerve.wheelCircumference), 
-            Rotation2d.fromRotations(mAngleMotor.getPosition().getValue().in(Units.Rotations))
+            Conversions.rotationsToMeters(drivePosition.getValueAsDouble(), Constants.Swerve.wheelCircumference), 
+            Rotation2d.fromRotations(anglePosition.getValueAsDouble())
         );
+    }
+
+    /** @return simulated current draw of the module in amps */
+    public double simulationPeriodic() {
+        var supplyVoltage = RobotController.getBatteryVoltage();
+        driveMotorSim.setSupplyVoltage(supplyVoltage);
+        angleMotorSim.setSupplyVoltage(supplyVoltage);
+        driveSim.setInputVoltage(driveMotorSim.getMotorVoltage());
+        steerSim.setInputVoltage(angleMotorSim.getMotorVoltage());
+        driveSim.update(Constants.LOOP_TIME_SECONDS);
+        steerSim.update(Constants.LOOP_TIME_SECONDS);
+
+        driveMotorSim.setRawRotorPosition(driveSim.getAngularPositionRotations() * Constants.Swerve.chosenModule.driveGearRatio);
+        driveMotorSim.setRotorVelocity(Units.radiansToRotations(driveSim.getAngularVelocityRadPerSec() * Constants.Swerve.chosenModule.driveGearRatio));
+        angleMotorSim.setRawRotorPosition(steerSim.getAngularPositionRotations() * Constants.Swerve.chosenModule.angleGearRatio);
+        angleMotorSim.setRotorVelocity(Units.radiansToRotations(steerSim.getAngularVelocityRadPerSec()) * Constants.Swerve.chosenModule.angleGearRatio);
+
+        return Math.abs(driveSim.getCurrentDrawAmps()) + Math.abs(steerSim.getCurrentDrawAmps());
     }
 }

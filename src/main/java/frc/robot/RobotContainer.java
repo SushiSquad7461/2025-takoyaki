@@ -148,6 +148,10 @@ public class RobotContainer {
         // programmerController.a().whileTrue(elevator.resetElevator());
     }
 
+    public double getSimulatedSubsytemCurrentDrawAmps() {
+        return swerve.getSimulatedCurrentDrawAmps() + elevator.getSimulatedCurrentDrawAmps();
+    }
+
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.

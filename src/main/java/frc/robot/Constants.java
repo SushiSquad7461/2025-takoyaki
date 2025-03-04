@@ -22,6 +22,7 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.SlotConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -41,6 +42,7 @@ import frc.lib.util.SwerveModuleConstants;
 public class Constants {
     public static final boolean IS_SIM = Robot.isSimulation();
     public static final double stickDeadband = 0.1;
+    public static final double LOOP_TIME_SECONDS = 0.02;
 
     public static final CurrentLimitsConfigs BASIC_CURRENT_LIMIT = new CurrentLimitsConfigs().withSupplyCurrentLimit(35);
     public static final MotorOutputConfigs MOTOR_OUTPUT_CW = new MotorOutputConfigs()
@@ -154,8 +156,25 @@ public class Constants {
             public static final int angleMotorID = 2;
             public static final int canCoderID = 3;
             public static final Rotation2d angleOffset = Rotation2d.fromDegrees(170.244141); //point bevel to right
-            public static final SwerveModuleConstants constants = 
-                new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
+            public static final SwerveModuleConstants constants = new SwerveModuleConstants(
+                driveMotorID, 
+                angleMotorID, 
+                canCoderID, 
+                angleOffset,
+                new SlotConfigs()
+                    .withKP(driveKP)
+                    .withKI(driveKI)
+                    .withKD(driveKD)
+                    .withKS(0.19)
+                    .withKV(0.71)
+                    .withKA(0.066),
+                new SlotConfigs()
+                    .withKP(angleKP)
+                    .withKI(angleKI)
+                    .withKD(angleKD)
+                    .withKS(0.13995)
+                    .withKV(0.2178)
+                    .withKA(0.14872));
         }
 
         /* Front Right Module - Module 1 */
@@ -164,8 +183,25 @@ public class Constants {
             public static final int angleMotorID = 5;
             public static final int canCoderID = 6;
             public static final Rotation2d angleOffset = Rotation2d.fromDegrees(72.861328); //168.925781
-            public static final SwerveModuleConstants constants = 
-                new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
+            public static final SwerveModuleConstants constants = new SwerveModuleConstants(
+                driveMotorID, 
+                angleMotorID, 
+                canCoderID, 
+                angleOffset,
+                new SlotConfigs()
+                    .withKP(driveKP)
+                    .withKI(driveKI)
+                    .withKD(driveKD)
+                    .withKS(0.18879)
+                    .withKV(0.70816)
+                    .withKA(0.066208),
+                new SlotConfigs()
+                    .withKP(angleKP)
+                    .withKI(angleKI)
+                    .withKD(angleKD)
+                    .withKS(0.16468)
+                    .withKV(2.2002)
+                    .withKA(0.12755));
         }
         
         /* Back Left Module - Module 2 */
@@ -174,8 +210,25 @@ public class Constants {
             public static final int angleMotorID = 8;
             public static final int canCoderID = 9;
             public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-15.732422); //-15.732422
-            public static final SwerveModuleConstants constants = 
-                new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
+            public static final SwerveModuleConstants constants = new SwerveModuleConstants(
+                driveMotorID, 
+                angleMotorID, 
+                canCoderID, 
+                angleOffset,
+                new SlotConfigs()
+                    .withKP(driveKP)
+                    .withKI(driveKI)
+                    .withKD(driveKD)
+                    .withKS(0.1812)
+                    .withKV(0.68313)
+                    .withKA(0.031761),
+                new SlotConfigs()
+                    .withKP(angleKP)
+                    .withKI(angleKI)
+                    .withKD(angleKD)
+                    .withKS(0.1437)
+                    .withKV(2.1619)
+                    .withKA(0.037237));
         }
 
         /* Back Right Module - Module 3 */
@@ -183,53 +236,28 @@ public class Constants {
             public static final int driveMotorID = 10;
             public static final int angleMotorID = 11;
             public static final int canCoderID = 12;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-144.492188); //-144.228516)
-            public static final SwerveModuleConstants constants = 
-                new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-144.492188); //-144.228516) 
+            public static final SwerveModuleConstants constants = new SwerveModuleConstants(
+                driveMotorID, 
+                angleMotorID, 
+                canCoderID, 
+                angleOffset,
+                new SlotConfigs()
+                    .withKP(driveKP)
+                    .withKI(driveKI)
+                    .withKD(driveKD)
+                    .withKS(0.15286)
+                    .withKV(1.72792)
+                    .withKA(0.059573),
+                new SlotConfigs()
+                    .withKP(angleKP)
+                    .withKI(angleKI)
+                    .withKD(angleKD)
+                    .withKS(0.18268)
+                    .withKV(2.2717)
+                    .withKA(0.046578));
         }
     }
-
-    public static final class DriveCharacterization {
-        /* Module 0 - Front Left */
-        public static final class Mod0 {
-            public static final double driveKS = 0.19;
-            public static final double driveKV = 0.71;
-            public static final double driveKA = 0.066;
-            public static final double angleKS = 0.13995;
-            public static final double angleKV = 2.2178;
-            public static final double angleKA = 0.14872;
-        }
-    
-        /* Module 1 - Front Right */
-        public static final class Mod1 {
-            public static final double driveKS = 0.18879;
-            public static final double driveKV = 0.70816;
-            public static final double driveKA = 0.066208;
-            public static final double angleKS = 0.16468;
-            public static final double angleKV = 2.2002;
-            public static final double angleKA = 0.12755;
-        }
-    
-        /* Module 2 - Back Left */
-        public static final class Mod2 {
-            public static final double driveKS = 0.1812;
-            public static final double driveKV = 0.68313;
-            public static final double driveKA = 0.031761;
-            public static final double angleKS = 0.1437;
-            public static final double angleKV = 2.1619;
-            public static final double angleKA = 0.037237;
-        }
-    
-        /* Module 3 - Back Right */
-        public static final class Mod3 {
-            public static final double driveKS = 0.15286;
-            public static final double driveKV = 1.72792;
-            public static final double driveKA = 0.059573;
-            public static final double angleKS = 0.18268;
-            public static final double angleKV = 2.2717;
-            public static final double angleKA = 0.046578;
-        }
-    }    
 
     public static class Elevator {
         public static final Distance MAX_HEIGHT = Inches.of(28.0); 

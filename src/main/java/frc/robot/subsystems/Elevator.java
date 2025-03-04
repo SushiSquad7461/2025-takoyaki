@@ -61,6 +61,7 @@ public class Elevator extends SubsystemBase {
 
   private final VoltageOut voltReq = new VoltageOut(0);
 
+  private double simCurrentDrawAmps = 0;
   private final TalonFXSimState leftSim;
   private final TalonFXSimState rightSim;
   private final double maxSimHeightMeters = ElevatorState.L4.position.plus(Inches.of(2)).in(Meters);
@@ -90,6 +91,7 @@ public class Elevator extends SubsystemBase {
     rightMotorPosition = rightMotor.getPosition();
     statusSignals = new StatusSignal[]{rightMotorCurrent, rightMotorPosition};
     motionMagic = new MotionMagicVoltage(0);
+
     if(Robot.isSimulation()) SmartDashboard.putData("Elevator2d", mech2d);
     SmartDashboard.putData("Elev L4", changeState(ElevatorState.L4));
     SmartDashboard.putData("Elev L3", changeState(ElevatorState.L3));
@@ -216,7 +218,6 @@ public class Elevator extends SubsystemBase {
 
   @Override
   public void periodic() {
-    if(Robot.isSimulation()) simulationPeriod();
     BaseStatusSignal.refreshAll(statusSignals);
     limitSwitchPub.set(limitSwitch.get());
   }
@@ -227,15 +228,13 @@ public class Elevator extends SubsystemBase {
       / Constants.Elevator.ELEVATOR_EXTENSION_PER_ROTATION.in(Meters);
   }
 
-  private void simulationPeriod() {
-    // seems to work but probably need to TODO remove 35A hard current limits on motors
+  @Override
+  public void simulationPeriodic() {
     var supplyVoltage = RobotController.getBatteryVoltage();
-    SmartDashboard.putNumber("Battery Voltage", supplyVoltage);
-
     leftSim.setSupplyVoltage(supplyVoltage);
     rightSim.setSupplyVoltage(supplyVoltage);
     sim.setInputVoltage(rightSim.getMotorVoltage());
-    sim.update(0.020);
+    sim.update(Constants.LOOP_TIME_SECONDS);
     
     var elevExtension = sim.getPositionMeters();
     var motorRot = heightMetersToMotorRotations(elevExtension);
@@ -246,6 +245,10 @@ public class Elevator extends SubsystemBase {
     rightSim.setRotorVelocity(motorRotPerSec);
     
     elevMech2d.setLength(elevExtension);
-    RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(sim.getCurrentDrawAmps()));
+    simCurrentDrawAmps = Math.abs(sim.getCurrentDrawAmps());
+  }
+
+  public double getSimulatedCurrentDrawAmps() {
+    return simCurrentDrawAmps;
   }
 }
