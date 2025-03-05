@@ -77,7 +77,7 @@ public class RobotContainer {
             () -> -driverController.getLeftY(),
             () -> -driverController.getLeftX(),
             () -> -driverController.getRightX(), 
-            () -> driverController.x().getAsBoolean())); // allows you to drive as robot relative only while holding down the button
+            () -> driverController.back().getAsBoolean())); // allows you to drive as robot relative only while holding down the button
         
         // Driver handles robot positioning, alignment, and algae
         driverController.y().onTrue(swerve.resetHeading());
@@ -114,10 +114,10 @@ public class RobotContainer {
         programmerController.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
         programmerController.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
 
-        programmerController.a().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdQuasistatic(Direction.kForward));
-        programmerController.b().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdQuasistatic(Direction.kReverse));
-        programmerController.x().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdDynamic(Direction.kForward));
-        programmerController.y().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdDynamic(Direction.kReverse));
+        // programmerController.a().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdQuasistatic(Direction.kForward));
+        // programmerController.b().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdQuasistatic(Direction.kReverse));
+        // programmerController.x().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdDynamic(Direction.kForward));
+        // programmerController.y().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdDynamic(Direction.kReverse));
 
         // programmerController.a().and(programmerController.leftTrigger()).whileTrue(intake.sysIdQuasistatic(Direction.kForward));
         // programmerController.b().and(programmerController.leftTrigger()).whileTrue(intake.sysIdQuasistatic(Direction.kReverse));
@@ -129,10 +129,10 @@ public class RobotContainer {
         // programmerController.x().and(programmerController.povLeft()).whileTrue(swerve.sysIdDriveDynamic(Direction.kForward));
         // programmerController.y().and(programmerController.povLeft()).whileTrue(swerve.sysIdDriveDynamic(Direction.kReverse));
 
-        // programmerController.a().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kForward));
-        // programmerController.b().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kReverse));
-        // programmerController.x().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kForward));
-        // programmerController.y().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kReverse));
+        programmerController.a().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kForward));
+        programmerController.b().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kReverse));
+        programmerController.x().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kForward));
+        programmerController.y().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kReverse));
 
         // programmerController.povUp().whileTrue(elevator.goUp());
         // programmerController.povDown().whileTrue(elevator.goDown());

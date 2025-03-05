@@ -105,6 +105,7 @@ public class Swerve extends SubsystemBase {
     private final Alert robotConfigAlert;
     private final Alert leftCameraAlert;
     private final Alert rightCameraAlert;
+    //private final HttpCamera camStream;
 
     public Swerve() {
         field = new Field2d();
@@ -127,6 +128,8 @@ public class Swerve extends SubsystemBase {
         leftCameraAlert = new Alert(
             String.format("Left camera %s is not connected", lCamName), 
             AlertType.kError);
+
+        //camStream = new HttpCamera("Photonvison Left", "http://photonvision.local:1181");
         final String rCamName = "Arducam_OV9281_USB_Camera";
         rightCamera = new PhotonCamera(rCamName);
         rightCameraAlert = new Alert(
