@@ -33,10 +33,10 @@ public class StateMachine extends SubsystemBase {
         PREPARE_L4(IntakeState.IDLE, ManipulatorState.IDLE, ElevatorState.L4),
 
         // scoring states for different levels
-        SCORE_L1(IntakeState.IDLE, ManipulatorState.SCORE, ElevatorState.L1),
-        SCORE_L2(IntakeState.IDLE, ManipulatorState.SCORE, ElevatorState.L2),
-        SCORE_L3(IntakeState.IDLE, ManipulatorState.SCORE, ElevatorState.L3),
-        SCORE_L4(IntakeState.IDLE, ManipulatorState.SCORE, ElevatorState.L4),
+        SCORE_L1(IntakeState.IDLE, ManipulatorState.SCORE_L1, ElevatorState.L1),
+        SCORE_L2(IntakeState.IDLE, ManipulatorState.SCORE_L2, ElevatorState.L2),
+        SCORE_L3(IntakeState.IDLE, ManipulatorState.SCORE_L3, ElevatorState.L3),
+        SCORE_L4(IntakeState.IDLE, ManipulatorState.SCORE_L4, ElevatorState.L4),
         
         // special state
         KNOCK_ALGAE(IntakeState.IDLE, ManipulatorState.KNOCK, ElevatorState.L3_KNOCK);
