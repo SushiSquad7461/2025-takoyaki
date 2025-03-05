@@ -303,8 +303,8 @@ public class Constants {
     }
 
     public static final class VisionConstants { //TODO: only tell pipeline to give pose when multiple tags detected
-        public static final Transform3d leftCamera = new Transform3d(new Translation3d(8.69, 10.7684, 7.5325), new Rotation3d(0, 17.75, -50.5));
-        public static final Transform3d rightCamera = new Transform3d(new Translation3d(8.69, -10.7684, 7.5325), new Rotation3d(0, 17.75, 50.5));
+        public static final Transform3d leftCamera = new Transform3d(new Translation3d(0.220726, 0.27351736, 0.1913255), new Rotation3d(0, -0.30543261909, -0.88139127225));
+        public static final Transform3d rightCamera = new Transform3d(new Translation3d(0.220726, -0.27351736, 0.1913255), new Rotation3d(0, -0.30543261909, 0.88139127225));
 
         /* Constraint for the motion profilied robot angle controller */
         public static final TrapezoidProfile.Constraints kThetaControllerConstraints =

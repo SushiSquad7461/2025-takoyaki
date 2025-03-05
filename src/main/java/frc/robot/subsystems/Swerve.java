@@ -347,24 +347,16 @@ public class Swerve extends SubsystemBase {
     }
 
     public Command resetHeading() {
-        var alliance = DriverStation.getAlliance();
-        if (alliance.isPresent()) {
-            if (alliance.get() == DriverStation.Alliance.Red) {
-                return runOnce(() -> setPose(
-                    new Pose2d(
-                        getPose().getTranslation(),
-                        new Rotation2d(Math.PI)
-                    )
-                ));
-            }
-        }
-
-        return runOnce(() -> setPose(
-            new Pose2d(
-                getPose().getTranslation(),
-                new Rotation2d(0)
-            )
-        ));
+        return runOnce(() -> 
+        {   var alliance = DriverStation.getAlliance();
+            setPose(
+                new Pose2d(
+                    getPose().getTranslation(),
+                    alliance.isPresent() 
+                    && alliance.get() == DriverStation.Alliance.Red ? new Rotation2d(Math.PI) : new Rotation2d()
+                )
+            );
+        });
     }
 
     public SwerveModulePosition[] getModulePositions(){
@@ -712,9 +704,10 @@ public class Swerve extends SubsystemBase {
                 table.getDoubleTopic("Alignment/OdomTarget/X").publish().set(targetPose.getX());
                 table.getDoubleTopic("Alignment/OdomTarget/Y").publish().set(targetPose.getY());
                 table.getDoubleTopic("Alignment/OdomTarget/Rotation").publish().set(targetPose.getRotation().getDegrees());
-            }),
-            swerveControllerCommand,
-            runOnce(() -> drive(new Translation2d(), 0, true, true))
+                //TODO: publish trajectoryu on field 2d
+            })
+            // swerveControllerCommand,
+            // runOnce(() -> drive(new Translation2d(), 0, true, true))
         );
     }
 
@@ -744,13 +737,14 @@ public class Swerve extends SubsystemBase {
         //         poseEstimator.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
         //     }
         // }
-        // if (!leftCameraResults.isEmpty()) {
-        //     var photonLeftUpdate = photonPoseEstimatorLeft.update(leftCameraResults.get(leftCameraResults.size() - 1));
-        //     if (photonLeftUpdate.isPresent()) {
-        //         EstimatedRobotPose visionPose = photonLeftUpdate.get();
-        //         poseEstimator.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
-        //     }
-        // }
+        
+        if (!leftCameraResults.isEmpty()) {
+            var photonLeftUpdate = photonPoseEstimatorLeft.update(leftCameraResults.get(leftCameraResults.size() - 1));
+            if (photonLeftUpdate.isPresent()) {
+                EstimatedRobotPose visionPose = photonLeftUpdate.get();
+                poseEstimator.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
+            }
+        }
 
         Pose2d currentPose = getPose();
         field.setRobotPose(currentPose);
