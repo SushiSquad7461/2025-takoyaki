@@ -153,7 +153,7 @@ public class Constants {
             public static final int driveMotorID = 1;
             public static final int angleMotorID = 2;
             public static final int canCoderID = 3;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(168.486328); //point bevel to right
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(170.244141); //point bevel to right
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -163,7 +163,7 @@ public class Constants {
             public static final int driveMotorID = 4;
             public static final int angleMotorID = 5;
             public static final int canCoderID = 6;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-43.066406); //168.925781
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(72.861328); //168.925781
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -173,7 +173,7 @@ public class Constants {
             public static final int driveMotorID = 7;
             public static final int angleMotorID = 8;
             public static final int canCoderID = 9;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-16.699219); //-15.732422
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-15.732422); //-15.732422
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -183,7 +183,7 @@ public class Constants {
             public static final int driveMotorID = 10;
             public static final int angleMotorID = 11;
             public static final int canCoderID = 12;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-144.228516); //-144.228516)
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-144.492188); //-144.228516)
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -195,9 +195,9 @@ public class Constants {
             public static final double driveKS = 0.19;
             public static final double driveKV = 0.71;
             public static final double driveKA = 0.066;
-            public static final double angleKS = 0;
-            public static final double angleKV = 0;
-            public static final double angleKA = 0;
+            public static final double angleKS = 0.13995;
+            public static final double angleKV = 2.2178;
+            public static final double angleKA = 0.14872;
         }
     
         /* Module 1 - Front Right */
@@ -205,9 +205,9 @@ public class Constants {
             public static final double driveKS = 0.18879;
             public static final double driveKV = 0.70816;
             public static final double driveKA = 0.066208;
-            public static final double angleKS = 0;
-            public static final double angleKV = 0;
-            public static final double angleKA = 0;
+            public static final double angleKS = 0.16468;
+            public static final double angleKV = 2.2002;
+            public static final double angleKA = 0.12755;
         }
     
         /* Module 2 - Back Left */
@@ -215,9 +215,9 @@ public class Constants {
             public static final double driveKS = 0.1812;
             public static final double driveKV = 0.68313;
             public static final double driveKA = 0.031761;
-            public static final double angleKS = 0;
-            public static final double angleKV = 0;
-            public static final double angleKA = 0;
+            public static final double angleKS = 0.1437;
+            public static final double angleKV = 2.1619;
+            public static final double angleKA = 0.037237;
         }
     
         /* Module 3 - Back Right */
@@ -225,9 +225,9 @@ public class Constants {
             public static final double driveKS = 0.15286;
             public static final double driveKV = 1.72792;
             public static final double driveKA = 0.059573;
-            public static final double angleKS = 0;
-            public static final double angleKV = 0;
-            public static final double angleKA = 0;
+            public static final double angleKS = 0.18268;
+            public static final double angleKV = 2.2717;
+            public static final double angleKA = 0.046578;
         }
     }    
 
@@ -248,18 +248,18 @@ public class Constants {
             .withCurrentLimits(BASIC_CURRENT_LIMIT)
             .withMotorOutput(MOTOR_OUTPUT_CCW)
             .withSlot0(new Slot0Configs()
-                .withKP(0.0051095)
-                .withKD(0.02)
-                .withKG(0.15891)
-                .withKS(0.060976)
-                .withKV(0.11353)
-                .withKA(0.0014317)
+                .withKP(0.0055095) //0.0055095
+                .withKD(0.02) //0.02
+                .withKG(0.17409)
+                .withKS(0.065134)
+                .withKV(0.11334)
+                .withKA(0.0014578)
             ).withMotionMagic(new MotionMagicConfigs()
                 .withMotionMagicCruiseVelocity(MOTION_MAGIC_VELOCITY)
                 .withMotionMagicAcceleration(MOTION_MAGIC_ACCELERATION)
             );
 
-        public static final double MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(1.0)).in(Rotations);
+        public static final double MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(.5)).in(Rotations);
         public static final double RELAXED_MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(4.0)).in(Rotations);
     }
 
@@ -272,7 +272,7 @@ public class Constants {
   
     public static class AlgaeIntake {
         public static final double INTAKE_GEAR_RATIO = 15; // output over input
-        public static final double INTAKE_SPEED = 0.3;
+        public static final double INTAKE_SPEED = 0.4;
 
         public static final Angle MAX_ERROR = Degrees.of(5.0 * INTAKE_GEAR_RATIO);
         public static final Angle RAISED_POS = Degrees.of(12 * INTAKE_GEAR_RATIO);
@@ -312,16 +312,17 @@ public class Constants {
                 AutoConstants.kMaxAngularSpeedRadiansPerSecond, AutoConstants.kMaxAngularSpeedRadiansPerSecondSquared);
 
         public static final Map<AlignmentPosition, Double> leftCameraOffsets = Map.of( 
-            AlignmentPosition.LEFT, 1095.,
+            AlignmentPosition.LEFT, 1107.,
             AlignmentPosition.RIGHT, -(double)Swerve.CAMERA_RESOLUTIONX, // TODO verify target offscreen in this case
             AlignmentPosition.CENTER, 839.
         );
 
         public static final Map<AlignmentPosition, Double> rightCameraOffsets = Map.of(
             AlignmentPosition.LEFT, 2.*Swerve.CAMERA_RESOLUTIONX, // TODO verify target offscreen in this case
-            AlignmentPosition.RIGHT, 318., //.40, .12
+            AlignmentPosition.RIGHT, 308., //318
             AlignmentPosition.CENTER, 571. //.29
         );
     }
 
 }
+

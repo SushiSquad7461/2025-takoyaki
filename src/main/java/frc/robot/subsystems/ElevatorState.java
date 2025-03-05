@@ -11,7 +11,7 @@ public enum ElevatorState {
     L1(Inches.of(2)),
     L2(Inches.of(7)),
     L3(Inches.of(15)),
-    L4(Inches.of(27)),       
+    L4(Inches.of(28)),       
     L3_KNOCK(Inches.of(17));         
 
     final Distance position;

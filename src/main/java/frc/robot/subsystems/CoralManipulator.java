@@ -51,7 +51,7 @@ public class CoralManipulator extends SubsystemBase {
                 .andThen(stopRollers())
                 .unless(this::hasCoral);
             case KNOCK -> runRollers(state.getRollerSpeed()).unless(() -> !hasCoral());
-            case SCORE -> runRollers(state.getRollerSpeed())
+            case SCORE_L1, SCORE_L2, SCORE_L3, SCORE_L4 -> runRollers(state.getRollerSpeed())
                 .andThen(Commands.waitUntil(() -> !hasCoral()))
                 .andThen(Commands.waitSeconds(0.5))
                 .unless(() -> !hasCoral());

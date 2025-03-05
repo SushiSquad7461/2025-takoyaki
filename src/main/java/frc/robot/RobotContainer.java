@@ -6,7 +6,7 @@ package frc.robot;
 
 import java.util.Set;
 
-// import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -22,7 +22,7 @@ import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.Swerve.AlignmentPosition;
-// import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -34,7 +34,7 @@ public class RobotContainer {
     /* Controllers */
     private final CommandXboxController driverController = new CommandXboxController(Constants.Ports.DRIVER_PORT);
     private final CommandXboxController operatorController = new CommandXboxController(Constants.Ports.OPERATOR_PORT);
-    // private final CommandXboxController programmerController = new CommandXboxController(Constants.Ports.PROG_PORT);
+    private final CommandXboxController programmerController = new CommandXboxController(Constants.Ports.PROG_PORT);
     
     /* Subsystems */
     private final Swerve swerve = new Swerve();
@@ -77,7 +77,7 @@ public class RobotContainer {
             () -> -driverController.getLeftY(),
             () -> -driverController.getLeftX(),
             () -> -driverController.getRightX(), 
-            () -> driverController.x().getAsBoolean())); // allows you to drive as robot relative only while holding down the button
+            () -> driverController.back().getAsBoolean())); // allows you to drive as robot relative only while holding down the button
         
         // Driver handles robot positioning, alignment, and algae
         driverController.y().onTrue(swerve.resetHeading());
@@ -111,8 +111,8 @@ public class RobotContainer {
         operatorController.povDown().whileTrue(swerve.runTrajectoryOdomAlign());
 
 
-        // programmerController.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
-        // programmerController.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
+        programmerController.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
+        programmerController.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
 
         // programmerController.a().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdQuasistatic(Direction.kForward));
         // programmerController.b().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdQuasistatic(Direction.kReverse));
@@ -129,10 +129,10 @@ public class RobotContainer {
         // programmerController.x().and(programmerController.povLeft()).whileTrue(swerve.sysIdDriveDynamic(Direction.kForward));
         // programmerController.y().and(programmerController.povLeft()).whileTrue(swerve.sysIdDriveDynamic(Direction.kReverse));
 
-        // programmerController.a().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kForward));
-        // programmerController.b().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kReverse));
-        // programmerController.x().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kForward));
-        // programmerController.y().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kReverse));
+        programmerController.a().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kForward));
+        programmerController.b().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerQuasistatic(Direction.kReverse));
+        programmerController.x().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kForward));
+        programmerController.y().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kReverse));
 
         // programmerController.povUp().whileTrue(elevator.goUp());
         // programmerController.povDown().whileTrue(elevator.goDown());
