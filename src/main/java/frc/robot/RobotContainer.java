@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.util.Set;
+
 import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.wpilibj.GenericHID;
@@ -149,9 +151,8 @@ public class RobotContainer {
     }
 
     public double getSimulatedSubsytemCurrentDrawAmps() {
-        return swerve.getSimulatedCurrentDrawAmps() + elevator.getSimulatedCurrentDrawAmps();
+        return swerve.getSimulatedCurrentDrawAmps() + elevator.getSimulatedCurrentDrawAmps() + manipulator.getSimulatedCurrentDrawAmps();
     }
-
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.

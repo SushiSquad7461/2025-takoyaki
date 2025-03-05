@@ -41,20 +41,20 @@ public class SwerveModule {
     /* angle motor control requests */
     private final PositionVoltage anglePositionReq = new PositionVoltage(0);
 
-    private final DCMotor driveMotorSimConstants = DCMotor.getKrakenX60(1);
-    private final DCMotor steerMotorSimConstants = DCMotor.getKrakenX60(1);
+    private final DCMotor driveMotorModel = DCMotor.getKrakenX60(1);
+    private final DCMotor angleMotorModel = DCMotor.getKrakenX60(1);
     private final DCMotorSim driveSim = new DCMotorSim(
         LinearSystemId.createDCMotorSystem(
-            driveMotorSimConstants, 
+            driveMotorModel, 
             0.025,
             Constants.Swerve.chosenModule.driveGearRatio),
-        driveMotorSimConstants);
-    private final DCMotorSim steerSim = new DCMotorSim(
+        driveMotorModel);
+    private final DCMotorSim angleSim = new DCMotorSim(
         LinearSystemId.createDCMotorSystem(
-            steerMotorSimConstants, 
+            angleMotorModel, 
             0.004, 
             Constants.Swerve.chosenModule.angleGearRatio), 
-        driveMotorSimConstants);
+        angleMotorModel);
     private final TalonFXSimState driveMotorSim;
     private final TalonFXSimState angleMotorSim;
 
@@ -159,15 +159,15 @@ public class SwerveModule {
         driveMotorSim.setSupplyVoltage(supplyVoltage);
         angleMotorSim.setSupplyVoltage(supplyVoltage);
         driveSim.setInputVoltage(driveMotorSim.getMotorVoltage());
-        steerSim.setInputVoltage(angleMotorSim.getMotorVoltage());
+        angleSim.setInputVoltage(angleMotorSim.getMotorVoltage());
         driveSim.update(Constants.LOOP_TIME_SECONDS);
-        steerSim.update(Constants.LOOP_TIME_SECONDS);
+        angleSim.update(Constants.LOOP_TIME_SECONDS);
 
         driveMotorSim.setRawRotorPosition(driveSim.getAngularPositionRotations() * Constants.Swerve.chosenModule.driveGearRatio);
         driveMotorSim.setRotorVelocity(Units.radiansToRotations(driveSim.getAngularVelocityRadPerSec() * Constants.Swerve.chosenModule.driveGearRatio));
-        angleMotorSim.setRawRotorPosition(steerSim.getAngularPositionRotations() * Constants.Swerve.chosenModule.angleGearRatio);
-        angleMotorSim.setRotorVelocity(Units.radiansToRotations(steerSim.getAngularVelocityRadPerSec()) * Constants.Swerve.chosenModule.angleGearRatio);
+        angleMotorSim.setRawRotorPosition(angleSim.getAngularPositionRotations() * Constants.Swerve.chosenModule.angleGearRatio);
+        angleMotorSim.setRotorVelocity(Units.radiansToRotations(angleSim.getAngularVelocityRadPerSec()) * Constants.Swerve.chosenModule.angleGearRatio);
 
-        return Math.abs(driveSim.getCurrentDrawAmps()) + Math.abs(steerSim.getCurrentDrawAmps());
+        return Math.abs(driveSim.getCurrentDrawAmps()) + Math.abs(angleSim.getCurrentDrawAmps());
     }
 }

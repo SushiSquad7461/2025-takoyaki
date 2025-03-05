@@ -285,7 +285,6 @@ public class Constants {
                 .withMotionMagicAcceleration(MOTION_MAGIC_ACCELERATION)
             );
         
-
         public static final double MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(.5)).in(Rotations);
         public static final double RELAXED_MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(4.0)).in(Rotations);
     }

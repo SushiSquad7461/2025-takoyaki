@@ -27,6 +27,5 @@ public class SwerveModuleConstants {
         this.angleOffset = angleOffset;
         this.driveGains = driveGains;
         this.angleGains = angleGains;
-
     }
 }

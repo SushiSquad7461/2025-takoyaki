@@ -2,7 +2,6 @@ package frc.robot.subsystems;
 
 import frc.robot.SwerveModule;
 import frc.robot.Constants;
-import frc.robot.Robot;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -56,7 +55,6 @@ import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -752,13 +750,15 @@ public class Swerve extends SubsystemBase {
 
         if(leftCamera.isConnected()) {
             leftCameraResults = leftCamera.getAllUnreadResults();
+            leftCameraAlert.set(false);
         } else {
-            leftCameraAlert.set(!leftCamera.isConnected());
+            leftCameraAlert.set(true);
         }
         if(rightCamera.isConnected()) {
             rightCameraResults = rightCamera.getAllUnreadResults();
+            rightCameraAlert.set(false);
         } else {
-            rightCameraAlert.set(!rightCamera.isConnected());
+            rightCameraAlert.set(true);
         }
         poseEstimator.update(getGyroYaw(), getModulePositions());
 
@@ -784,8 +784,6 @@ public class Swerve extends SubsystemBase {
 
         alignmentPositionPub.set(currentAlignmentPosition.toString());
         isAlignedPub.set(isAligned(currentAlignmentPosition));
-
-        
     }
 
     @Override

@@ -26,9 +26,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
-import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
@@ -57,13 +55,13 @@ public class Elevator extends SubsystemBase {
   public SysIdRoutine routine;
   private boolean reset = false;
 
-  private static final double CURRENT_LIMIT_AMPS = Robot.isReal() ? 5 : 4;
+  private static final double CURRENT_LIMIT_AMPS = Constants.IS_SIM ? 4 : 5;
 
   private final VoltageOut voltReq = new VoltageOut(0);
 
   private double simCurrentDrawAmps = 0;
-  private final TalonFXSimState leftSim;
-  private final TalonFXSimState rightSim;
+  private final TalonFXSimState leftMotorSim;
+  private final TalonFXSimState rightMotorSim;
   private final double maxSimHeightMeters = ElevatorState.L4.position.plus(Inches.of(2)).in(Meters);
   private final ElevatorSim sim = new ElevatorSim(
       DCMotor.getKrakenX60(2), 
@@ -92,17 +90,17 @@ public class Elevator extends SubsystemBase {
     statusSignals = new StatusSignal[]{rightMotorCurrent, rightMotorPosition};
     motionMagic = new MotionMagicVoltage(0);
 
-    if(Robot.isSimulation()) SmartDashboard.putData("Elevator2d", mech2d);
+    if(Constants.IS_SIM) SmartDashboard.putData("Elevator2d", mech2d);
     SmartDashboard.putData("Elev L4", changeState(ElevatorState.L4));
     SmartDashboard.putData("Elev L3", changeState(ElevatorState.L3));
     SmartDashboard.putData("Elev L2", changeState(ElevatorState.L2));
     SmartDashboard.putData("Elev L1", changeState(ElevatorState.L1));
     SmartDashboard.putData("Elev Idle", changeState(ElevatorState.IDLE));
     SmartDashboard.putData("Elev Stop", stopElevator());
-    leftSim = leftMotor.getSimState();
-    rightSim = rightMotor.getSimState();
-    leftSim.Orientation = ChassisReference.Clockwise_Positive;
-    rightSim.Orientation = ChassisReference.CounterClockwise_Positive;
+    leftMotorSim = leftMotor.getSimState();
+    rightMotorSim = rightMotor.getSimState();
+    leftMotorSim.Orientation = ChassisReference.Clockwise_Positive;
+    rightMotorSim.Orientation = ChassisReference.CounterClockwise_Positive;
 
     // network table variables
     elevatorTable = NetworkTableInstance.getDefault().getTable("Elevator");
@@ -231,18 +229,18 @@ public class Elevator extends SubsystemBase {
   @Override
   public void simulationPeriodic() {
     var supplyVoltage = RobotController.getBatteryVoltage();
-    leftSim.setSupplyVoltage(supplyVoltage);
-    rightSim.setSupplyVoltage(supplyVoltage);
-    sim.setInputVoltage(rightSim.getMotorVoltage());
+    leftMotorSim.setSupplyVoltage(supplyVoltage);
+    rightMotorSim.setSupplyVoltage(supplyVoltage);
+    sim.setInputVoltage(rightMotorSim.getMotorVoltage());
     sim.update(Constants.LOOP_TIME_SECONDS);
     
     var elevExtension = sim.getPositionMeters();
     var motorRot = heightMetersToMotorRotations(elevExtension);
-    leftSim.setRawRotorPosition(motorRot);
-    rightSim.setRawRotorPosition(motorRot);
+    leftMotorSim.setRawRotorPosition(motorRot);
+    rightMotorSim.setRawRotorPosition(motorRot);
     var motorRotPerSec = heightMetersToMotorRotations(sim.getVelocityMetersPerSecond());
-    leftSim.setRotorVelocity(motorRotPerSec);
-    rightSim.setRotorVelocity(motorRotPerSec);
+    leftMotorSim.setRotorVelocity(motorRotPerSec);
+    rightMotorSim.setRotorVelocity(motorRotPerSec);
     
     elevMech2d.setLength(elevExtension);
     simCurrentDrawAmps = Math.abs(sim.getCurrentDrawAmps());
