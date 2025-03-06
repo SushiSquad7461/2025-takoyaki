@@ -284,7 +284,9 @@ public class Swerve extends SubsystemBase {
         }
     
         SmartDashboard.putData("Field", field);
-        SmartDashboard.putData("Auto Align", defer(() -> runTrajectoryOdomAlign()));
+        SmartDashboard.putData("Align Center", defer(() -> runTrajectoryOdomAlign(AlignmentPosition.CENTER)));
+        SmartDashboard.putData("Align Left", defer(() -> runTrajectoryOdomAlign(AlignmentPosition.LEFT)));
+        SmartDashboard.putData("Align Right", defer(() -> runTrajectoryOdomAlign(AlignmentPosition.RIGHT)));
 
         SmartDashboard.putData("DriveSysIdQuasiFwd", sysIdDriveQuasistatic(SysIdRoutine.Direction.kForward));
         SmartDashboard.putData("DriveSysIdQuasiRev", sysIdDriveQuasistatic(SysIdRoutine.Direction.kReverse));
@@ -694,14 +696,76 @@ public class Swerve extends SubsystemBase {
         scorePositions = new ReefPositions(locations, scorePositionsList);
     }
 
-    public Command runTrajectoryOdomAlign() {
+    public Command runTrajectoryOdomAlign(AlignmentPosition position) {
         Pose2d currentPose = getPose();
         Pose2d targetPose = currentPose.nearest(scorePositions.poses);
+        ReefScorePosition reefPosition = scorePositions.locations.get(targetPose);
+        
+        double offsetDistance = .25; //TODO: change this constant (meters)
+        double xOffset = 0.0;
+        
+        switch(position) {
+            case LEFT:
+                xOffset = -offsetDistance;
+                break;
+            case RIGHT:
+                xOffset = offsetDistance;
+                break;
+            case CENTER:
+            default:
+                xOffset = 0.0;
+                break;
+        }
+        
+        double offsetX, offsetY;
+        
+        switch(reefPosition) {
+            case FRONT: // 180 degrees (horizontal, facing left)
+                offsetX = 0;
+                offsetY = xOffset;
+                break;
+            case FRONTLEFT: // 120 degrees
+                offsetX = -xOffset * Math.sin(Math.toRadians(120));
+                offsetY = xOffset * Math.cos(Math.toRadians(120));
+                break;
+            case BACKLEFT: // 60 degrees
+                offsetX = -xOffset * Math.sin(Math.toRadians(60));
+                offsetY = xOffset * Math.cos(Math.toRadians(60));
+                break;
+            case BACK: // 0 degrees (horizontal, facing right)
+                offsetX = 0;
+                offsetY = -xOffset;
+                break;
+            case BACKRIGHT: // -60 degrees
+                offsetX = -xOffset * Math.sin(Math.toRadians(-60));
+                offsetY = xOffset * Math.cos(Math.toRadians(-60));
+                break;
+            case FRONTRIGHT: // -120 degrees
+                offsetX = -xOffset * Math.sin(Math.toRadians(-120));
+                offsetY = xOffset * Math.cos(Math.toRadians(-120));
+                break;
+            default:
+                offsetX = 0;
+                offsetY = 0;
+        }
+        
+        Pose2d offsetTargetPose = new Pose2d(
+            targetPose.getX() + offsetX,
+            targetPose.getY() + offsetY,
+            targetPose.getRotation()
+        );
 
-        targetXPub.set(targetPose.getX());
-        targetYPub.set(targetPose.getY());
-        targetRotPub.set(targetPose.getRotation().getDegrees());
+        targetXPub.set(offsetTargetPose.getX());
+        targetYPub.set(offsetTargetPose.getY());
+        targetRotPub.set(offsetTargetPose.getRotation().getDegrees());
 
+        SmartDashboard.putNumber("Original Target X", targetPose.getX());
+        SmartDashboard.putNumber("Original Target Y", targetPose.getY());
+        SmartDashboard.putNumber("Offset Target X", offsetTargetPose.getX());
+        SmartDashboard.putNumber("Offset Target Y", offsetTargetPose.getY());
+        SmartDashboard.putNumber("X Offset Applied", offsetX);
+        SmartDashboard.putNumber("Y Offset Applied", offsetY);
+    
         PathConstraints constraints = new PathConstraints(
             Constants.AutoConstants.kMaxSpeedMetersPerSecond * 0.9, 
             Constants.AutoConstants.kMaxAccelerationMetersPerSecondSquared * 0.9,
@@ -709,12 +773,12 @@ public class Swerve extends SubsystemBase {
             Constants.AutoConstants.kMaxAngularSpeedRadiansPerSecondSquared * 0.9
         );
 
-        Translation2d displacement = targetPose.getTranslation().minus(currentPose.getTranslation());
+        Translation2d displacement = offsetTargetPose.getTranslation().minus(currentPose.getTranslation());
         Rotation2d direction = new Rotation2d(displacement.getX(), displacement.getY());
         
         List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
             new Pose2d(currentPose.getTranslation(), direction),
-            new Pose2d(targetPose.getTranslation(), direction)
+            new Pose2d(offsetTargetPose.getTranslation(), direction)
         );
 
         PathPlannerPath path = new PathPlannerPath(
@@ -730,8 +794,8 @@ public class Swerve extends SubsystemBase {
 
         // resets odometry to the starting pose, follows trajectory, and stops robot
         return Commands.sequence(
-            AutoBuilder.followPath(path),
-            runOnce(() -> drive(new Translation2d(), 0, false, false))
+            AutoBuilder.followPath(path)
+            // runOnce(() -> drive(new Translation2d(), 0, false, false))
         );
     }
 

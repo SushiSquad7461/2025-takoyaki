@@ -110,7 +110,7 @@ public class RobotContainer {
         operatorController.leftTrigger().onTrue(stateMachine.changeState(RobotState.KNOCK_ALGAE)).onFalse(idle);
 
         // odometry autoalign testing
-        operatorController.povUp().whileTrue(Commands.defer(swerve::runTrajectoryOdomAlign, Set.of(swerve)));
+        // operatorController.povUp().whileTrue(Commands.defer(swerve::runTrajectoryOdomAlign(AlignmentPosition.CENTER), Set.of(swerve)));
 
 
         programmerController.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
