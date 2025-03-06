@@ -286,6 +286,15 @@ public class Swerve extends SubsystemBase {
         SmartDashboard.putData("Field", field);
         SmartDashboard.putData("Auto Align", defer(() -> runTrajectoryOdomAlign()));
 
+        SmartDashboard.putData("DriveSysIdQuasiFwd", sysIdDriveQuasistatic(SysIdRoutine.Direction.kForward));
+        SmartDashboard.putData("DriveSysIdQuasiRev", sysIdDriveQuasistatic(SysIdRoutine.Direction.kReverse));
+        SmartDashboard.putData("DriveSysIdDynFwd", sysIdDriveDynamic(SysIdRoutine.Direction.kForward));
+        SmartDashboard.putData("DriveSysIdDynRev", sysIdDriveDynamic(SysIdRoutine.Direction.kReverse));
+        
+        SmartDashboard.putData("SteerSysIdQuasiFwd", sysIdSteerQuasistatic(SysIdRoutine.Direction.kForward));
+        SmartDashboard.putData("SteerSysIdQuasiRev", sysIdSteerQuasistatic(SysIdRoutine.Direction.kReverse));
+        SmartDashboard.putData("SteerSysIdDynFwd", sysIdSteerDynamic(SysIdRoutine.Direction.kForward));
+        SmartDashboard.putData("SteerSysIdDynRev", sysIdSteerDynamic(SysIdRoutine.Direction.kReverse));
         SmartDashboard.putData("Swerve Drive", new Sendable() {    
             @Override
             public void initSendable(SendableBuilder builder) {
@@ -694,10 +703,10 @@ public class Swerve extends SubsystemBase {
         targetRotPub.set(targetPose.getRotation().getDegrees());
 
         PathConstraints constraints = new PathConstraints(
-            Constants.AutoConstants.kMaxSpeedMetersPerSecond * 0.5, 
-            Constants.AutoConstants.kMaxAccelerationMetersPerSecondSquared * 0.5,
-            Constants.AutoConstants.kMaxAngularSpeedRadiansPerSecond * 0.5,
-            Constants.AutoConstants.kMaxAngularSpeedRadiansPerSecondSquared * 0.5
+            Constants.AutoConstants.kMaxSpeedMetersPerSecond * 0.9, 
+            Constants.AutoConstants.kMaxAccelerationMetersPerSecondSquared * 0.9,
+            Constants.AutoConstants.kMaxAngularSpeedRadiansPerSecond * 0.9,
+            Constants.AutoConstants.kMaxAngularSpeedRadiansPerSecondSquared * 0.9
         );
 
         Translation2d displacement = targetPose.getTranslation().minus(currentPose.getTranslation());

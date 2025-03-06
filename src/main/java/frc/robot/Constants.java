@@ -40,7 +40,7 @@ import frc.lib.util.COTSTalonFXSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
 
 public class Constants {
-    public static final boolean IS_SIM = Robot.isSimulation();
+    public static final boolean IS_SIM = Robot.isSimulation();;
     public static final double stickDeadband = 0.1;
     public static final double LOOP_TIME_SECONDS = 0.02;
 
@@ -165,16 +165,16 @@ public class Constants {
                     .withKP(driveKP)
                     .withKI(driveKI)
                     .withKD(driveKD)
-                    .withKS(0.19)
-                    .withKV(0.71)
-                    .withKA(0.066),
+                    .withKS(IS_SIM ? 0 :    0.19)
+                    .withKV(IS_SIM ? 0 :    0.71)
+                    .withKA(IS_SIM ? 0 :    0.066),
                 new SlotConfigs()
                     .withKP(angleKP)
                     .withKI(angleKI)
                     .withKD(angleKD)
-                    .withKS(0.13995)
-                    .withKV(0.2178)
-                    .withKA(0.14872));
+                    .withKS(IS_SIM ? 0 :    0.13995)
+                    .withKV(IS_SIM ? 0 :    0.2178)
+                    .withKA(IS_SIM ? 0 :    0.14872));
         }
 
         /* Front Right Module - Module 1 */
@@ -192,16 +192,16 @@ public class Constants {
                     .withKP(driveKP)
                     .withKI(driveKI)
                     .withKD(driveKD)
-                    .withKS(0.18879)
-                    .withKV(0.70816)
-                    .withKA(0.066208),
+                    .withKS(IS_SIM ? 0 :    0.18879)
+                    .withKV(IS_SIM ? 0 :    0.70816)
+                    .withKA(IS_SIM ? 0 :    0.066208),
                 new SlotConfigs()
                     .withKP(angleKP)
                     .withKI(angleKI)
                     .withKD(angleKD)
-                    .withKS(0.16468)
-                    .withKV(2.2002)
-                    .withKA(0.12755));
+                    .withKS(IS_SIM ? 0 :    0.16468)
+                    .withKV(IS_SIM ? 0 :    2.2002)
+                    .withKA(IS_SIM ? 0 :    0.12755));
         }
         
         /* Back Left Module - Module 2 */
@@ -219,16 +219,16 @@ public class Constants {
                     .withKP(driveKP)
                     .withKI(driveKI)
                     .withKD(driveKD)
-                    .withKS(0.1812)
-                    .withKV(0.68313)
-                    .withKA(0.031761),
+                    .withKS(IS_SIM ? 0 :    0.1812)
+                    .withKV(IS_SIM ? 0 :    0.68313)
+                    .withKA(IS_SIM ? 0 :    0.031761),
                 new SlotConfigs()
                     .withKP(angleKP)
                     .withKI(angleKI)
                     .withKD(angleKD)
-                    .withKS(0.1437)
-                    .withKV(2.1619)
-                    .withKA(0.037237));
+                    .withKS(IS_SIM ? 0 :    0.1437)
+                    .withKV(IS_SIM ? 0 :    2.1619)
+                    .withKA(IS_SIM ? 0 :    0.037237));
         }
 
         /* Back Right Module - Module 3 */
@@ -246,16 +246,16 @@ public class Constants {
                     .withKP(driveKP)
                     .withKI(driveKI)
                     .withKD(driveKD)
-                    .withKS(0.15286)
-                    .withKV(1.72792)
-                    .withKA(0.059573),
+                    .withKS(IS_SIM ? 0 :    0.15286)
+                    .withKV(IS_SIM ? 0 :    1.72792)
+                    .withKA(IS_SIM ? 0 :    0.059573),
                 new SlotConfigs()
                     .withKP(angleKP)
                     .withKI(angleKI)
                     .withKD(angleKD)
-                    .withKS(0.18268)
-                    .withKV(2.2717)
-                    .withKA(0.046578));
+                    .withKS(IS_SIM ? 0 :    0.18268)
+                    .withKV(IS_SIM ? 0 :    2.2717)
+                    .withKA(IS_SIM ? 0 :    0.046578));
         }
     }
 
@@ -324,8 +324,8 @@ public class Constants {
         public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
         public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
     
-        public static final double kPTranslationController = 0.2;
-        public static final double kPThetaController = 0.2;
+        public static final double kPTranslationController = 1;
+        public static final double kPThetaController = 1;
     }
 
     public static final class VisionConstants { //TODO: only tell pipeline to give pose when multiple tags detected
