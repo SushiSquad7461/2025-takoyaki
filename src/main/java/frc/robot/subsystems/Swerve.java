@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import frc.robot.SwerveModule;
 import frc.robot.Constants;
+import frc.robot.Robot;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -30,21 +31,21 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.Waypoint;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.cscore.HttpCamera;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.trajectory.TrajectoryConfig;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
@@ -61,7 +62,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 public class Swerve extends SubsystemBase {
@@ -109,7 +109,7 @@ public class Swerve extends SubsystemBase {
     //private final HttpCamera camStream;
 
     private double simCurrentDrawAmps = 0;
-
+    
     public Swerve() {
         field = new Field2d();
         gyro = new Pigeon2(Constants.Swerve.pigeonID);
@@ -291,6 +291,12 @@ public class Swerve extends SubsystemBase {
                 builder.addDoubleProperty("Robot Angle", () -> getPose().getRotation().getRadians(), null);
             }
         });
+
+        if (Robot.isSimulation()) {
+            SmartDashboard.putNumber("Sim/PoseX", 13.0);
+            SmartDashboard.putNumber("Sim/PoseY", 2.0);
+            SmartDashboard.putNumber("Sim/PoseRotation", 90.0);
+        }
     }
     
     public Command sysIdDriveQuasistatic(SysIdRoutine.Direction direction) {
@@ -672,71 +678,58 @@ public class Swerve extends SubsystemBase {
     }
 
     public Command runTrajectoryOdomAlign() {
-        // find closest score position to align with
         final var pose = getPose();
         Pose2d targetPose = pose.nearest(scorePositions.poses);
         Pose2d currentPose = getPose();
+        // System.out.println("Current pose: X=" + currentPose.getX() + 
+        // ", Y=" + currentPose.getY() + 
+        // ", Rot=" + currentPose.getRotation().getDegrees());
+        // System.out.println("Target pose: X=" + targetPose.getX() + 
+        // ", Y=" + targetPose.getY() + 
+        // ", Rot=" + targetPose.getRotation().getDegrees());
+
+        field.setRobotPose(currentPose);
+        field.getObject("target").setPose(targetPose);
+
         targetXPub.set(targetPose.getX());
         targetYPub.set(targetPose.getY());
         targetRotPub.set(targetPose.getRotation().getDegrees());
 
-        // trajectory configuration
-        TrajectoryConfig config = new TrajectoryConfig(
-            Constants.AutoConstants.kMaxSpeedMetersPerSecond * 0.5, //TODO: tweak
-            Constants.AutoConstants.kMaxAccelerationMetersPerSecondSquared * 0.5)
-            .setKinematics(Constants.Swerve.swerveKinematics);
+        PathConstraints constraints = new PathConstraints(
+            Constants.AutoConstants.kMaxSpeedMetersPerSecond * 0.5, 
+            Constants.AutoConstants.kMaxAccelerationMetersPerSecondSquared * 0.5,
+            Constants.AutoConstants.kMaxAngularSpeedRadiansPerSecond * 0.5,
+            Constants.AutoConstants.kMaxAngularSpeedRadiansPerSecondSquared * 0.5
+        );
+
+        Translation2d displacement = targetPose.getTranslation().minus(currentPose.getTranslation());
+        Rotation2d direction = new Rotation2d(displacement.getX(), displacement.getY());
         
-        // generate simple path with just start and end points
-        Trajectory trajectory = TrajectoryGenerator.generateTrajectory(
-            currentPose,
-            List.of(), 
-            targetPose,
-            config);
-        
-        PIDController xController = new PIDController(Constants.AutoConstants.kPTranslationController, 0, 0);
-        PIDController yController = new PIDController(Constants.AutoConstants.kPTranslationController, 0, 0);
-        
-        ProfiledPIDController thetaController = new ProfiledPIDController(
-            Constants.AutoConstants.kPThetaController, 0, 0,
-            new TrapezoidProfile.Constraints(
-                Constants.AutoConstants.kMaxAngularSpeedRadiansPerSecond,
-                Constants.AutoConstants.kMaxAngularSpeedRadiansPerSecondSquared
-            ));
-        
-        thetaController.enableContinuousInput(-Math.PI, Math.PI);
-        
-        SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
-            trajectory,
-            this::getPose,
-            Constants.Swerve.swerveKinematics,
-            xController,
-            yController,
-            thetaController,
-            this::setModuleStates,
-            this);
-        
+        List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
+            new Pose2d(currentPose.getTranslation(), direction),
+            new Pose2d(targetPose.getTranslation(), direction)
+        );
+
+        PathPlannerPath path = new PathPlannerPath(
+            waypoints,
+            constraints,
+            null,
+            new GoalEndState(0.0, targetPose.getRotation())
+        );
+        path.preventFlipping = true;
+        field.getObject("path").setPoses(path.getPathPoses());
+
         // resets odometry to the starting pose, follows trajectory, and stops robot
         return Commands.sequence(
             runOnce(() -> {
                 table.getDoubleTopic("Alignment/OdomTarget/X").publish().set(targetPose.getX());
                 table.getDoubleTopic("Alignment/OdomTarget/Y").publish().set(targetPose.getY());
                 table.getDoubleTopic("Alignment/OdomTarget/Rotation").publish().set(targetPose.getRotation().getDegrees());
-                //TODO: publish trajectoryu on field 2d
-            })
-            // swerveControllerCommand,
-            // runOnce(() -> drive(new Translation2d(), 0, true, true))
+            }),
+            AutoBuilder.followPath(path),
+            runOnce(() -> drive(new Translation2d(), 0, false, false))
         );
     }
-
-    public Command runAlignment() {
-        return runOnce(() -> 
-            Commands.either(
-                runAutoAlign(AlignmentPosition.CENTER),
-                runTrajectoryOdomAlign(),
-                this::isAprilTagVisible
-            )
-        );
-    }    
 
     @Override
     public void periodic(){
@@ -792,7 +785,16 @@ public class Swerve extends SubsystemBase {
         for(var mod : mSwerveMods) {
             simCurrentDrawAmps += mod.simulationPeriodic();
         }
+
+        double simX = SmartDashboard.getNumber("Sim/PoseX", 0.0);
+        double simY = SmartDashboard.getNumber("Sim/PoseY", 0.0);
+        double simRot = SmartDashboard.getNumber("Sim/PoseRotation", 0.0);
+        setPose(new Pose2d(simX, simY, Rotation2d.fromDegrees(simRot)));
+        System.out.println("Setting pose to: X=" + simX + ", Y=" + simY + ", Rot=" + simRot);
+        runTrajectoryOdomAlign();
     }
+
+
 
     public double getSimulatedCurrentDrawAmps() {
         return simCurrentDrawAmps;
