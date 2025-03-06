@@ -130,15 +130,19 @@ public class Swerve extends SubsystemBase {
         };
         modStatusSignals = new BaseStatusSignal[]{
             mSwerveMods[0].getDrivePosition(),
+            mSwerveMods[0].getDriveVelocity(),
             mSwerveMods[0].getAnglePosition(),
             mSwerveMods[0].getEncoderPosition(),
             mSwerveMods[1].getDrivePosition(),
+            mSwerveMods[1].getDriveVelocity(),
             mSwerveMods[1].getAnglePosition(),
             mSwerveMods[1].getEncoderPosition(),
             mSwerveMods[2].getDrivePosition(),
+            mSwerveMods[2].getDriveVelocity(),
             mSwerveMods[2].getAnglePosition(),
             mSwerveMods[2].getEncoderPosition(),
             mSwerveMods[3].getDrivePosition(),
+            mSwerveMods[3].getDriveVelocity(),
             mSwerveMods[3].getAnglePosition(),
             mSwerveMods[3].getEncoderPosition()
         };
@@ -287,6 +291,7 @@ public class Swerve extends SubsystemBase {
         SmartDashboard.putData("Align Center", defer(() -> runTrajectoryOdomAlign(AlignmentPosition.CENTER)));
         SmartDashboard.putData("Align Left", defer(() -> runTrajectoryOdomAlign(AlignmentPosition.LEFT)));
         SmartDashboard.putData("Align Right", defer(() -> runTrajectoryOdomAlign(AlignmentPosition.RIGHT)));
+        SmartDashboard.putData("Stop Drive", runOnce(() -> stop()));
 
         SmartDashboard.putData("DriveSysIdQuasiFwd", sysIdDriveQuasistatic(SysIdRoutine.Direction.kForward));
         SmartDashboard.putData("DriveSysIdQuasiRev", sysIdDriveQuasistatic(SysIdRoutine.Direction.kReverse));
@@ -349,6 +354,10 @@ public class Swerve extends SubsystemBase {
         SwerveModuleState[] states = Constants.Swerve.swerveKinematics.toSwerveModuleStates(robotRelativeSpeeds);
         SwerveDriveKinematics.desaturateWheelSpeeds(states, Constants.Swerve.maxSpeed);
         setModuleStates(states);
+    }
+
+    private void stop() {
+        drive(new Translation2d(), 0, false, false);
     }
     
     public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
@@ -568,8 +577,6 @@ public class Swerve extends SubsystemBase {
     
     private void initializeScorePositions() {
         Distance distanceAway = Inches.of(17.0);
-        var alliance = DriverStation.getAlliance();
-        boolean isRedAlliance = alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
         ArrayList<Pose2d> scorePositionsList = new ArrayList<>();
         Map<Pose2d, ReefScorePosition> locations = new HashMap<>();
         
@@ -800,10 +807,7 @@ public class Swerve extends SubsystemBase {
         field.getObject("path").setPoses(path.getPathPoses());
 
         // resets odometry to the starting pose, follows trajectory, and stops robot
-        return Commands.sequence(
-            AutoBuilder.followPath(path)
-            // runOnce(() -> drive(new Translation2d(), 0, false, false))
-        );
+        return AutoBuilder.followPath(path);
     }
 
     @Override

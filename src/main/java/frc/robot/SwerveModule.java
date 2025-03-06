@@ -18,6 +18,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.lib.math.Conversions;
@@ -31,6 +32,7 @@ public class SwerveModule {
     private final StatusSignal<Angle> anglePosition;
     private final TalonFX driveMotor;
     private final StatusSignal<Angle> drivePosition;
+    private final StatusSignal<AngularVelocity> driveVelocity;
     private final CANcoder angleEncoder;
     private final StatusSignal<Angle> angleEncoderPosition;
 
@@ -79,6 +81,7 @@ public class SwerveModule {
         driveMotor.getConfigurator().setPosition(0.0);
 
         drivePosition = driveMotor.getPosition();
+        driveVelocity = driveMotor.getVelocity();
         anglePosition = angleMotor.getPosition();
         angleEncoderPosition = angleEncoder.getAbsolutePosition();
 
@@ -129,6 +132,10 @@ public class SwerveModule {
         return drivePosition;
     }
 
+    public BaseStatusSignal getDriveVelocity() {
+        return driveVelocity;
+    }
+
     /** Use this to obtain the angle position status signal of this module to be refreshed along with the signal from getDrivePosition every loop before using getState or getPosition */
     public BaseStatusSignal getAnglePosition() {
         return anglePosition;
@@ -141,7 +148,7 @@ public class SwerveModule {
 
     public SwerveModuleState getState(){
         return new SwerveModuleState(
-            Conversions.RPSToMPS(drivePosition.getValueAsDouble(), Constants.Swerve.wheelCircumference), 
+            Conversions.RPSToMPS(driveVelocity.getValueAsDouble(), Constants.Swerve.wheelCircumference), 
             Rotation2d.fromRotations(anglePosition.getValueAsDouble())
         );
     }

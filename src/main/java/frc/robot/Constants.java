@@ -165,9 +165,9 @@ public class Constants {
                     .withKP(driveKP)
                     .withKI(driveKI)
                     .withKD(driveKD)
-                    .withKS(IS_SIM ? 0 :    0.19)
-                    .withKV(IS_SIM ? 0 :    0.71)
-                    .withKA(IS_SIM ? 0 :    0.066),
+                    .withKS(IS_SIM ? 0.010945 : 0.19)
+                    .withKV(IS_SIM ? 0.72409  : 0.71)
+                    .withKA(IS_SIM ? 0.044977  : 0.066),
                 new SlotConfigs()
                     .withKP(angleKP)
                     .withKI(angleKI)
@@ -192,9 +192,9 @@ public class Constants {
                     .withKP(driveKP)
                     .withKI(driveKI)
                     .withKD(driveKD)
-                    .withKS(IS_SIM ? 0 :    0.18879)
-                    .withKV(IS_SIM ? 0 :    0.70816)
-                    .withKA(IS_SIM ? 0 :    0.066208),
+                    .withKS(IS_SIM ? 0.010945 : 0.18879)
+                    .withKV(IS_SIM ? 0.72409  : 0.70816)
+                    .withKA(IS_SIM ? 0.044977  : 0.066208),
                 new SlotConfigs()
                     .withKP(angleKP)
                     .withKI(angleKI)
@@ -219,9 +219,9 @@ public class Constants {
                     .withKP(driveKP)
                     .withKI(driveKI)
                     .withKD(driveKD)
-                    .withKS(IS_SIM ? 0 :    0.1812)
-                    .withKV(IS_SIM ? 0 :    0.68313)
-                    .withKA(IS_SIM ? 0 :    0.031761),
+                    .withKS(IS_SIM ? 0.010945 : 0.1812)
+                    .withKV(IS_SIM ? 0.72409  : 0.68313)
+                    .withKA(IS_SIM ? 0.044977  : 0.031761),
                 new SlotConfigs()
                     .withKP(angleKP)
                     .withKI(angleKI)
@@ -246,9 +246,9 @@ public class Constants {
                     .withKP(driveKP)
                     .withKI(driveKI)
                     .withKD(driveKD)
-                    .withKS(IS_SIM ? 0 :    0.15286)
-                    .withKV(IS_SIM ? 0 :    1.72792)
-                    .withKA(IS_SIM ? 0 :    0.059573),
+                    .withKS(IS_SIM ? 0.010945 : 0.15286)
+                    .withKV(IS_SIM ? 0.72409  : 1.72792)
+                    .withKA(IS_SIM ? 0.044977  : 0.059573),
                 new SlotConfigs()
                     .withKP(angleKP)
                     .withKI(angleKI)
@@ -324,8 +324,8 @@ public class Constants {
         public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
         public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
     
-        public static final double kPTranslationController = 1;
-        public static final double kPThetaController = 1;
+        public static final double kPTranslationController = 0;//1;
+        public static final double kPThetaController = 0;//1;
     }
 
     public static final class VisionConstants { //TODO: only tell pipeline to give pose when multiple tags detected
