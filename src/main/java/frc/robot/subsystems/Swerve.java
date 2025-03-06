@@ -39,14 +39,15 @@ import com.pathplanner.lib.path.Waypoint;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.cscore.HttpCamera;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -109,6 +110,9 @@ public class Swerve extends SubsystemBase {
     //private final HttpCamera camStream;
 
     private double simCurrentDrawAmps = 0;
+    private final DoubleEntry xPosEntry;
+    private final DoubleEntry yPosEntry;
+    private final DoubleEntry rotEntry;
     
     public Swerve() {
         field = new Field2d();
@@ -140,17 +144,15 @@ public class Swerve extends SubsystemBase {
         };
 
         //TODO: rename cameras
-        final String lCamName = "Arducam_OV9782_USB_Camera";
-        leftCamera = new PhotonCamera(lCamName);
+        leftCamera = new PhotonCamera(Constants.VisionConstants.leftCameraName);
         leftCameraAlert = new Alert(
-            String.format("Left camera %s is not connected", lCamName), 
+            String.format("Left camera %s is not connected", Constants.VisionConstants.leftCameraName), 
             AlertType.kError);
 
         //camStream = new HttpCamera("Photonvison Left", "http://photonvision.local:1181");
-        final String rCamName = "Arducam_OV9281_USB_Camera";
-        rightCamera = new PhotonCamera(rCamName);
+        rightCamera = new PhotonCamera(Constants.VisionConstants.rightCameraName);
         rightCameraAlert = new Alert(
-            String.format("Right camera %s is not connected", rCamName), 
+            String.format("Right camera %s is not connected", Constants.VisionConstants.rightCameraName), 
             AlertType.kError);
         targetPositions = Map.of(
             leftCamera, Constants.VisionConstants.leftCameraOffsets,
@@ -185,6 +187,18 @@ public class Swerve extends SubsystemBase {
         targetXPub = table.getDoubleTopic("Alignment/OdomTarget/X").publish();
         targetYPub = table.getDoubleTopic("Alignment/OdomTarget/Y").publish();
         targetRotPub = table.getDoubleTopic("Alignment/OdomTarget/Rotation").publish();
+        if(Constants.IS_SIM) {
+            xPosEntry = table.getDoubleTopic("Simulation/SetOdom/X").getEntry(0);
+            xPosEntry.set(0);
+            yPosEntry = table.getDoubleTopic("Simulation/SetOdom/Y").getEntry(0);
+            yPosEntry.set(0);
+            rotEntry = table.getDoubleTopic("Simulation/SetOdom/Rotation").getEntry(0);
+            rotEntry.set(0);
+        } else {
+            xPosEntry = null;
+            yPosEntry = null;
+            rotEntry = null;
+        }
 
         initializeScorePositions();
 
@@ -270,6 +284,7 @@ public class Swerve extends SubsystemBase {
         }
     
         SmartDashboard.putData("Field", field);
+        SmartDashboard.putData("Auto Align", defer(() -> runTrajectoryOdomAlign()));
 
         SmartDashboard.putData("Swerve Drive", new Sendable() {    
             @Override
@@ -291,12 +306,6 @@ public class Swerve extends SubsystemBase {
                 builder.addDoubleProperty("Robot Angle", () -> getPose().getRotation().getRadians(), null);
             }
         });
-
-        if (Robot.isSimulation()) {
-            SmartDashboard.putNumber("Sim/PoseX", 13.0);
-            SmartDashboard.putNumber("Sim/PoseY", 6.8);
-            SmartDashboard.putNumber("Sim/PoseRotation", 0.0);
-        }
     }
     
     public Command sysIdDriveQuasistatic(SysIdRoutine.Direction direction) {
@@ -677,18 +686,8 @@ public class Swerve extends SubsystemBase {
     }
 
     public Command runTrajectoryOdomAlign() {
-        final var pose = getPose();
         Pose2d currentPose = getPose();
-        Pose2d targetPose = pose.nearest(scorePositions.poses);
-        // System.out.println("Current pose: X=" + currentPose.getX() + 
-        // ", Y=" + currentPose.getY() + 
-        // ", Rot=" + currentPose.getRotation().getDegrees());
-        // System.out.println("Target pose: X=" + targetPose.getX() + 
-        // ", Y=" + targetPose.getY() + 
-        // ", Rot=" + targetPose.getRotation().getDegrees());
-
-        field.setRobotPose(currentPose);
-        field.getObject("target").setPose(targetPose);
+        Pose2d targetPose = currentPose.nearest(scorePositions.poses);
 
         targetXPub.set(targetPose.getX());
         targetYPub.set(targetPose.getY());
@@ -716,15 +715,12 @@ public class Swerve extends SubsystemBase {
             new GoalEndState(0.0, targetPose.getRotation())
         );
         path.preventFlipping = true;
+
+        field.getObject("target").setPose(targetPose);
         field.getObject("path").setPoses(path.getPathPoses());
 
         // resets odometry to the starting pose, follows trajectory, and stops robot
         return Commands.sequence(
-            runOnce(() -> {
-                table.getDoubleTopic("Alignment/OdomTarget/X").publish().set(targetPose.getX());
-                table.getDoubleTopic("Alignment/OdomTarget/Y").publish().set(targetPose.getY());
-                table.getDoubleTopic("Alignment/OdomTarget/Rotation").publish().set(targetPose.getRotation().getDegrees());
-            }),
             AutoBuilder.followPath(path),
             runOnce(() -> drive(new Translation2d(), 0, false, false))
         );
@@ -785,12 +781,33 @@ public class Swerve extends SubsystemBase {
             simCurrentDrawAmps += mod.simulationPeriodic();
         }
 
-        double simX = SmartDashboard.getNumber("Sim/PoseX", 0.0);
-        double simY = SmartDashboard.getNumber("Sim/PoseY", 0.0);
-        double simRot = SmartDashboard.getNumber("Sim/PoseRotation", 0.0);
-        setPose(new Pose2d(simX, simY, Rotation2d.fromDegrees(simRot)));
-        // System.out.println("Setting pose to: X=" + simX + ", Y=" + simY + ", Rot=" + simRot);
-        runTrajectoryOdomAlign();
+        boolean resetRequested = false;
+        var curPose = getPose();
+        var xQ = xPosEntry.readQueueValues();
+        var x = curPose.getX();
+        if(xQ.length > 0 && xQ[xQ.length-1] != x) {
+            x = xQ[xQ.length-1];
+            resetRequested = true;
+        }
+        var yQ = yPosEntry.readQueueValues();
+        var y = curPose.getY();
+        if(yQ.length > 0 && yQ[yQ.length-1] != y) {
+            resetRequested = true;
+            y = yQ[yQ.length-1];
+        }
+        var rotQ = rotEntry.readQueueValues();
+        var rot = curPose.getRotation().getDegrees();
+        if(rotQ.length > 0 && !MathUtil.isNear(rotQ[rotQ.length-1], rot, 0.01)) {
+            resetRequested = true;
+            rot = rotQ[rotQ.length-1];
+        }
+        if(resetRequested) {
+            setPose(new Pose2d(x, y, Rotation2d.fromDegrees(rot)));
+        } else {
+            xPosEntry.set(x);
+            yPosEntry.set(y);
+            rotEntry.set(rot);
+        }
     }
 
 

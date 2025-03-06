@@ -337,12 +337,14 @@ public class Constants {
             new TrapezoidProfile.Constraints(
                 AutoConstants.kMaxAngularSpeedRadiansPerSecond, AutoConstants.kMaxAngularSpeedRadiansPerSecondSquared);
 
+        public static final String leftCameraName = "Arducam_OV9782_USB_Camera";
         public static final Map<AlignmentPosition, Double> leftCameraOffsets = Map.of( 
             AlignmentPosition.LEFT, 1107.,
             AlignmentPosition.RIGHT, -(double)Swerve.CAMERA_RESOLUTIONX, // TODO verify target offscreen in this case
             AlignmentPosition.CENTER, 839.
         );
 
+        public static final String rightCameraName = "Arducam_OV9281_USB_Camera";
         public static final Map<AlignmentPosition, Double> rightCameraOffsets = Map.of(
             AlignmentPosition.LEFT, 2.*Swerve.CAMERA_RESOLUTIONX, // TODO verify target offscreen in this case
             AlignmentPosition.RIGHT, 308., //318
