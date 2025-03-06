@@ -700,16 +700,23 @@ public class Swerve extends SubsystemBase {
         Pose2d currentPose = getPose();
         Pose2d targetPose = currentPose.nearest(scorePositions.poses);
         ReefScorePosition reefPosition = scorePositions.locations.get(targetPose);
-        
-        double offsetDistance = .25; //TODO: change this constant (meters)
+        var alliance = DriverStation.getAlliance();
+        boolean isRedAlliance = alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
+        double offsetDistance = .35; //meters
         double xOffset = 0.0;
         
         switch(position) {
             case LEFT:
-                xOffset = offsetDistance;
+                if (isRedAlliance)
+                    xOffset = offsetDistance; //works for red alliance
+                else 
+                    xOffset = -offsetDistance; //works for blue alliance
                 break;
             case RIGHT:
-                xOffset = -offsetDistance;
+                if (isRedAlliance) 
+                    xOffset = -offsetDistance;
+                else 
+                    xOffset = offsetDistance;
                 break;
             case CENTER:
             default:
