@@ -706,10 +706,10 @@ public class Swerve extends SubsystemBase {
         
         switch(position) {
             case LEFT:
-                xOffset = -offsetDistance;
+                xOffset = offsetDistance;
                 break;
             case RIGHT:
-                xOffset = offsetDistance;
+                xOffset = -offsetDistance;
                 break;
             case CENTER:
             default:
