@@ -2,7 +2,6 @@ package frc.robot.subsystems;
 
 import frc.robot.SwerveModule;
 import frc.robot.Constants;
-import frc.robot.Robot;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -61,7 +60,6 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
@@ -111,8 +109,11 @@ public class Swerve extends SubsystemBase {
 
     private double simCurrentDrawAmps = 0;
     private final DoubleEntry xPosEntry;
+    private long xPosEntryLastChanged;
     private final DoubleEntry yPosEntry;
+    private long yPosEntryLastChanged;
     private final DoubleEntry rotEntry;
+    private long rotEntryLastChanged;
     
     public Swerve() {
         field = new Field2d();
@@ -424,19 +425,12 @@ public class Swerve extends SubsystemBase {
     }
 
     public void setPose(Pose2d pose) {
+        System.out.println("Settin pose");
         poseEstimator.resetPosition(getGyroYaw(), getModulePositions(), pose);
     }
 
     public Rotation2d getHeading(){
         return getPose().getRotation();
-    }
-
-    public void setHeading(Rotation2d heading){
-        poseEstimator.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), heading));
-    }
-
-    public void zeroHeading(){
-        poseEstimator.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), new Rotation2d()));
     }
 
     public Rotation2d getGyroYaw() {
@@ -867,30 +861,34 @@ public class Swerve extends SubsystemBase {
 
         boolean resetRequested = false;
         var curPose = getPose();
-        var xQ = xPosEntry.readQueueValues();
         var x = curPose.getX();
-        if(xQ.length > 0 && xQ[xQ.length-1] != x) {
-            x = xQ[xQ.length-1];
+        if(xPosEntry.getLastChange() != xPosEntryLastChanged) {
             resetRequested = true;
+            xPosEntryLastChanged = xPosEntry.getLastChange();
+            x = xPosEntry.get();
         }
-        var yQ = yPosEntry.readQueueValues();
         var y = curPose.getY();
-        if(yQ.length > 0 && yQ[yQ.length-1] != y) {
+        if(yPosEntry.getLastChange() != yPosEntryLastChanged) {
             resetRequested = true;
-            y = yQ[yQ.length-1];
+            yPosEntryLastChanged = yPosEntry.getLastChange();
+            y = xPosEntry.get();
         }
-        var rotQ = rotEntry.readQueueValues();
         var rot = curPose.getRotation().getDegrees();
-        if(rotQ.length > 0 && !MathUtil.isNear(rotQ[rotQ.length-1], rot, 0.01)) {
+        if(rotEntry.getLastChange() != rotEntryLastChanged) {
             resetRequested = true;
-            rot = rotQ[rotQ.length-1];
+            rotEntryLastChanged = rotEntry.getLastChange();
+            rot = rotEntry.get();
         }
         if(resetRequested) {
+            System.out.println("Resetting pose");
             setPose(new Pose2d(x, y, Rotation2d.fromDegrees(rot)));
         } else {
             xPosEntry.set(x);
+            xPosEntryLastChanged = xPosEntry.getLastChange();
             yPosEntry.set(y);
+            yPosEntryLastChanged = yPosEntry.getLastChange();
             rotEntry.set(rot);
+            rotEntryLastChanged = rotEntry.getLastChange();
         }
     }
 
