@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import frc.robot.SwerveModule;
 import frc.robot.Constants;
+import frc.robot.Robot;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -24,8 +25,10 @@ import org.photonvision.targeting.TargetCorner;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.ctre.phoenix6.sim.Pigeon2SimState;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
@@ -38,19 +41,20 @@ import com.pathplanner.lib.path.Waypoint;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.cscore.HttpCamera;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -64,12 +68,14 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 public class Swerve extends SubsystemBase {
-    public SwerveDrivePoseEstimator poseEstimator;
-    public SwerveModule[] mSwerveMods;
-    public BaseStatusSignal[] modStatusSignals;
-    public Pigeon2 gyro;
-    public SysIdRoutine driveSysIdRoutine;
-    public SysIdRoutine steerSysIdRoutine;
+    private final SwerveDrivePoseEstimator poseEstimator;
+    private final SwerveModule[] mSwerveMods;
+    private final BaseStatusSignal[] modStatusSignals;
+    private final Pigeon2 gyro;
+    private final Pigeon2SimState gyroSim;
+    private final StatusSignal<Angle> gyroYaw;
+    private final SysIdRoutine driveSysIdRoutine;
+    private final SysIdRoutine steerSysIdRoutine;
 
     private final PhotonCamera leftCamera;
     private List<PhotonPipelineResult> leftCameraResults = List.of();
@@ -120,6 +126,8 @@ public class Swerve extends SubsystemBase {
         gyro = new Pigeon2(Constants.Swerve.pigeonID);
         gyro.getConfigurator().apply(new Pigeon2Configuration());
         gyro.setYaw(0);
+        gyroSim = gyro.getSimState();
+        gyroYaw = gyro.getYaw();
         alignmentPID = new PIDController(0.15, 0, 0); 
         alignmentPID.setTolerance(10, 10);
         
@@ -145,7 +153,8 @@ public class Swerve extends SubsystemBase {
             mSwerveMods[3].getDrivePosition(),
             mSwerveMods[3].getDriveVelocity(),
             mSwerveMods[3].getAnglePosition(),
-            mSwerveMods[3].getEncoderPosition()
+            mSwerveMods[3].getEncoderPosition(),
+            gyroYaw
         };
 
         //TODO: rename cameras
@@ -170,6 +179,9 @@ public class Swerve extends SubsystemBase {
             getModulePositions(),
             new Pose2d()
         );
+        if(Constants.IS_SIM) {
+            Robot.registerFastPeriodic(() -> updateOdom());
+        }
     
         final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
         photonPoseEstimatorLeft = new PhotonPoseEstimator(
@@ -425,7 +437,6 @@ public class Swerve extends SubsystemBase {
     }
 
     public void setPose(Pose2d pose) {
-        System.out.println("Settin pose");
         poseEstimator.resetPosition(getGyroYaw(), getModulePositions(), pose);
     }
 
@@ -434,7 +445,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public Rotation2d getGyroYaw() {
-        return Rotation2d.fromDegrees(gyro.getYaw().getValueAsDouble());
+        return Rotation2d.fromDegrees(gyroYaw.getValueAsDouble());
     }
 
     public void resetModulesToAbsolute(){
@@ -826,8 +837,9 @@ public class Swerve extends SubsystemBase {
         } else {
             rightCameraAlert.set(true);
         }
-        poseEstimator.update(getGyroYaw(), getModulePositions());
 
+        Pose2d currentPose = getPose();
+        if(!Constants.IS_SIM) updateOdom();
         // TODO re-enable at least one camera after verifying no memory issues
         // if (!rightCameraResults.isEmpty()) {
         //     var photonRightUpdate = photonPoseEstimatorRight.update(rightCameraResults.get(rightCameraResults.size() - 1));
@@ -845,7 +857,7 @@ public class Swerve extends SubsystemBase {
             }
         }
 
-        Pose2d currentPose = getPose();
+        currentPose = getPose();
         field.setRobotPose(currentPose);
 
         alignmentPositionPub.set(currentAlignmentPosition.toString());
@@ -880,7 +892,6 @@ public class Swerve extends SubsystemBase {
             rot = rotEntry.get();
         }
         if(resetRequested) {
-            System.out.println("Resetting pose");
             setPose(new Pose2d(x, y, Rotation2d.fromDegrees(rot)));
         } else {
             xPosEntry.set(x);
@@ -892,9 +903,15 @@ public class Swerve extends SubsystemBase {
         }
     }
 
-
-
     public double getSimulatedCurrentDrawAmps() {
         return simCurrentDrawAmps;
-      }
+    }
+
+    private void updateOdom() {
+        if(Constants.IS_SIM) {
+            gyroSim.setRawYaw(Units.radiansToDegrees(
+                getGyroYaw().getRadians() + getRobotRelativeSpeeds().omegaRadiansPerSecond * Constants.LOOP_TIME_SECONDS));
+        }
+        poseEstimator.update(getGyroYaw(), getModulePositions());
+    }
 }

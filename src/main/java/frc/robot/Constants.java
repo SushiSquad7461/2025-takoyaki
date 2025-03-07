@@ -43,6 +43,7 @@ public class Constants {
     public static final boolean IS_SIM = Robot.isSimulation();;
     public static final double stickDeadband = 0.1;
     public static final double LOOP_TIME_SECONDS = 0.02;
+    public static final double FAST_LOOP_TIME_SECONDS = 0.01;
 
     public static final CurrentLimitsConfigs BASIC_CURRENT_LIMIT = new CurrentLimitsConfigs().withSupplyCurrentLimit(35);
     public static final MotorOutputConfigs MOTOR_OUTPUT_CW = new MotorOutputConfigs()
@@ -324,8 +325,8 @@ public class Constants {
         public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
         public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
     
-        public static final double kPTranslationController = 0;//1;
-        public static final double kPThetaController = 0;//1;
+        public static final double kPTranslationController = IS_SIM ? 15 : 1;
+        public static final double kPThetaController = 1;
     }
 
     public static final class VisionConstants { //TODO: only tell pipeline to give pose when multiple tags detected

@@ -4,6 +4,9 @@
 
 package frc.robot;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -25,6 +28,11 @@ public class Robot extends TimedRobot {
 
   private RobotContainer m_robotContainer;
 
+  private static List<Runnable> fastPeriodics = new ArrayList<>();
+  public static void registerFastPeriodic(Runnable func) {
+    fastPeriodics.add(func);
+  }
+
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -34,6 +42,11 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
+    addPeriodic(() -> {
+      for(var func : fastPeriodics) {
+        func.run();
+      }
+    }, Constants.FAST_LOOP_TIME_SECONDS, 0.005);
   }
 
   /**
