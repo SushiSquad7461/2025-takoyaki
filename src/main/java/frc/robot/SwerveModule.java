@@ -49,13 +49,13 @@ public class SwerveModule {
         LinearSystemId.createDCMotorSystem(
             driveMotorModel, 
             0.025,
-            Constants.Swerve.chosenModule.driveGearRatio),
+            Constants.Swerve.driveGearRatio),
         driveMotorModel);
     private final DCMotorSim angleSim = new DCMotorSim(
         LinearSystemId.createDCMotorSystem(
             angleMotorModel, 
             0.004, 
-            Constants.Swerve.chosenModule.angleGearRatio), 
+            Constants.Swerve.angleGearRatio), 
         angleMotorModel);
     private final TalonFXSimState driveMotorSim;
     private final TalonFXSimState angleMotorSim;
@@ -169,11 +169,11 @@ public class SwerveModule {
         angleSim.setInputVoltage(angleMotorSim.getMotorVoltage());
         driveSim.update(Constants.LOOP_TIME_SECONDS);
         angleSim.update(Constants.LOOP_TIME_SECONDS);
-
-        driveMotorSim.setRawRotorPosition(driveSim.getAngularPositionRotations() * Constants.Swerve.chosenModule.driveGearRatio);
-        driveMotorSim.setRotorVelocity(Units.radiansToRotations(driveSim.getAngularVelocityRadPerSec() * Constants.Swerve.chosenModule.driveGearRatio));
-        angleMotorSim.setRawRotorPosition(angleSim.getAngularPositionRotations() * Constants.Swerve.chosenModule.angleGearRatio);
-        angleMotorSim.setRotorVelocity(Units.radiansToRotations(angleSim.getAngularVelocityRadPerSec()) * Constants.Swerve.chosenModule.angleGearRatio);
+        
+        driveMotorSim.setRawRotorPosition(driveSim.getAngularPositionRotations() * Constants.Swerve.driveGearRatio);
+        driveMotorSim.setRotorVelocity(Units.radiansToRotations(driveSim.getAngularVelocityRadPerSec() * Constants.Swerve.driveGearRatio));
+        angleMotorSim.setRawRotorPosition(angleSim.getAngularPositionRotations() * Constants.Swerve.angleGearRatio);
+        angleMotorSim.setRotorVelocity(Units.radiansToRotations(angleSim.getAngularVelocityRadPerSec()) * Constants.Swerve.angleGearRatio);
 
         return Math.abs(driveSim.getCurrentDrawAmps()) + Math.abs(angleSim.getCurrentDrawAmps());
     }
