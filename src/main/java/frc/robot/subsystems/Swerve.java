@@ -60,6 +60,7 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
@@ -289,9 +290,9 @@ public class Swerve extends SubsystemBase {
         }
     
         SmartDashboard.putData("Field", field);
-        SmartDashboard.putData("Align Center", defer(() -> runTrajectoryOdomAlign(AlignmentPosition.CENTER)));
-        SmartDashboard.putData("Align Left", defer(() -> runTrajectoryOdomAlign(AlignmentPosition.LEFT)));
-        SmartDashboard.putData("Align Right", defer(() -> runTrajectoryOdomAlign(AlignmentPosition.RIGHT)));
+        // SmartDashboard.putData("Align Center", defer(() -> runTrajectoryOdomAlign(AlignmentPosition.CENTER)));
+        // SmartDashboard.putData("Align Left", defer(() -> runTrajectoryOdomAlign(AlignmentPosition.LEFT)));
+        // SmartDashboard.putData("Align Right", defer(() -> runTrajectoryOdomAlign(AlignmentPosition.RIGHT)));
         SmartDashboard.putData("Stop Drive", runOnce(() -> stop()));
 
         SmartDashboard.putData("DriveSysIdQuasiFwd", sysIdDriveQuasistatic(SysIdRoutine.Direction.kForward));
@@ -569,6 +570,10 @@ public class Swerve extends SubsystemBase {
     record ReefPositions(Map<Pose2d, ReefScorePosition> locations, List<Pose2d> poses) {};
     private ReefPositions scorePositions;
     
+    public Command setPosition() {
+        return Commands.runOnce(() -> setPose(getPose()));
+    }
+
     private void initializeScorePositions() {
         Distance distanceAway = Inches.of(17.0);
         ArrayList<Pose2d> scorePositionsList = new ArrayList<>();
@@ -767,6 +772,7 @@ public class Swerve extends SubsystemBase {
         targetYPub.set(offsetTargetPose.getY());
         targetRotPub.set(offsetTargetPose.getRotation().getDegrees());
 
+        System.out.println("curr pose " + getPose().getX() + ", " + getPose().getY());
         SmartDashboard.putNumber("Original Target X", targetPose.getX());
         SmartDashboard.putNumber("Original Target Y", targetPose.getY());
         SmartDashboard.putNumber("Offset Target X", offsetTargetPose.getX());
@@ -797,7 +803,6 @@ public class Swerve extends SubsystemBase {
         );
         path.preventFlipping = true;
 
-        field.getObject("target").setPose(targetPose);
         field.getObject("path").setPoses(path.getPathPoses());
 
         // resets odometry to the starting pose, follows trajectory, and stops robot
@@ -839,14 +844,13 @@ public class Swerve extends SubsystemBase {
         
         if (!leftCameraResults.isEmpty()) {
             var photonLeftUpdate = photonPoseEstimatorLeft.update(leftCameraResults.get(leftCameraResults.size() - 1));
-            if (photonLeftUpdate.isPresent()) {
+            if (photonLeftUpdate.isPresent() 
+            && leftCameraResults.get(leftCameraResults.size() - 1).getBestTarget().getPoseAmbiguity() < 0.2) {
                 EstimatedRobotPose visionPose = photonLeftUpdate.get();
                 poseEstimator.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
             }
         }
 
-        Pose2d currentPose = getPose();
-        field.setRobotPose(currentPose);
 
         alignmentPositionPub.set(currentAlignmentPosition.toString());
         isAlignedPub.set(isAligned(currentAlignmentPosition));
