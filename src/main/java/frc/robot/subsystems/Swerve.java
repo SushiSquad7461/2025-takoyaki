@@ -626,7 +626,7 @@ public class Swerve extends SubsystemBase {
         if(yPosEntry.getLastChange() != yPosEntryLastChanged) {
             resetRequested = true;
             yPosEntryLastChanged = yPosEntry.getLastChange();
-            y = xPosEntry.get();
+            y = yPosEntry.get();
         }
         var rot = curPose.getRotation().getDegrees();
         if(rotEntry.getLastChange() != rotEntryLastChanged) {
@@ -634,6 +634,7 @@ public class Swerve extends SubsystemBase {
             rotEntryLastChanged = rotEntry.getLastChange();
             rot = rotEntry.get();
         }
+        
         if(resetRequested) {
             setPose(new Pose2d(x, y, Rotation2d.fromDegrees(rot)));
         } else {
