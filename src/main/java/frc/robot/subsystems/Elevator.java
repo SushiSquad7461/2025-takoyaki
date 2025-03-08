@@ -36,7 +36,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
-import frc.robot.Robot;
 
 public class Elevator extends SubsystemBase {
   private final TalonFX leftMotor;
@@ -55,24 +54,22 @@ public class Elevator extends SubsystemBase {
   public SysIdRoutine routine;
   private boolean reset = false;
 
-  private static final double CURRENT_LIMIT_AMPS = Constants.IS_SIM ? 4 : 5;
 
   private final VoltageOut voltReq = new VoltageOut(0);
 
   private double simCurrentDrawAmps = 0;
   private final TalonFXSimState leftMotorSim;
   private final TalonFXSimState rightMotorSim;
-  private final double maxSimHeightMeters = ElevatorState.L4.position.plus(Inches.of(2)).in(Meters);
   private final ElevatorSim sim = new ElevatorSim(
       DCMotor.getKrakenX60(2), 
       Constants.Elevator.GEAR_RATIO,
-      10, // TODO fix/verify this
+      10, 
       Constants.Elevator.ELEVATOR_EXTENSION_PER_ROTATION.div(2.*Math.PI).in(Meters),
       0.,
-      maxSimHeightMeters,
+      Constants.Elevator.maxSimHeightMeters,
       true,
       0.);
-  private final Mechanism2d mech2d = new Mechanism2d(1, maxSimHeightMeters);
+  private final Mechanism2d mech2d = new Mechanism2d(1, Constants.Elevator.maxSimHeightMeters);
   private final MechanismRoot2d mech2dRoot = mech2d.getRoot("Elevator Root", 0, 0);
   private final MechanismLigament2d elevMech2d = mech2dRoot.append(new MechanismLigament2d(
     "Elevator", 
@@ -153,7 +150,11 @@ public class Elevator extends SubsystemBase {
       if(state != ElevatorState.IDLE) reset = false;
     })
     .andThen(Commands.waitUntil(() -> elevatorInPosition(state)))
-    .andThen(state == ElevatorState.IDLE && !reset ? resetElevator() : Commands.none());
+    .andThen(Commands.either(
+      resetElevator(), 
+      Commands.none(), 
+      () -> state == ElevatorState.IDLE && !reset
+    ));
   }
 
   // checks if elevator has reached target position
@@ -202,7 +203,7 @@ public class Elevator extends SubsystemBase {
   }
 
   private boolean currentSpike() {
-    return rightMotorCurrent.getValueAsDouble() > CURRENT_LIMIT_AMPS;
+    return rightMotorCurrent.getValueAsDouble() > Constants.Elevator.CURRENT_LIMIT_AMPS;
   }
 
   public Command goUp() {

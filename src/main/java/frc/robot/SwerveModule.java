@@ -57,8 +57,9 @@ public class SwerveModule {
             0.004, 
             Constants.Swerve.angleGearRatio), 
         angleMotorModel);
-    private final TalonFXSimState driveMotorSim;
-    private final TalonFXSimState angleMotorSim;
+        
+    private TalonFXSimState driveMotorSim;
+    private TalonFXSimState angleMotorSim;
 
     public SwerveModule(int moduleNumber, SwerveModuleConstants moduleConstants){
         this.moduleNumber = moduleNumber;
@@ -85,9 +86,11 @@ public class SwerveModule {
         anglePosition = angleMotor.getPosition();
         angleEncoderPosition = angleEncoder.getAbsolutePosition();
 
-        driveMotorSim = driveMotor.getSimState();
-        angleMotorSim = angleMotor.getSimState();
-        angleEncoder.getSimState().setRawPosition(angleOffset.getRotations());
+        if (Constants.IS_SIM) {
+            driveMotorSim = driveMotor.getSimState();
+            angleMotorSim = angleMotor.getSimState();
+            angleEncoder.getSimState().setRawPosition(angleOffset.getRotations());    
+        }
 
         resetToAbsolute();
     }
@@ -132,6 +135,7 @@ public class SwerveModule {
         return drivePosition;
     }
 
+    // Use this to obtain the drive velocity status signal of this module to be refreshed every loop before using getState
     public BaseStatusSignal getDriveVelocity() {
         return driveVelocity;
     }

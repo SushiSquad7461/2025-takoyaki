@@ -101,7 +101,9 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+    SmartDashboard.putNumber("Battery Voltage", RobotController.getBatteryVoltage());
+  }
 
   @Override
   public void testInit() {

@@ -7,6 +7,7 @@ import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import edu.wpi.first.units.AngleUnit;
@@ -27,6 +28,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
+import com.pathplanner.lib.path.PathConstraints;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -40,7 +42,7 @@ import frc.lib.util.COTSTalonFXSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
 
 public class Constants {
-    public static final boolean IS_SIM = Robot.isSimulation();;
+    public static final boolean IS_SIM = Robot.isSimulation();
     public static final double stickDeadband = 0.1;
     public static final double LOOP_TIME_SECONDS = 0.02;
     public static final double FAST_LOOP_TIME_SECONDS = 0.01;
@@ -183,7 +185,7 @@ public class Constants {
             public static final int driveMotorID = 4;
             public static final int angleMotorID = 5;
             public static final int canCoderID = 6;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(126.386719); //168.925781
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(126.386719);
             public static final SwerveModuleConstants constants = new SwerveModuleConstants(
                 driveMotorID, 
                 angleMotorID, 
@@ -210,7 +212,7 @@ public class Constants {
             public static final int driveMotorID = 7;
             public static final int angleMotorID = 8;
             public static final int canCoderID = 9;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-15.292969); //-15.732422
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-15.292969);
             public static final SwerveModuleConstants constants = new SwerveModuleConstants(
                 driveMotorID, 
                 angleMotorID, 
@@ -237,7 +239,7 @@ public class Constants {
             public static final int driveMotorID = 10;
             public static final int angleMotorID = 11;
             public static final int canCoderID = 12;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(28.564453); //-144.228516) 
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(28.564453);
             public static final SwerveModuleConstants constants = new SwerveModuleConstants(
                 driveMotorID, 
                 angleMotorID, 
@@ -268,7 +270,8 @@ public class Constants {
 
         public static final AngularVelocity MOTION_MAGIC_VELOCITY = RotationsPerSecond.of(80);
         public static final AngularAcceleration MOTION_MAGIC_ACCELERATION = RotationsPerSecondPerSecond.of(160);
-        
+        public static final double CURRENT_LIMIT_AMPS = Constants.IS_SIM ? 4 : 5;
+
         public static final TalonFXConfiguration ELEVATOR_LEFT = new TalonFXConfiguration()
             .withMotorOutput(MOTOR_OUTPUT_CW);
 
@@ -287,7 +290,8 @@ public class Constants {
             );
         
         public static final double MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(.5)).in(Rotations);
-        public static final double RELAXED_MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(4.0)).in(Rotations);
+        public static final double RELAXED_MAX_ERROR_ROTATIONS = frc.robot.subsystems.Elevator.heightToMotor(Inches.of(2.0)).in(Rotations);
+        public static final double maxSimHeightMeters = Inches.of(28.0).in(Meters);
     }
 
     public static final class CoralManipulator {
@@ -352,6 +356,54 @@ public class Constants {
             AlignmentPosition.CENTER, 571. //.29
         );
     }
+
+    public static final class AprilTags {
+        public static final double[] coralBlueTags = { 17, 18, 19, 20, 21, 22 };
+        public static final double[] coralRedTags =  { 6, 7, 8, 9, 10, 11 };
+
+        public static final double[] stationBlueTags = { 12, 13 };
+        public static final double[] stationRedTags =  { 1, 2 };
+
+        // X is horizontal distance, Y is distance out from coral aprilTag -- half of bot width (bumpers included)
+        public static final Translation2d coralOffsetRight = new Translation2d(0.147, 0.56); // 0.148
+        public static final Translation2d coralOffsetLeft = new Translation2d(-0.147, 0.56);
+        public static final Translation2d coralOffsetRightLow = new Translation2d(0.147, 0.62);
+        public static final Translation2d coralOffsetLeftLow = new Translation2d(-0.147, 0.62);
+        
+        public static final Translation2d coralOffsetCentered = new Translation2d(-0.04, 0.46);
+
+        public static final double coralXTagOffset = -0.04;
+
+        public static final Translation2d coralCollectOffset = new Translation2d(0, 0.515); // 0.035
+
+        public static final PathConstraints aprilTagDriveConstraints = new PathConstraints(0.4, 0.4, 0.4, 0.4);
+
+        public static Map<Double, Double> aprilTagFaceAngles = new HashMap<Double, Double>();
+
+        static {
+        // blue side apriltags 
+        aprilTagFaceAngles.put(Double.valueOf(17), Double.valueOf(60));
+        aprilTagFaceAngles.put(Double.valueOf(18), Double.valueOf(0));
+        aprilTagFaceAngles.put(Double.valueOf(19), Double.valueOf(-60));
+        aprilTagFaceAngles.put(Double.valueOf(20), Double.valueOf(-120));
+        aprilTagFaceAngles.put(Double.valueOf(21), Double.valueOf(180));
+        aprilTagFaceAngles.put(Double.valueOf(22), Double.valueOf(120));
+
+        // red side apriltags
+        aprilTagFaceAngles.put(Double.valueOf(11), Double.valueOf(60));
+        aprilTagFaceAngles.put(Double.valueOf(10), Double.valueOf(0));
+        aprilTagFaceAngles.put(Double.valueOf(9), Double.valueOf(-60));
+        aprilTagFaceAngles.put(Double.valueOf(8), Double.valueOf(-120));
+        aprilTagFaceAngles.put(Double.valueOf(7), Double.valueOf(180));
+        aprilTagFaceAngles.put(Double.valueOf(6), Double.valueOf(120));
+
+        // coral intake apriltags
+        aprilTagFaceAngles.put(Double.valueOf(13), Double.valueOf(125));
+        aprilTagFaceAngles.put(Double.valueOf(12), Double.valueOf(-125));
+        aprilTagFaceAngles.put(Double.valueOf(2), Double.valueOf(55));
+        aprilTagFaceAngles.put(Double.valueOf(1), Double.valueOf(-55));
+        }
+  }
 
 }
 

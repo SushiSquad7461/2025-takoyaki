@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import java.util.Set;
-
 import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.wpilibj.GenericHID;
@@ -58,7 +56,7 @@ public class RobotContainer {
         // Configure the button bindings
         configureButtonBindings();
 
-        if(Robot.isReal()) {
+        if(!Constants.IS_SIM) {
             elevator.setDefaultCommand(elevator.resetElevator().andThen(() -> elevator.removeDefaultCommand()));
             intake.setDefaultCommand(intake.reset(true).andThen(() -> intake.removeDefaultCommand()));
         }
@@ -85,9 +83,9 @@ public class RobotContainer {
         // Driver handles robot positioning, alignment, and algae
         driverController.y().onTrue(swerve.resetHeading());
         driverController.a().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL)).onFalse(idle);
-        driverController.b().whileTrue(swerve.runAutoAlign(AlignmentPosition.CENTER));
-        driverController.leftTrigger().whileTrue(swerve.runAutoAlign(AlignmentPosition.LEFT));
-        driverController.rightTrigger().whileTrue(swerve.runAutoAlign(AlignmentPosition.RIGHT));
+        driverController.b().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.CENTER));
+        driverController.leftTrigger().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.LEFT));
+        driverController.rightTrigger().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.RIGHT));
 
         driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_ALGAE)).onFalse(idle);  // intake wheels rolled in regular direction
         driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.SCORE_ALGAE)).onFalse(idle); // intake wheels rolled in reverse

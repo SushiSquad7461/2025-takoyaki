@@ -37,11 +37,9 @@ public class TeleopSwerve extends Command {
         double rotationVal = MathUtil.applyDeadband(rotationSup.getAsDouble(), Constants.stickDeadband);
 
         var alliance = DriverStation.getAlliance();
-        if (alliance.isPresent()) {
-            if (alliance.get() == DriverStation.Alliance.Red){
-                translationVal = -translationVal;
-                strafeVal = -strafeVal;
-            }
+        if (alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red) {
+            translationVal = -translationVal;
+            strafeVal = -strafeVal;
         }
 
         Translation2d translationVector = new Translation2d(translationVal, strafeVal);
