@@ -44,6 +44,7 @@ public class Intake extends SubsystemBase {
         pivotMotorCurrent = pivotMotor.getSupplyCurrent();
         wheelMotor = new TalonFX(Constants.Ports.ALGAE_INTAKE_ROLLER_ID);
         wheelMotor.getConfigurator().apply(Constants.AlgaeIntake.INTAKE_CONFIG);
+        //TODO: This should not be the manipulator
         coralManipulator = NetworkTableInstance.getDefault().getTable("Manipulator");
         pivotPos = coralManipulator.getDoubleTopic("pivotPos").publish();
     

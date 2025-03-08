@@ -30,9 +30,10 @@ public class Shooter extends SubsystemBase{
     public Shooter(){
         //TODO: Add the port numbers for both motors
         pivotMotor = new TalonFX(0);
+        wheelMotor = new TalonFX(1);
+
         //Applies a specific config to each motor
         pivotMotor.getConfigurator().apply(Constants.Shooter.PIVOT_CONFIG);
-        wheelMotor = new TalonFX(1);
         wheelMotor.getConfigurator().apply(Constants.Shooter.WHEEL_CONFIG);
     }
 
