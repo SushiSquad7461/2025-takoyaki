@@ -291,7 +291,21 @@ public class Constants {
             .withMotorOutput(MOTOR_OUTPUT_CCW)
             .withSlot0(new Slot0Configs().withKP(0.2));
     }
-    
+    public static class Shooter{
+        public static final Angle LOWERED_POS = Degrees.of(0.0);
+        public static final Angle PROCESSOR_POS = Degrees.of(0.0);
+        public static final Angle BARGE_POS = Degrees.of(0.0);
+
+        public static final TalonFXConfiguration PIVOT_CONFIG = new TalonFXConfiguration()
+            .withCurrentLimits(BASIC_CURRENT_LIMIT)
+            .withMotorOutput(MOTOR_OUTPUT_CCW);
+        public static final TalonFXConfiguration WHEEL_CONFIG = new TalonFXConfiguration()
+            .withCurrentLimits(BASIC_CURRENT_LIMIT)
+            .withMotorOutput(MOTOR_OUTPUT_CCW);
+        public static final double ROLLER_SPEED = 0.0;
+        public static final double MAX_ERROR = 0.0;
+    }
+
     public static final class AutoConstants { //TODO: Need to tune constants!
         public static final double kMaxSpeedMetersPerSecond = 3;
         public static final double kMaxAccelerationMetersPerSecondSquared = 3;
