@@ -1,0 +1,50 @@
+{
+  "NetworkTables": {
+    "transitory": {
+      "Swerve": {
+        "Module 3": {
+          "open": true
+        },
+        "open": true
+      }
+    },
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/Alerts": "Alerts",
+      "/SmartDashboard/Align Center": "Command",
+      "/SmartDashboard/Align Left": "Command",
+      "/SmartDashboard/Align Right": "Command",
+      "/SmartDashboard/Auto Chooser": "String Chooser",
+      "/SmartDashboard/DriveSysIdDynFwd": "Command",
+      "/SmartDashboard/DriveSysIdDynRev": "Command",
+      "/SmartDashboard/DriveSysIdQuasiFwd": "Command",
+      "/SmartDashboard/DriveSysIdQuasiRev": "Command",
+      "/SmartDashboard/Elev Idle": "Command",
+      "/SmartDashboard/Elev L1": "Command",
+      "/SmartDashboard/Elev L2": "Command",
+      "/SmartDashboard/Elev L3": "Command",
+      "/SmartDashboard/Elev L4": "Command",
+      "/SmartDashboard/Elev Stop": "Command",
+      "/SmartDashboard/ElevSysIdDynFwd": "Command",
+      "/SmartDashboard/ElevSysIdDynRev": "Command",
+      "/SmartDashboard/ElevSysIdQuasiFwd": "Command",
+      "/SmartDashboard/ElevSysIdQuasiRev": "Command",
+      "/SmartDashboard/Field": "Field2d",
+      "/SmartDashboard/PathPlanner": "Alerts",
+      "/SmartDashboard/SignalLogger::start": "Command",
+      "/SmartDashboard/SignalLogger::stop": "Command",
+      "/SmartDashboard/SteerSysIdDynFwd": "Command",
+      "/SmartDashboard/SteerSysIdDynRev": "Command",
+      "/SmartDashboard/SteerSysIdQuasiFwd": "Command",
+      "/SmartDashboard/SteerSysIdQuasiRev": "Command",
+      "/SmartDashboard/Stop Drive": "Command"
+    }
+  },
+  "NetworkTables Info": {
+    "visible": true
+  },
+  "NetworkTables Settings": {
+    "mode": "Client (NT4)",
+    "serverTeam": "7461"
+  }
+}
