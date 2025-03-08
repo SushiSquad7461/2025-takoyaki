@@ -303,7 +303,8 @@ public class Constants {
             .withCurrentLimits(BASIC_CURRENT_LIMIT)
             .withMotorOutput(MOTOR_OUTPUT_CCW);
         public static final double ROLLER_SPEED = 0.0;
-        public static final double MAX_ERROR = 0.0;
+        //TODO: Add a max error value
+        public static final Angle MAX_ERROR = null;
     }
 
     public static final class AutoConstants { //TODO: Need to tune constants!
