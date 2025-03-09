@@ -93,6 +93,7 @@ public class Swerve extends SubsystemBase {
     private final BooleanPublisher isAlignedPub;
     private final DoublePublisher targetCenterXPub;
     private final DoublePublisher desiredXPub;
+    private final DoublePublisher gyroDoublePublisher;
 
     private final Field2d field;
 
@@ -171,6 +172,7 @@ public class Swerve extends SubsystemBase {
             getModulePositions(),
             new Pose2d()
         );
+        
         if(Constants.IS_SIM) {
             Robot.registerFastPeriodic(() -> updateOdom());
         }
@@ -205,7 +207,7 @@ public class Swerve extends SubsystemBase {
             yPosEntry = null;
             rotEntry = null;
         }
-
+        gyroDoublePublisher = table.getDoubleTopic("GyroYaw").publish();
         cancoderPubs = new DoublePublisher[4];
         anglePubs = new DoublePublisher[4];
         velocityPubs = new DoublePublisher[4];
@@ -433,6 +435,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public Rotation2d getGyroYaw() {
+        gyroDoublePublisher.set(gyroYaw.getValueAsDouble());
         return Rotation2d.fromDegrees(gyroYaw.getValueAsDouble());
     }
 
