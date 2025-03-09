@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.Swerve.AlignmentPosition;
+import frc.robot.util.AllianceUtil;
 import frc.robot.util.ReefPositions;
 import frc.robot.util.ReefPositions.ReefScorePosition;
 
@@ -47,10 +48,8 @@ public class TrajectoryAlign extends Command {
         Pose2d targetPose = currentPose.nearest(scorePositions.poses());
         ReefScorePosition reefPosition = scorePositions.locations().get(targetPose);
         
-        var alliance = DriverStation.getAlliance();
-        boolean isRedAlliance = alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
         double offsetDistance = .35; //meters
-        double xOffset = getHorizontalOffset(isRedAlliance, offsetDistance);
+        double xOffset = getHorizontalOffset(AllianceUtil.isRedAlliance(), offsetDistance);
         
         double[] offsets = calculatePositionalOffsets(reefPosition, xOffset);
         double offsetX = offsets[0];

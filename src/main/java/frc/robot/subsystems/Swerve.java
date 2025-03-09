@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import frc.robot.SwerveModule;
 import frc.robot.commands.TrajectoryAlign;
+import frc.robot.util.AllianceUtil;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -30,6 +31,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.Waypoint;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -287,6 +289,7 @@ public class Swerve extends SubsystemBase {
         SmartDashboard.putData("Align Center", defer(() -> runTrajectoryAlign(AlignmentPosition.CENTER)));
         SmartDashboard.putData("Align Left", defer(() -> runTrajectoryAlign(AlignmentPosition.LEFT)));
         SmartDashboard.putData("Align Right", defer(() -> runTrajectoryAlign(AlignmentPosition.RIGHT)));
+        SmartDashboard.putData("Reset Position", defer(() -> resetPositionToFrontReef()));
         SmartDashboard.putData("Stop Drive", runOnce(() -> stop()));
 
         SmartDashboard.putData("DriveSysIdQuasiFwd", sysIdDriveQuasistatic(SysIdRoutine.Direction.kForward));
@@ -401,7 +404,7 @@ public class Swerve extends SubsystemBase {
             setPose(
                 new Pose2d(
                     getPose().getTranslation(),
-                    isRedAlliance() ? new Rotation2d(Math.PI) : new Rotation2d()
+                    AllianceUtil.isRedAlliance() ? new Rotation2d(Math.PI) : new Rotation2d()
                 )
             );
         });
@@ -546,9 +549,9 @@ public class Swerve extends SubsystemBase {
         return false;
     }
 
-    private boolean isRedAlliance() {
-        var alliance = DriverStation.getAlliance();
-        return alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
+    public Command resetPositionToFrontReef() {
+        Waypoint bluePoint = new Waypoint(null, new Translation2d(3.171, 4.024), null);
+        return runOnce(() -> setPose(AllianceUtil.isRedAlliance() ? new Pose2d(bluePoint.flip().anchor(), new Rotation2d(180.0)) : new Pose2d(bluePoint.anchor(), new Rotation2d(0.0)))); // TODO put correct pose here from auto align map
     }
 
     public Command runTrajectoryAlign(AlignmentPosition position) {
