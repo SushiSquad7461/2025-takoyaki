@@ -20,6 +20,7 @@ import frc.robot.commands.TeleopSwerve;
 import frc.robot.subsystems.CoralManipulator;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.Swerve.AlignmentPosition;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -40,9 +41,9 @@ public class RobotContainer {
     private final Swerve swerve = new Swerve();
     private final Elevator elevator = new Elevator();
     private final CoralManipulator manipulator = new CoralManipulator();
-    private final Intake intake = new Intake();
+    private final Shooter shooter = new Shooter();
 
-    private final StateMachine stateMachine = new StateMachine(intake, manipulator, elevator);
+    private final StateMachine stateMachine = new StateMachine(shooter, manipulator, elevator);
     private final AutoCommands autos = new AutoCommands(swerve, elevator, manipulator, stateMachine);
     private Command[] scoreCommands = {
         stateMachine.changeState(RobotState.SCORE_L1),
@@ -58,7 +59,7 @@ public class RobotContainer {
         configureButtonBindings();
 
         elevator.setDefaultCommand(elevator.resetElevator().andThen(() -> elevator.removeDefaultCommand()));
-        intake.setDefaultCommand(intake.reset(true).andThen(() -> intake.removeDefaultCommand()));
+      //  intake.setDefaultCommand(intake.reset(true).andThen(() -> intake.removeDefaultCommand()));
     }
 
     /**
@@ -104,7 +105,7 @@ public class RobotContainer {
         
         // special state => override and resetting to idle, and knocking algae
         operatorController.back().onTrue(idle);
-        operatorController.leftTrigger().onTrue(stateMachine.changeState(RobotState.KNOCK_ALGAE)).onFalse(idle);
+     //  operatorController.leftTrigger().onTrue(stateMachine.changeState(RobotState.KNOCK_ALGAE)).onFalse(idle);
 
         // odometry autoalign testing
         operatorController.povUp().whileTrue(swerve.runTrajectoryOdomAlign());

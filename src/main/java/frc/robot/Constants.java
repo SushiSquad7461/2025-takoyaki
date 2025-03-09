@@ -291,7 +291,7 @@ public class Constants {
             .withMotorOutput(MOTOR_OUTPUT_CCW)
             .withSlot0(new Slot0Configs().withKP(0.2));
     }
-    public static class Shooter{
+    public static class AlgaeShooter{
         public static final Angle LOWERED_POS = Degrees.of(0.0);
         public static final Angle PROCESSOR_POS = Degrees.of(0.0);
         public static final Angle BARGE_POS = Degrees.of(0.0);
@@ -305,6 +305,8 @@ public class Constants {
         public static final double ROLLER_SPEED = 0.0;
         //TODO: Add a max error value
         public static final Angle MAX_ERROR = Degrees.of(0.0);
+        public static final long REV_UP_TIME = 100;
+        public static final Angle UPRIGHT = Degrees.of(0.0);
     }
 
     public static final class AutoConstants { //TODO: Need to tune constants!

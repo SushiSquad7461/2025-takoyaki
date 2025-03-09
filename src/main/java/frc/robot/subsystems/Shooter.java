@@ -33,21 +33,27 @@ public class Shooter extends SubsystemBase{
         wheelMotor = new TalonFX(1);
 
         //Applies a specific config to each motor
-        pivotMotor.getConfigurator().apply(Constants.Shooter.PIVOT_CONFIG);
-        wheelMotor.getConfigurator().apply(Constants.Shooter.WHEEL_CONFIG);
+        pivotMotor.getConfigurator().apply(Constants.AlgaeShooter.PIVOT_CONFIG);
+        wheelMotor.getConfigurator().apply(Constants.AlgaeShooter.WHEEL_CONFIG);
     }
 
 
     private Command intakeAlgae(){
-        return runOnce(() -> wheelMotor.set(Constants.Shooter.ROLLER_SPEED));
+        return runOnce(() -> wheelMotor.set(Constants.AlgaeShooter.ROLLER_SPEED));
     }
 
     private Command shootAlgae(){
-        return runOnce(()-> wheelMotor.set(-1*Constants.Shooter.ROLLER_SPEED));
+        //TODO: Add logic to include a third motor
+        return runOnce(()-> wheelMotor.set(-1*Constants.AlgaeShooter.ROLLER_SPEED));
     }
 
     private Command idleWheels(){
         return runOnce(()-> wheelMotor.set(0.0));
+    }
+
+    private Command reset(){
+        return runOnce(()->
+        idleWheels().andThen(changePivotPos(Constants.AlgaeShooter.UPRIGHT)));
     }
 
     private Command changePivotPos(Angle pos){
@@ -62,24 +68,33 @@ public class Shooter extends SubsystemBase{
          * This will allow for a small error margin
         */
         return () -> (pivotMotor.getPosition().getValue())
-        .minus(pos).abs(Degrees) < Constants.Shooter.MAX_ERROR.in(Degrees);
+        .minus(pos).abs(Degrees) < Constants.AlgaeShooter.MAX_ERROR.in(Degrees);
     }
 
     public Command changeState(ShooterState state){
         //These states will determine what state each motor should be in
-        Command pivotState;
-        Command wheelState;
-        if(state.extended){
-            pivotState = changePivotPos(Constants.Shooter.LOWERED_POS);
+        Command pivotState, wheelState;
+
+        //Will cjeck to see if the intake is requesting to be intaking, if so, it will move all the way dowm
+        if(state.intaking){
+            pivotState = changePivotPos(Constants.AlgaeShooter.LOWERED_POS);
         }
         else{
-            if(state.shootPos == Constants.Shooter.BARGE_POS){
-                pivotState=changePivotPos(Constants.Shooter.BARGE_POS);
+            //This will check to see if the state requires the 
+            if(state.shootPos == Constants.AlgaeShooter.BARGE_POS){
+                pivotState = changePivotPos(Constants.AlgaeShooter.BARGE_POS)
+                .andThen(Commands.waitSeconds(Constants.AlgaeShooter.REV_UP_TIME))
+                .andThen(shootAlgae())
+                .andThen(reset());
             }
             else{
-                pivotState = changePivotPos(Constants.Shooter.PROCESSOR_POS);
+                pivotState = changePivotPos(Constants.AlgaeShooter.PROCESSOR_POS)
+                .andThen(Commands.waitSeconds(Constants.AlgaeShooter.REV_UP_TIME))
+                .andThen(shootAlgae())
+                .andThen(reset());
             }
         }
+
         //Use a switch-case to determine what the wheels should do at each direction state
         wheelState = switch(state.direction){
             case OFF -> idleWheels();
