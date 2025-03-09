@@ -59,6 +59,7 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
@@ -435,7 +436,6 @@ public class Swerve extends SubsystemBase {
     }
 
     public Rotation2d getGyroYaw() {
-        gyroDoublePublisher.set(gyroYaw.getValueAsDouble());
         return Rotation2d.fromDegrees(gyroYaw.getValueAsDouble());
     }
 
@@ -556,8 +556,20 @@ public class Swerve extends SubsystemBase {
 
     public Command resetPositionToFrontReef() {
         Waypoint bluePoint = new Waypoint(null, new Translation2d(3.171, 4.024), null);
-        return runOnce(() -> setPose(AllianceUtil.isRedAlliance() ? new Pose2d(bluePoint.flip().anchor(), new Rotation2d(180.0)) : new Pose2d(bluePoint.anchor(), new Rotation2d(0.0)))); // TODO put correct pose here from auto align map
+        return Commands.sequence(
+            runOnce(() -> {
+                setPose(AllianceUtil.isRedAlliance() ? new Pose2d(bluePoint.flip().anchor(), new Rotation2d(180.0)) : new Pose2d(bluePoint.anchor(), new Rotation2d(0.0)));
+                resetGyro();
+            })
+        );   
+
     }
+
+    public void resetGyro() {
+        if (AllianceUtil.isRedAlliance()) gyro.setYaw(180);
+        else gyro.setYaw(0);
+    }
+
 
     public Command runTrajectoryAlign(AlignmentPosition position) {
         return new TrajectoryAlign(this, field, position);
@@ -588,15 +600,18 @@ public class Swerve extends SubsystemBase {
 
         Pose2d currentPose = getPose();
         updateOdom(); 
-        // TODO re-enable at least one camera after verifying no memory issues
-        // if (!rightCameraResults.isEmpty()) {
-        //     var photonRightUpdate = photonPoseEstimatorRight.update(rightCameraResults.get(rightCameraResults.size() - 1));
-        //     if (photonRightUpdate.isPresent()) {
-        //         EstimatedRobotPose visionPose = photonRightUpdate.get();
-        //         poseEstimator.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
-        //     }
-        // }
         
+        if (!rightCameraResults.isEmpty()) {
+            var lastCameraResult = rightCameraResults.get(rightCameraResults.size() - 1);
+            var photonRightUpdate = photonPoseEstimatorLeft.update(lastCameraResult);
+            if (photonRightUpdate.isPresent() && lastCameraResult.getBestTarget().getPoseAmbiguity() < 0.2) {
+                EstimatedRobotPose visionPose = photonRightUpdate.get();
+                if (currentPose.getTranslation().getDistance(visionPose.estimatedPose.getTranslation().toTranslation2d()) < 1.0){
+                    poseEstimator.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
+                }
+            }
+        }
+
         if (!leftCameraResults.isEmpty()) {
             var lastCameraResult = leftCameraResults.get(leftCameraResults.size() - 1);
             var photonLeftUpdate = photonPoseEstimatorLeft.update(lastCameraResult);
@@ -610,7 +625,7 @@ public class Swerve extends SubsystemBase {
 
         currentPose = getPose();
         field.setRobotPose(currentPose);
-
+        gyroDoublePublisher.set(getGyroYaw().getDegrees());
         alignmentPositionPub.set(currentAlignmentPosition.toString());
         isAlignedPub.set(isAligned(currentAlignmentPosition));
     }

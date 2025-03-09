@@ -47,7 +47,7 @@ public class TrajectoryAlign extends Command {
         Pose2d targetPose = currentPose.nearest(scorePositions.poses());
         ReefScorePosition reefPosition = scorePositions.locations().get(targetPose);
         
-        double offsetDistance = .35; //meters
+        double offsetDistance = .165; //meters
         double xOffset = getHorizontalOffset(AllianceUtil.isRedAlliance(), offsetDistance);
         
         double[] offsets = calculatePositionalOffsets(reefPosition, xOffset);
@@ -60,7 +60,7 @@ public class TrajectoryAlign extends Command {
             targetPose.getRotation()
         );
 
-        publishTargetInfo(currentPose, offsetTargetPose, offsetX, offsetY);
+        publishTargetInfo(currentPose, offsetTargetPose, offsetX, offsetY, targetPose);
         
         PathConstraints constraints = new PathConstraints(
             Constants.AutoConstants.kMaxSpeedMetersPerSecond * 0.9, 
@@ -150,12 +150,13 @@ public class TrajectoryAlign extends Command {
         return new double[]{offsetX, offsetY};
     }
     
-    private void publishTargetInfo(Pose2d currentPose, Pose2d offsetTargetPose, double offsetX, double offsetY) {
+    private void publishTargetInfo(Pose2d currentPose, Pose2d offsetTargetPose, double offsetX, double offsetY, Pose2d targetRotation) {
         SmartDashboard.putNumber("Current X", currentPose.getX());
         SmartDashboard.putNumber("Current Y", currentPose.getY());
         SmartDashboard.putNumber("Offset Target X", offsetTargetPose.getX());
         SmartDashboard.putNumber("Offset Target Y", offsetTargetPose.getY());
         SmartDashboard.putNumber("X Offset Applied", offsetX);
         SmartDashboard.putNumber("Y Offset Applied", offsetY);
+        SmartDashboard.putNumber("Target Rotation Applied", targetRotation.getRotation().getRadians());
     }
 }

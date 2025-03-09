@@ -158,7 +158,7 @@ public class Constants {
             public static final int driveMotorID = 1;
             public static final int angleMotorID = 2;
             public static final int canCoderID = 3;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(170.507812); //point bevel to right
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(170.156250); //point bevel to right
             public static final SwerveModuleConstants constants = new SwerveModuleConstants(
                 driveMotorID, 
                 angleMotorID, 
@@ -185,7 +185,7 @@ public class Constants {
             public static final int driveMotorID = 4;
             public static final int angleMotorID = 5;
             public static final int canCoderID = 6;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(132.626953);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(132.802734);
             public static final SwerveModuleConstants constants = new SwerveModuleConstants(
                 driveMotorID, 
                 angleMotorID, 
@@ -212,7 +212,7 @@ public class Constants {
             public static final int driveMotorID = 7;
             public static final int angleMotorID = 8;
             public static final int canCoderID = 9;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-14.326172);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-16.259766);
             public static final SwerveModuleConstants constants = new SwerveModuleConstants(
                 driveMotorID, 
                 angleMotorID, 
@@ -239,7 +239,7 @@ public class Constants {
             public static final int driveMotorID = 10;
             public static final int angleMotorID = 11;
             public static final int canCoderID = 12;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(29.179688);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(30.585937);
             public static final SwerveModuleConstants constants = new SwerveModuleConstants(
                 driveMotorID, 
                 angleMotorID, 
@@ -334,8 +334,8 @@ public class Constants {
     }
 
     public static final class VisionConstants { //TODO: only tell pipeline to give pose when multiple tags detected
-        public static final Transform3d leftCamera = new Transform3d(new Translation3d(0.220726, 0.27351736, 0.1913255), new Rotation3d(0, -0.30543261909, -0.88139127225));
-        public static final Transform3d rightCamera = new Transform3d(new Translation3d(0.220726, -0.27351736, 0.1913255), new Rotation3d(0, -0.30543261909, 0.88139127225));
+        public static final Transform3d leftCamera = new Transform3d(new Translation3d(0.220726, 0.27351736, 0.1913255), new Rotation3d(0, -0.30543261909, -0.59));
+        public static final Transform3d rightCamera = new Transform3d(new Translation3d(0.220726, -0.27351736, 0.1913255), new Rotation3d(0, -0.30543261909, 0.59));
 
         /* Constraint for the motion profilied robot angle controller */
         public static final TrapezoidProfile.Constraints kThetaControllerConstraints =
