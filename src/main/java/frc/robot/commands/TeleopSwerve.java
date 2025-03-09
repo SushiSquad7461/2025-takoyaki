@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import frc.robot.Constants;
 import frc.robot.subsystems.Swerve;
+import frc.robot.util.AllianceUtil;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -34,6 +35,11 @@ public class TeleopSwerve extends Command {
         double translationVal = MathUtil.applyDeadband(translationSup.getAsDouble(), Constants.stickDeadband);
         double strafeVal = MathUtil.applyDeadband(strafeSup.getAsDouble(), Constants.stickDeadband);
         double rotationVal = MathUtil.applyDeadband(rotationSup.getAsDouble(), Constants.stickDeadband);
+
+        if (AllianceUtil.isRedAlliance()) {
+            translationVal = -translationVal;
+            strafeVal = -strafeVal;
+        }
 
         Translation2d translationVector = new Translation2d(translationVal, strafeVal);
         double magnitude = translationVector.getNorm();

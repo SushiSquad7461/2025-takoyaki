@@ -4,12 +4,11 @@
 
 package frc.robot;
 
-import java.util.Set;
-
 import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -57,8 +56,10 @@ public class RobotContainer {
         // Configure the button bindings
         configureButtonBindings();
 
-        elevator.setDefaultCommand(elevator.resetElevator().andThen(() -> elevator.removeDefaultCommand()));
-        intake.setDefaultCommand(intake.reset(true).andThen(() -> intake.removeDefaultCommand()));
+        if(!Constants.IS_SIM) {
+            elevator.setDefaultCommand(elevator.resetElevator().andThen(() -> elevator.removeDefaultCommand()));
+            intake.setDefaultCommand(intake.reset(true).andThen(() -> intake.removeDefaultCommand()));
+        }
     }
 
     /**
@@ -82,9 +83,9 @@ public class RobotContainer {
         // Driver handles robot positioning, alignment, and algae
         driverController.y().onTrue(swerve.resetHeading());
         driverController.a().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL)).onFalse(idle);
-        driverController.b().whileTrue(swerve.runAutoAlign(AlignmentPosition.CENTER));
-        driverController.leftTrigger().whileTrue(swerve.runAutoAlign(AlignmentPosition.LEFT));
-        driverController.rightTrigger().whileTrue(swerve.runAutoAlign(AlignmentPosition.RIGHT));
+        driverController.b().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.CENTER));
+        driverController.leftTrigger().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.LEFT));
+        driverController.rightTrigger().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.RIGHT));
 
         driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_ALGAE)).onFalse(idle);  // intake wheels rolled in regular direction
         driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.SCORE_ALGAE)).onFalse(idle); // intake wheels rolled in reverse
@@ -107,17 +108,25 @@ public class RobotContainer {
         operatorController.leftTrigger().onTrue(stateMachine.changeState(RobotState.KNOCK_ALGAE)).onFalse(idle);
 
         // odometry autoalign testing
-        operatorController.povUp().whileTrue(swerve.runTrajectoryOdomAlign());
-        operatorController.povDown().whileTrue(swerve.runTrajectoryOdomAlign());
+        // operatorController.povUp().whileTrue(Commands.defer(swerve::runTrajectoryOdomAlign(AlignmentPosition.CENTER), Set.of(swerve)));
 
 
         programmerController.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
         programmerController.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
+        SmartDashboard.putBoolean("SignalLogger Active", false);
+        SmartDashboard.putData("SignalLogger::start", Commands.runOnce(() -> {
+            SignalLogger.start();
+            SmartDashboard.putBoolean("SignalLogger Active", true);
+        }));
+        SmartDashboard.putData("SignalLogger::stop", Commands.runOnce(() -> {
+            SignalLogger.stop();
+            SmartDashboard.putBoolean("SignalLogger Active", false);
+        }));
 
-        // programmerController.a().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdQuasistatic(Direction.kForward));
-        // programmerController.b().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdQuasistatic(Direction.kReverse));
-        // programmerController.x().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdDynamic(Direction.kForward));
-        // programmerController.y().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdDynamic(Direction.kReverse));
+        programmerController.a().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdQuasistatic(Direction.kForward));
+        programmerController.b().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdQuasistatic(Direction.kReverse));
+        programmerController.x().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdDynamic(Direction.kForward));
+        programmerController.y().and(programmerController.rightTrigger()).whileTrue(elevator.sysIdDynamic(Direction.kReverse));
 
         // programmerController.a().and(programmerController.leftTrigger()).whileTrue(intake.sysIdQuasistatic(Direction.kForward));
         // programmerController.b().and(programmerController.leftTrigger()).whileTrue(intake.sysIdQuasistatic(Direction.kReverse));
@@ -134,12 +143,18 @@ public class RobotContainer {
         programmerController.x().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kForward));
         programmerController.y().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kReverse));
 
-        // programmerController.povUp().whileTrue(elevator.goUp());
-        // programmerController.povDown().whileTrue(elevator.goDown());
-        // programmerController.a().whileTrue(elevator.resetElevator());
+        programmerController.povUp().whileTrue(elevator.goUp());
+        programmerController.povDown().whileTrue(elevator.goDown());
+        programmerController.a().whileTrue(elevator.resetElevator());
     }
 
+    public double getSimulatedSubsytemCurrentDrawAmps() {
+        return swerve.getSimulatedCurrentDrawAmps() + elevator.getSimulatedCurrentDrawAmps() + manipulator.getSimulatedCurrentDrawAmps();
+    }
 
+    public void resetModulesToAbsolute(){
+        swerve.resetModulesToAbsolute();
+    }
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
      *

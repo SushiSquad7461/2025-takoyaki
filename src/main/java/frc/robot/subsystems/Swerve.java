@@ -1,18 +1,17 @@
 package frc.robot.subsystems;
 
 import frc.robot.SwerveModule;
+import frc.robot.commands.TrajectoryAlign;
+import frc.robot.util.AllianceUtil;
 import frc.robot.Constants;
-
+import frc.robot.Robot;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
 import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Volts;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,33 +22,34 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.TargetCorner;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.ctre.phoenix6.sim.Pigeon2SimState;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.Waypoint;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.cscore.HttpCamera;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.trajectory.TrajectoryConfig;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -59,22 +59,23 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 public class Swerve extends SubsystemBase {
-    public SwerveDrivePoseEstimator poseEstimator;
-    public SwerveModule[] mSwerveMods;
-    public Pigeon2 gyro;
-    public SysIdRoutine driveSysIdRoutine;
-    public SysIdRoutine steerSysIdRoutine;
+    private final SwerveDrivePoseEstimator poseEstimator;
+    private final SwerveModule[] mSwerveMods;
+    private final BaseStatusSignal[] modStatusSignals;
+    private final Pigeon2 gyro;
+    private final Pigeon2SimState gyroSim;
+    private final StatusSignal<Angle> gyroYaw;
+    private final SysIdRoutine driveSysIdRoutine;
+    private final SysIdRoutine steerSysIdRoutine;
 
     private final PhotonCamera leftCamera;
-    private List<PhotonPipelineResult> leftCameraResults;
+    private List<PhotonPipelineResult> leftCameraResults = List.of();
     private final PhotonCamera rightCamera;
-    private List<PhotonPipelineResult> rightCameraResults;
+    private List<PhotonPipelineResult> rightCameraResults = List.of();
     private final Map<PhotonCamera, Map<AlignmentPosition, Double>> targetPositions;
 
     private final PhotonPoseEstimator photonPoseEstimatorLeft;
@@ -92,10 +93,8 @@ public class Swerve extends SubsystemBase {
     private final BooleanPublisher isAlignedPub;
     private final DoublePublisher targetCenterXPub;
     private final DoublePublisher desiredXPub;
+    private final DoublePublisher gyroDoublePublisher;
 
-    private final DoublePublisher targetXPub;
-    private final DoublePublisher targetYPub;
-    private final DoublePublisher targetRotPub;
     private final Field2d field;
 
     private final DoublePublisher[] cancoderPubs;
@@ -107,11 +106,21 @@ public class Swerve extends SubsystemBase {
     private final Alert rightCameraAlert;
     //private final HttpCamera camStream;
 
+    private double simCurrentDrawAmps = 0;
+    private final DoubleEntry xPosEntry;
+    private long xPosEntryLastChanged;
+    private final DoubleEntry yPosEntry;
+    private long yPosEntryLastChanged;
+    private final DoubleEntry rotEntry;
+    private long rotEntryLastChanged;
+    
     public Swerve() {
         field = new Field2d();
         gyro = new Pigeon2(Constants.Swerve.pigeonID);
         gyro.getConfigurator().apply(new Pigeon2Configuration());
         gyro.setYaw(0);
+        gyroSim = gyro.getSimState();
+        gyroYaw = gyro.getYaw();
         alignmentPID = new PIDController(0.15, 0, 0); 
         alignmentPID.setTolerance(10, 10);
         
@@ -121,19 +130,36 @@ public class Swerve extends SubsystemBase {
             new SwerveModule(2, Constants.Swerve.Mod2.constants),
             new SwerveModule(3, Constants.Swerve.Mod3.constants)
         };
+        modStatusSignals = new BaseStatusSignal[]{
+            mSwerveMods[0].getDrivePosition(),
+            mSwerveMods[0].getDriveVelocity(),
+            mSwerveMods[0].getAnglePosition(),
+            mSwerveMods[0].getEncoderPosition(),
+            mSwerveMods[1].getDrivePosition(),
+            mSwerveMods[1].getDriveVelocity(),
+            mSwerveMods[1].getAnglePosition(),
+            mSwerveMods[1].getEncoderPosition(),
+            mSwerveMods[2].getDrivePosition(),
+            mSwerveMods[2].getDriveVelocity(),
+            mSwerveMods[2].getAnglePosition(),
+            mSwerveMods[2].getEncoderPosition(),
+            mSwerveMods[3].getDrivePosition(),
+            mSwerveMods[3].getDriveVelocity(),
+            mSwerveMods[3].getAnglePosition(),
+            mSwerveMods[3].getEncoderPosition(),
+            gyroYaw
+        };
 
         //TODO: rename cameras
-        final String lCamName = "Arducam_OV9782_USB_Camera";
-        leftCamera = new PhotonCamera(lCamName);
+        leftCamera = new PhotonCamera(Constants.VisionConstants.leftCameraName);
         leftCameraAlert = new Alert(
-            String.format("Left camera %s is not connected", lCamName), 
+            String.format("Left camera %s is not connected", Constants.VisionConstants.leftCameraName), 
             AlertType.kError);
 
         //camStream = new HttpCamera("Photonvison Left", "http://photonvision.local:1181");
-        final String rCamName = "Arducam_OV9281_USB_Camera";
-        rightCamera = new PhotonCamera(rCamName);
+        rightCamera = new PhotonCamera(Constants.VisionConstants.rightCameraName);
         rightCameraAlert = new Alert(
-            String.format("Right camera %s is not connected", rCamName), 
+            String.format("Right camera %s is not connected", Constants.VisionConstants.rightCameraName), 
             AlertType.kError);
         targetPositions = Map.of(
             leftCamera, Constants.VisionConstants.leftCameraOffsets,
@@ -146,6 +172,10 @@ public class Swerve extends SubsystemBase {
             getModulePositions(),
             new Pose2d()
         );
+        
+        if(Constants.IS_SIM) {
+            Robot.registerFastPeriodic(() -> updateOdom());
+        }
     
         final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
         photonPoseEstimatorLeft = new PhotonPoseEstimator(
@@ -165,12 +195,19 @@ public class Swerve extends SubsystemBase {
         isAlignedPub = table.getBooleanTopic("Alignment/IsAligned").publish();
         targetCenterXPub = table.getDoubleTopic("Alignment/TargetCenterX").publish();
         desiredXPub = table.getDoubleTopic("Alignment/DesiredX").publish();
-        targetXPub = table.getDoubleTopic("Alignment/OdomTarget/X").publish();
-        targetYPub = table.getDoubleTopic("Alignment/OdomTarget/Y").publish();
-        targetRotPub = table.getDoubleTopic("Alignment/OdomTarget/Rotation").publish();
-
-        initializeScorePositions();
-
+        if(Constants.IS_SIM) {
+            xPosEntry = table.getDoubleTopic("Simulation/SetOdom/X").getEntry(0);
+            xPosEntry.set(0);
+            yPosEntry = table.getDoubleTopic("Simulation/SetOdom/Y").getEntry(0);
+            yPosEntry.set(0);
+            rotEntry = table.getDoubleTopic("Simulation/SetOdom/Rotation").getEntry(0);
+            rotEntry.set(0);
+        } else {
+            xPosEntry = null;
+            yPosEntry = null;
+            rotEntry = null;
+        }
+        gyroDoublePublisher = table.getDoubleTopic("GyroYaw").publish();
         cancoderPubs = new DoublePublisher[4];
         anglePubs = new DoublePublisher[4];
         velocityPubs = new DoublePublisher[4];
@@ -253,7 +290,21 @@ public class Swerve extends SubsystemBase {
         }
     
         SmartDashboard.putData("Field", field);
+        SmartDashboard.putData("Align Center", defer(() -> runTrajectoryAlign(AlignmentPosition.CENTER)));
+        SmartDashboard.putData("Align Left", defer(() -> runTrajectoryAlign(AlignmentPosition.LEFT)));
+        SmartDashboard.putData("Align Right", defer(() -> runTrajectoryAlign(AlignmentPosition.RIGHT)));
+        SmartDashboard.putData("Reset Position", defer(() -> resetPositionToFrontReef()));
+        SmartDashboard.putData("Stop Drive", runOnce(() -> stop()));
 
+        SmartDashboard.putData("DriveSysIdQuasiFwd", sysIdDriveQuasistatic(SysIdRoutine.Direction.kForward));
+        SmartDashboard.putData("DriveSysIdQuasiRev", sysIdDriveQuasistatic(SysIdRoutine.Direction.kReverse));
+        SmartDashboard.putData("DriveSysIdDynFwd", sysIdDriveDynamic(SysIdRoutine.Direction.kForward));
+        SmartDashboard.putData("DriveSysIdDynRev", sysIdDriveDynamic(SysIdRoutine.Direction.kReverse));
+        
+        SmartDashboard.putData("SteerSysIdQuasiFwd", sysIdSteerQuasistatic(SysIdRoutine.Direction.kForward));
+        SmartDashboard.putData("SteerSysIdQuasiRev", sysIdSteerQuasistatic(SysIdRoutine.Direction.kReverse));
+        SmartDashboard.putData("SteerSysIdDynFwd", sysIdSteerDynamic(SysIdRoutine.Direction.kForward));
+        SmartDashboard.putData("SteerSysIdDynRev", sysIdSteerDynamic(SysIdRoutine.Direction.kReverse));
         SmartDashboard.putData("Swerve Drive", new Sendable() {    
             @Override
             public void initSendable(SendableBuilder builder) {
@@ -307,6 +358,12 @@ public class Swerve extends SubsystemBase {
         SwerveDriveKinematics.desaturateWheelSpeeds(states, Constants.Swerve.maxSpeed);
         setModuleStates(states);
     }
+
+    private void stop() {
+        for (SwerveModule mod : mSwerveMods) {
+            mod.setDriveVoltage(0);
+        }
+    }
     
     public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
         SwerveModuleState[] swerveModuleStates =
@@ -347,12 +404,14 @@ public class Swerve extends SubsystemBase {
     }
 
     public Command resetHeading() {
-        return runOnce(() -> setPose(
-            new Pose2d(
-                getPose().getTranslation(),
-                new Rotation2d()
-            )
-        ));
+        return runOnce(() -> {
+            setPose(
+                new Pose2d(
+                    getPose().getTranslation(),
+                    AllianceUtil.isRedAlliance() ? new Rotation2d(Math.PI) : new Rotation2d()
+                )
+            );
+        });
     }
 
     public SwerveModulePosition[] getModulePositions(){
@@ -375,16 +434,9 @@ public class Swerve extends SubsystemBase {
         return getPose().getRotation();
     }
 
-    public void setHeading(Rotation2d heading){
-        poseEstimator.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), heading));
-    }
-
-    public void zeroHeading(){
-        poseEstimator.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), new Rotation2d()));
-    }
-
     public Rotation2d getGyroYaw() {
-        return Rotation2d.fromDegrees(gyro.getYaw().getValueAsDouble());
+        gyroDoublePublisher.set(gyroYaw.getValueAsDouble());
+        return Rotation2d.fromDegrees(gyroYaw.getValueAsDouble());
     }
 
     public void resetModulesToAbsolute(){
@@ -502,228 +554,40 @@ public class Swerve extends SubsystemBase {
         return false;
     }
 
-    private boolean isAprilTagVisible() {
-        return !leftCameraResults.isEmpty() && leftCameraResults.get(leftCameraResults.size() - 1).hasTargets() ||
-            !rightCameraResults.isEmpty() && rightCameraResults.get(rightCameraResults.size() - 1).hasTargets();
-    }
-    
-    public enum ReefScorePosition {
-        FRONT,
-        FRONTLEFT,
-        BACKLEFT,
-        BACK,
-        BACKRIGHT,
-        FRONTRIGHT
-    }
-    
-    record ReefPositions(Map<Pose2d, ReefScorePosition> locations, List<Pose2d> poses) {};
-    private ReefPositions scorePositions;
-    
-    private void initializeScorePositions() {
-        Distance distanceAway = Inches.of(17.0);
-        var alliance = DriverStation.getAlliance();
-        boolean isRedAlliance = alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
-        ArrayList<Pose2d> scorePositionsList = new ArrayList<>();
-        Map<Pose2d, ReefScorePosition> locations = new HashMap<>();
-        
-        if (!isRedAlliance) {            
-            // Tag 18 (FRONT)
-            Pose2d blueTag18 = new Pose2d(3.6576, 4.0259, Rotation2d.fromDegrees(180));
-            final var blueTag18Robot = new Pose2d(
-                blueTag18.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(180)), 
-                blueTag18.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(180)), 
-                blueTag18.getRotation()
-            );
-            scorePositionsList.add(blueTag18Robot);
-            locations.put(blueTag18Robot, ReefScorePosition.FRONT);
-            
-            // Tag 19 (FRONTLEFT)
-            Pose2d blueTag19 = new Pose2d(4.0739, 4.7455, Rotation2d.fromDegrees(120));
-            final var blueTag19Robot = new Pose2d(
-                blueTag19.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(120)), 
-                blueTag19.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(120)), 
-                blueTag19.getRotation()
-            );
-            scorePositionsList.add(blueTag19Robot);
-            locations.put(blueTag19Robot, ReefScorePosition.FRONTLEFT);
-            
-            // Tag 20 (BACKLEFT)
-            Pose2d blueTag20 = new Pose2d(4.9047, 4.7455, Rotation2d.fromDegrees(60));
-            final var blueTag20Robot = new Pose2d(
-                    blueTag20.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(60)), 
-                    blueTag20.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(60)), 
-                    blueTag20.getRotation()
-                );
-            scorePositionsList.add(blueTag20Robot);
-            locations.put(blueTag20Robot, ReefScorePosition.BACKLEFT);
-            
-            // Tag 21 (BACK)
-            Pose2d blueTag21 = new Pose2d(5.3210, 4.0259, Rotation2d.fromDegrees(0));
-            final var blueTag21Robot = new Pose2d(
-                    blueTag21.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(0)), 
-                    blueTag21.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(0)), 
-                    blueTag21.getRotation()
-                );
-            scorePositionsList.add(blueTag21Robot);
-            locations.put(blueTag21Robot, ReefScorePosition.BACK);
-            
-            // Tag 22 (BACKRIGHT)
-            Pose2d blueTag22 = new Pose2d(4.9047, 3.3063, Rotation2d.fromDegrees(-60));
-            final var blueTag22Robot = new Pose2d(
-                    blueTag22.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(-60)), 
-                    blueTag22.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(-60)), 
-                    blueTag22.getRotation()
-                );
-            scorePositionsList.add(blueTag22Robot);
-            locations.put(blueTag22Robot, ReefScorePosition.BACKRIGHT);
-            
-            // Tag 17 (FRONTRIGHT)
-            Pose2d blueTag17 = new Pose2d(4.0739, 3.3063, Rotation2d.fromDegrees(-120));
-            final var blueTag17Robot = new Pose2d(
-                    blueTag17.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(-120)), 
-                    blueTag17.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(-120)), 
-                    blueTag17.getRotation()
-                );
-            scorePositionsList.add(blueTag17Robot);
-            locations.put(blueTag17Robot, ReefScorePosition.FRONTRIGHT);
-        } else { // Red Alliance
-            // Tag 7 (FRONT)
-            Pose2d redTag7 = new Pose2d(13.8905, 4.0259, Rotation2d.fromDegrees(0));
-            final var redTag7Robot = new Pose2d(
-                    redTag7.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(0)), 
-                    redTag7.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(0)), 
-                    redTag7.getRotation()
-                );
-            scorePositionsList.add(redTag7Robot);
-            locations.put(redTag7Robot, ReefScorePosition.FRONT);
-            
-            // Tag 6 (FRONTLEFT)
-            Pose2d redTag6 = new Pose2d(13.4744, 3.3063, Rotation2d.fromDegrees(-60));
-            final var redTag6Robot = new Pose2d(
-                    redTag6.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(-60)), 
-                    redTag6.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(-60)), 
-                    redTag6.getRotation()
-                );
-            scorePositionsList.add(redTag6Robot);
-            locations.put(redTag6Robot, ReefScorePosition.FRONTLEFT);
-            
-            // Tag 11 (BACKLEFT)
-            Pose2d redTag11 = new Pose2d(12.6434, 3.3063, Rotation2d.fromDegrees(-120));
-            final var redTag11Robot = new Pose2d(
-                    redTag11.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(-120)), 
-                    redTag11.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(-120)), 
-                    redTag11.getRotation()
-                );
-            scorePositionsList.add(redTag11Robot);
-            locations.put(redTag11Robot, ReefScorePosition.BACKLEFT);
-            
-            // Tag 10 (BACK)
-            Pose2d redTag10 = new Pose2d(12.2273, 4.0259, Rotation2d.fromDegrees(180));
-            final var redTag10Robot = new Pose2d(
-                    redTag10.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(180)), 
-                    redTag10.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(180)), 
-                    redTag10.getRotation()
-                );
-            scorePositionsList.add(redTag10Robot);
-            locations.put(redTag10Robot, ReefScorePosition.BACK);
-            
-            // Tag 9 (BACKRIGHT)
-            Pose2d redTag9 = new Pose2d(12.6434, 4.7455, Rotation2d.fromDegrees(120));
-            final var redTag9Robot = new Pose2d(
-                    redTag9.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(120)), 
-                    redTag9.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(120)), 
-                    redTag9.getRotation()
-                );
-            scorePositionsList.add(redTag9Robot);
-            locations.put(redTag9Robot, ReefScorePosition.BACKRIGHT);
-            
-            // Tag 8 (FRONTRIGHT)
-            Pose2d redTag8 = new Pose2d(13.4744, 4.7455, Rotation2d.fromDegrees(60));
-            final var redTag8Robot = new Pose2d(
-                    redTag8.getX() + distanceAway.in(Meters) * Math.cos(Math.toRadians(60)), 
-                    redTag8.getY() + distanceAway.in(Meters) * Math.sin(Math.toRadians(60)), 
-                    redTag8.getRotation()
-                );
-            scorePositionsList.add(redTag8Robot);
-            locations.put(redTag8Robot, ReefScorePosition.FRONTRIGHT);
-        }
-        scorePositions = new ReefPositions(locations, scorePositionsList);
+    public Command resetPositionToFrontReef() {
+        Waypoint bluePoint = new Waypoint(null, new Translation2d(3.171, 4.024), null);
+        return runOnce(() -> setPose(AllianceUtil.isRedAlliance() ? new Pose2d(bluePoint.flip().anchor(), new Rotation2d(180.0)) : new Pose2d(bluePoint.anchor(), new Rotation2d(0.0)))); // TODO put correct pose here from auto align map
     }
 
-    public Command runTrajectoryOdomAlign() {
-        // find closest score position to align with
-        final var pose = getPose();
-        Pose2d targetPose = pose.nearest(scorePositions.poses);
-        Pose2d currentPose = getPose();
-        targetXPub.set(targetPose.getX());
-        targetYPub.set(targetPose.getY());
-        targetRotPub.set(targetPose.getRotation().getDegrees());
-
-        // trajectory configuration
-        TrajectoryConfig config = new TrajectoryConfig(
-            Constants.AutoConstants.kMaxSpeedMetersPerSecond * 0.5, //TODO: tweak
-            Constants.AutoConstants.kMaxAccelerationMetersPerSecondSquared * 0.5)
-            .setKinematics(Constants.Swerve.swerveKinematics);
-        
-        // generate simple path with just start and end points
-        Trajectory trajectory = TrajectoryGenerator.generateTrajectory(
-            currentPose,
-            List.of(), 
-            targetPose,
-            config);
-        
-        PIDController xController = new PIDController(Constants.AutoConstants.kPTranslationController, 0, 0);
-        PIDController yController = new PIDController(Constants.AutoConstants.kPTranslationController, 0, 0);
-        
-        ProfiledPIDController thetaController = new ProfiledPIDController(
-            Constants.AutoConstants.kPThetaController, 0, 0,
-            new TrapezoidProfile.Constraints(
-                Constants.AutoConstants.kMaxAngularSpeedRadiansPerSecond,
-                Constants.AutoConstants.kMaxAngularSpeedRadiansPerSecondSquared
-            ));
-        
-        thetaController.enableContinuousInput(-Math.PI, Math.PI);
-        
-        SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
-            trajectory,
-            this::getPose,
-            Constants.Swerve.swerveKinematics,
-            xController,
-            yController,
-            thetaController,
-            this::setModuleStates,
-            this);
-        
-        // resets odometry to the starting pose, follows trajectory, and stops robot
-        return Commands.sequence(
-            runOnce(() -> {
-                table.getDoubleTopic("Alignment/OdomTarget/X").publish().set(targetPose.getX());
-                table.getDoubleTopic("Alignment/OdomTarget/Y").publish().set(targetPose.getY());
-                table.getDoubleTopic("Alignment/OdomTarget/Rotation").publish().set(targetPose.getRotation().getDegrees());
-            }),
-            swerveControllerCommand,
-            runOnce(() -> drive(new Translation2d(), 0, true, true))
-        );
+    public Command runTrajectoryAlign(AlignmentPosition position) {
+        return new TrajectoryAlign(this, field, position);
     }
-
-    public Command runAlignment() {
-        return runOnce(() -> 
-            Commands.either(
-                runAutoAlign(AlignmentPosition.CENTER),
-                runTrajectoryOdomAlign(),
-                this::isAprilTagVisible
-            )
-        );
-    }    
 
     @Override
     public void periodic(){
-        leftCameraAlert.set(!leftCamera.isConnected());
-        rightCameraAlert.set(!rightCamera.isConnected());
-        leftCameraResults = leftCamera.getAllUnreadResults();
-        rightCameraResults = rightCamera.getAllUnreadResults();
-        poseEstimator.update(getGyroYaw(), getModulePositions());
+        BaseStatusSignal.refreshAll(modStatusSignals);
+        for(SwerveModule mod : mSwerveMods){
+            cancoderPubs[mod.moduleNumber].set(mod.getCANcoder().getDegrees());
+            var modState = mod.getState();
+            anglePubs[mod.moduleNumber].set(modState.angle.getDegrees());
+            velocityPubs[mod.moduleNumber].set(modState.speedMetersPerSecond);
+        }
 
+        if(leftCamera.isConnected()) {
+            leftCameraResults = leftCamera.getAllUnreadResults();
+            leftCameraAlert.set(false);
+        } else {
+            leftCameraAlert.set(true);
+        }
+        if(rightCamera.isConnected()) {
+            rightCameraResults = rightCamera.getAllUnreadResults();
+            rightCameraAlert.set(false);
+        } else {
+            rightCameraAlert.set(true);
+        }
+
+        Pose2d currentPose = getPose();
+        updateOdom(); 
         // TODO re-enable at least one camera after verifying no memory issues
         // if (!rightCameraResults.isEmpty()) {
         //     var photonRightUpdate = photonPoseEstimatorRight.update(rightCameraResults.get(rightCameraResults.size() - 1));
@@ -732,26 +596,74 @@ public class Swerve extends SubsystemBase {
         //         poseEstimator.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
         //     }
         // }
-        // if (!leftCameraResults.isEmpty()) {
-        //     var photonLeftUpdate = photonPoseEstimatorLeft.update(leftCameraResults.get(leftCameraResults.size() - 1));
-        //     if (photonLeftUpdate.isPresent()) {
-        //         EstimatedRobotPose visionPose = photonLeftUpdate.get();
-        //         poseEstimator.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
-        //     }
-        // }
+        
+        if (!leftCameraResults.isEmpty()) {
+            var lastCameraResult = leftCameraResults.get(leftCameraResults.size() - 1);
+            var photonLeftUpdate = photonPoseEstimatorLeft.update(lastCameraResult);
+            if (photonLeftUpdate.isPresent() && lastCameraResult.getBestTarget().getPoseAmbiguity() < 0.2) {
+                EstimatedRobotPose visionPose = photonLeftUpdate.get();
+                if (currentPose.getTranslation().getDistance(visionPose.estimatedPose.getTranslation().toTranslation2d()) < 1.0){
+                    poseEstimator.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
+                }
+            }
+        }
 
-        Pose2d currentPose = getPose();
+        currentPose = getPose();
         field.setRobotPose(currentPose);
 
         alignmentPositionPub.set(currentAlignmentPosition.toString());
         isAlignedPub.set(isAligned(currentAlignmentPosition));
+    }
 
-        for(SwerveModule mod : mSwerveMods){
-            cancoderPubs[mod.moduleNumber].set(mod.getCANcoder().getDegrees());
-            anglePubs[mod.moduleNumber].set(mod.getPosition().angle.getDegrees());
-            velocityPubs[mod.moduleNumber].set(mod.getState().speedMetersPerSecond);
+    @Override
+    public void simulationPeriodic() {
+        simCurrentDrawAmps = 0;
+        for(var mod : mSwerveMods) {
+            simCurrentDrawAmps += mod.simulationPeriodic();
+        }
+
+        boolean resetRequested = false;
+        var curPose = getPose();
+        var x = curPose.getX();
+        if(xPosEntry.getLastChange() != xPosEntryLastChanged) {
+            resetRequested = true;
+            xPosEntryLastChanged = xPosEntry.getLastChange();
+            x = xPosEntry.get();
+        }
+        var y = curPose.getY();
+        if(yPosEntry.getLastChange() != yPosEntryLastChanged) {
+            resetRequested = true;
+            yPosEntryLastChanged = yPosEntry.getLastChange();
+            y = yPosEntry.get();
+        }
+        var rot = curPose.getRotation().getDegrees();
+        if(rotEntry.getLastChange() != rotEntryLastChanged) {
+            resetRequested = true;
+            rotEntryLastChanged = rotEntry.getLastChange();
+            rot = rotEntry.get();
+        }
+        
+        if(resetRequested) {
+            setPose(new Pose2d(x, y, Rotation2d.fromDegrees(rot)));
+        } else {
+            xPosEntry.set(x);
+            xPosEntryLastChanged = xPosEntry.getLastChange();
+            yPosEntry.set(y);
+            yPosEntryLastChanged = yPosEntry.getLastChange();
+            rotEntry.set(rot);
+            rotEntryLastChanged = rotEntry.getLastChange();
         }
     }
 
-    
+    public double getSimulatedCurrentDrawAmps() {
+        return simCurrentDrawAmps;
+    }
+
+    private void updateOdom() {
+        if (Constants.IS_SIM) {
+            gyroSim.setRawYaw(Units.radiansToDegrees(
+                getGyroYaw().getRadians() + getRobotRelativeSpeeds().omegaRadiansPerSecond * Constants.LOOP_TIME_SECONDS));
+        }
+        poseEstimator.update(getGyroYaw(), getModulePositions());
+    }
 }
