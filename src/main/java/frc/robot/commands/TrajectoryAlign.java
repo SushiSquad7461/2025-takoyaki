@@ -13,6 +13,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.Swerve.AlignmentPosition;
@@ -27,7 +29,8 @@ public class TrajectoryAlign extends Command {
     private final Field2d field;
     private final AlignmentPosition alignmentPosition;
     private final ReefPositions.ReefPositionsMap scorePositions;
-    
+    Command cmd = Commands.none();
+
     public TrajectoryAlign(Swerve swerve, Field2d field, AlignmentPosition position) {
         this.swerve = swerve;
         this.field = field;
@@ -87,9 +90,26 @@ public class TrajectoryAlign extends Command {
         field.getObject("target").setPose(targetPose);
         field.getObject("path").setPoses(path.getPathPoses());
         
-        AutoBuilder.followPath(path).schedule();
+        cmd = AutoBuilder.followPath(path);
+        cmd.initialize();
+    }
+
+    @Override
+    public void execute() {
+        cmd.execute();
     }
     
+    @Override
+    public boolean isFinished() {
+        return cmd.isFinished();
+    }
+
+    @Override
+    public void end(boolean interrupted) {
+        CommandScheduler.getInstance().cancel(cmd);
+        cmd = Commands.none();
+    }
+
     private double getHorizontalOffset(boolean isRedAlliance, double offsetDistance) {
         return switch (alignmentPosition) {
             case LEFT -> isRedAlliance ? offsetDistance : -offsetDistance;

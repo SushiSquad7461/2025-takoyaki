@@ -127,7 +127,8 @@ public class SwerveModule {
 
     public void resetToAbsolute(){
         double absolutePosition = getCANcoder().getRotations() - angleOffset.getRotations();
-        angleMotor.setPosition(absolutePosition);
+        var res = angleMotor.setPosition(absolutePosition);
+        System.out.println(String.format("Module%d.resetToAbsolute: %s", moduleNumber, res.getName()));
     }
 
     /** Use this to obtain the drive position status signal of this module to be refreshed along with the signal from getAnglePosition every loop before using getState or getPosition */

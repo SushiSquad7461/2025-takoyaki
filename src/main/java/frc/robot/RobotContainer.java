@@ -143,15 +143,18 @@ public class RobotContainer {
         programmerController.x().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kForward));
         programmerController.y().and(programmerController.povRight()).whileTrue(swerve.sysIdSteerDynamic(Direction.kReverse));
 
-        // programmerController.povUp().whileTrue(elevator.goUp());
-        // programmerController.povDown().whileTrue(elevator.goDown());
-        // programmerController.a().whileTrue(elevator.resetElevator());
+        programmerController.povUp().whileTrue(elevator.goUp());
+        programmerController.povDown().whileTrue(elevator.goDown());
+        programmerController.a().whileTrue(elevator.resetElevator());
     }
 
     public double getSimulatedSubsytemCurrentDrawAmps() {
         return swerve.getSimulatedCurrentDrawAmps() + elevator.getSimulatedCurrentDrawAmps() + manipulator.getSimulatedCurrentDrawAmps();
     }
 
+    public void resetModulesToAbsolute(){
+        swerve.resetModulesToAbsolute();
+    }
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
      *
