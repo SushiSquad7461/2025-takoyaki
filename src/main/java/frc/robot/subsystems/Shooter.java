@@ -46,25 +46,17 @@ public class Shooter extends SubsystemBase{
         return runOnce(() -> wheelMotor.set(Constants.AlgaeShooter.ROLLER_SPEED));
     }
 
-    //Will run the wheels
-    private Command runWheels(){
-        return runOnce(()-> 
-        wheelMotor.set(-1*Constants.AlgaeShooter.ROLLER_SPEED));
-    }
-
-    //Will run the kicker
-    private Command runKicker(){
-        return runOnce(() -> kickerMotor.set(-1*Constants.AlgaeShooter.KICKER_SPEED));
-    }
-
-    //Will run the kicker and the wheels at the same time to shoot the algae
+    //Will run the kicker when shooting the algae
     private Command shootAlgae(){
-        return runOnce(()-> runKicker().alongWith(runWheels()));
+        return runOnce(()-> kickerMotor.set(-1*Constants.AlgaeShooter.KICKER_SPEED));
     }
 
     //Will make the wheels stop spinning
     private Command idleWheels(){
         return runOnce(()-> wheelMotor.set(0.0));
+    }
+    private Command runWheels(){
+        return runOnce(()-> wheelMotor.set(-1*Constants.AlgaeShooter.ROLLER_SPEED));
     }
 
     //I just used this to reset the intake, maybe use the current spike method later
@@ -101,8 +93,9 @@ public class Shooter extends SubsystemBase{
             //This will check to see if the statw doesnt require the intake to be down
             if(state.shootPos == Constants.AlgaeShooter.BARGE_POS){
                 pivotState = changePivotPos(Constants.AlgaeShooter.BARGE_POS)
+                .andThen(runWheels())
                 .andThen(Commands.waitSeconds(Constants.AlgaeShooter.REV_UP_TIME))
-                .andThen(shootAlgae())
+                .andThen(idleWheels().alongWith(shootAlgae()))
                 .andThen(reset());
             }
             else{
