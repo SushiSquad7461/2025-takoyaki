@@ -49,7 +49,7 @@ public class VisionAlign extends Command {
         this.alignmentPosition = position;
         this.aprilTagFieldLayout = aprilTagFieldLayout;
 
-        this.xController = new PIDController(0.2, 0, 0); //p gains
+        this.xController = new PIDController(0.2, 0, 0); //p gains TODO: Prob bump these up
         this.yController = new PIDController(0.2, 0, 0);
         this.rotationController = new PIDController(0.2, 0, 0);
         
@@ -227,7 +227,8 @@ public class VisionAlign extends Command {
     private double limit(double value, double limit) {
         return Math.max(-limit, Math.min(limit, value));
     }
-    
+
+    //TODO: when would this timeout if the tag is jittery
     @Override
     public boolean isFinished() {
         if (bestReefID == -1 || bestTarget == null) {
