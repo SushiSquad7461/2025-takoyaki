@@ -26,7 +26,7 @@ public class Shooter extends SubsystemBase{
     private TalonFX wheelMotor;
     private TalonFX kickerMotor;
 
-    //Creates a pos
+    //Creates a Position Duty Cycle
     PositionDutyCycle positionDutyCycle = new PositionDutyCycle(0);
 
     public Shooter(){
@@ -98,7 +98,7 @@ public class Shooter extends SubsystemBase{
             pivotState = changePivotPos(Constants.AlgaeShooter.LOWERED_POS);
         }
         else{
-            //This will check to see if the state requires the 
+            //This will check to see if the statw doesnt require the intake to be down
             if(state.shootPos == Constants.AlgaeShooter.BARGE_POS){
                 pivotState = changePivotPos(Constants.AlgaeShooter.BARGE_POS)
                 .andThen(Commands.waitSeconds(Constants.AlgaeShooter.REV_UP_TIME))
