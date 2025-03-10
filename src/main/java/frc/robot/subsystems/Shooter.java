@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 import edu.wpi.first.units.measure.Angle;
-
+import edu.wpi.first.wpilibj.motorcontrol.Talon;
 
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 
@@ -24,38 +24,56 @@ import java.util.function.BooleanSupplier;
 public class Shooter extends SubsystemBase{
     private TalonFX pivotMotor;
     private TalonFX wheelMotor;
+    private TalonFX kickerMotor;
 
+    //Creates a pos
     PositionDutyCycle positionDutyCycle = new PositionDutyCycle(0);
 
     public Shooter(){
         //TODO: Add the port numbers for both motors
         pivotMotor = new TalonFX(0);
         wheelMotor = new TalonFX(1);
+        kickerMotor = new TalonFX(3);
 
         //Applies a specific config to each motor
-        pivotMotor.getConfigurator().apply(Constants.AlgaeShooter.PIVOT_CONFIG);
-        wheelMotor.getConfigurator().apply(Constants.AlgaeShooter.WHEEL_CONFIG);
+        pivotMotor.getConfigurator().apply(Constants.AlgaeShooter.MOTOR_CONFIG);
+        wheelMotor.getConfigurator().apply(Constants.AlgaeShooter.MOTOR_CONFIG);
+        kickerMotor.getConfigurator().apply(Constants.AlgaeShooter.MOTOR_CONFIG);
     }
 
-
+    //Will suck the algae in
     private Command intakeAlgae(){
         return runOnce(() -> wheelMotor.set(Constants.AlgaeShooter.ROLLER_SPEED));
     }
 
-    private Command shootAlgae(){
-        //TODO: Add logic to include a third motor
-        return runOnce(()-> wheelMotor.set(-1*Constants.AlgaeShooter.ROLLER_SPEED));
+    //Will run the wheels
+    private Command runWheels(){
+        return runOnce(()-> 
+        wheelMotor.set(-1*Constants.AlgaeShooter.ROLLER_SPEED));
     }
 
+    //Will run the kicker
+    private Command runKicker(){
+        return runOnce(() -> kickerMotor.set(-1*Constants.AlgaeShooter.KICKER_SPEED));
+    }
+
+    //Will run the kicker and the wheels at the same time to shoot the algae
+    private Command shootAlgae(){
+        return runOnce(()-> runKicker().alongWith(runWheels()));
+    }
+
+    //Will make the wheels stop spinning
     private Command idleWheels(){
         return runOnce(()-> wheelMotor.set(0.0));
     }
 
+    //I just used this to reset the intake, maybe use the current spike method later
     private Command reset(){
         return runOnce(()->
         idleWheels().andThen(changePivotPos(Constants.AlgaeShooter.UPRIGHT)));
     }
 
+    //Changes the position of the pivot motor
     private Command changePivotPos(Angle pos){
         //This will use a Position Duty Cycle until intake reaches within a specific error range of the final position
         return runOnce( () -> pivotMotor.setControl(positionDutyCycle.withPosition(pos)))
@@ -101,7 +119,7 @@ public class Shooter extends SubsystemBase{
             case REVERSE -> shootAlgae();
             case FORWARD -> intakeAlgae();
         };
-
+        //Will return the command to change the pivot, which will then follow with the command to change the wheel
         return pivotState.andThen(wheelState);
     }
 

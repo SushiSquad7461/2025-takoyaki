@@ -296,13 +296,13 @@ public class Constants {
         public static final Angle PROCESSOR_POS = Degrees.of(0.0);
         public static final Angle BARGE_POS = Degrees.of(0.0);
 
-        public static final TalonFXConfiguration PIVOT_CONFIG = new TalonFXConfiguration()
+        public static final TalonFXConfiguration MOTOR_CONFIG = new TalonFXConfiguration()
             .withCurrentLimits(BASIC_CURRENT_LIMIT)
             .withMotorOutput(MOTOR_OUTPUT_CCW);
-        public static final TalonFXConfiguration WHEEL_CONFIG = new TalonFXConfiguration()
-            .withCurrentLimits(BASIC_CURRENT_LIMIT)
-            .withMotorOutput(MOTOR_OUTPUT_CCW);
+
         public static final double ROLLER_SPEED = 0.0;
+        public static final int KICKER_SPEED = 0;
+
         //TODO: Add a max error value
         public static final Angle MAX_ERROR = Degrees.of(0.0);
         public static final long REV_UP_TIME = 100;
