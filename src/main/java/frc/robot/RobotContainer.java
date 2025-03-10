@@ -87,6 +87,7 @@ public class RobotContainer {
         driverController.leftTrigger().whileTrue(swerve.runAutoAlign(AlignmentPosition.LEFT));
         driverController.rightTrigger().whileTrue(swerve.runAutoAlign(AlignmentPosition.RIGHT));
 
+        // TODO: Changed these for nnow, change these later
         driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.IDLE)).onFalse(idle);  // intake wheels rolled in regular direction
         driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.IDLE)).onFalse(idle); // intake wheels rolled in reverse
 

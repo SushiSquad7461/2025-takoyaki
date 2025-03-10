@@ -20,17 +20,16 @@ import java.util.function.BooleanSupplier;
 
 
 
-
 public class Shooter extends SubsystemBase{
+
+
     private TalonFX pivotMotor;
     private TalonFX wheelMotor;
     private TalonFX kickerMotor;
-
-    //Creates a Position Duty Cycle
-    PositionDutyCycle positionDutyCycle = new PositionDutyCycle(0);
+    private PositionDutyCycle positionDutyCycle = new PositionDutyCycle(0);
 
     public Shooter(){
-        //TODO: Add the port numbers for both motors
+        //TODO: Add the port numbers for all motors
         pivotMotor = new TalonFX(0);
         wheelMotor = new TalonFX(1);
         kickerMotor = new TalonFX(3);
@@ -41,12 +40,12 @@ public class Shooter extends SubsystemBase{
         kickerMotor.getConfigurator().apply(Constants.AlgaeShooter.MOTOR_CONFIG);
     }
 
-    //Will suck the algae in
+    //Will suck the algae in (might have to change the direction)
     private Command intakeAlgae(){
         return runOnce(() -> wheelMotor.set(Constants.AlgaeShooter.ROLLER_SPEED));
     }
 
-    //Will run the kicker when shooting the algae
+    //Will run the kicker when shooting the algae (might have to change the direction)
     private Command shootAlgae(){
         return runOnce(()-> kickerMotor.set(-1*Constants.AlgaeShooter.KICKER_SPEED));
     }
@@ -55,6 +54,8 @@ public class Shooter extends SubsystemBase{
     private Command idleWheels(){
         return runOnce(()-> wheelMotor.set(0.0));
     }
+
+    //Will spin the wheels 
     private Command runWheels(){
         return runOnce(()-> wheelMotor.set(-1*Constants.AlgaeShooter.ROLLER_SPEED));
     }
@@ -62,7 +63,7 @@ public class Shooter extends SubsystemBase{
     //I just used this to reset the intake, maybe use the current spike method later
     private Command reset(){
         return runOnce(()->
-        idleWheels().andThen(changePivotPos(Constants.AlgaeShooter.UPRIGHT)));
+        idleWheels().alongWith(changePivotPos(Constants.AlgaeShooter.UPRIGHT)));
     }
 
     //Changes the position of the pivot motor
