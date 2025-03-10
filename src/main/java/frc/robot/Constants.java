@@ -32,6 +32,7 @@ import com.pathplanner.lib.path.PathConstraints;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -335,7 +336,10 @@ public class Constants {
 
     public static final class VisionConstants { //TODO: only tell pipeline to give pose when multiple tags detected
         public static final Transform3d leftCamera = new Transform3d(new Translation3d(0.220726, 0.27351736, 0.1913255), new Rotation3d(0, -0.30543261909, -0.59));
+        public static final Transform2d leftCamera2d = new Transform2d(new Translation2d(leftCamera.getX(), leftCamera.getY()), new Rotation2d(leftCamera.getRotation().getZ()));
+
         public static final Transform3d rightCamera = new Transform3d(new Translation3d(0.220726, -0.27351736, 0.1913255), new Rotation3d(0, -0.30543261909, 0.59));
+        public static final Transform2d rightCamera2d = new Transform2d(new Translation2d(rightCamera.getX(), rightCamera.getY()), new Rotation2d(rightCamera.getRotation().getZ()));
 
         /* Constraint for the motion profilied robot angle controller */
         public static final TrapezoidProfile.Constraints kThetaControllerConstraints =

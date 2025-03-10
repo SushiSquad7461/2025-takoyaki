@@ -2,7 +2,10 @@ package frc.robot.subsystems;
 
 import frc.robot.SwerveModule;
 import frc.robot.commands.TrajectoryAlign;
+import frc.robot.commands.VisionAlign;
+
 import frc.robot.util.AllianceUtil;
+import frc.robot.util.ReefPositions;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -14,12 +17,15 @@ import static edu.wpi.first.units.Units.Volts;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import org.photonvision.PhotonUtils;
 import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
 import org.photonvision.targeting.TargetCorner;
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -39,7 +45,9 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
@@ -73,10 +81,10 @@ public class Swerve extends SubsystemBase {
     private final SysIdRoutine driveSysIdRoutine;
     private final SysIdRoutine steerSysIdRoutine;
 
-    private final PhotonCamera leftCamera;
-    private List<PhotonPipelineResult> leftCameraResults = List.of();
-    private final PhotonCamera rightCamera;
-    private List<PhotonPipelineResult> rightCameraResults = List.of();
+    public final PhotonCamera leftCamera;
+    public List<PhotonPipelineResult> leftCameraResults = List.of();
+    public final PhotonCamera rightCamera;
+    public List<PhotonPipelineResult> rightCameraResults = List.of();
     private final Map<PhotonCamera, Map<AlignmentPosition, Double>> targetPositions;
 
     private final PhotonPoseEstimator photonPoseEstimatorLeft;
@@ -94,9 +102,10 @@ public class Swerve extends SubsystemBase {
     private final BooleanPublisher isAlignedPub;
     private final DoublePublisher targetCenterXPub;
     private final DoublePublisher desiredXPub;
-    private final DoublePublisher gyroDoublePublisher;
 
+    private final DoublePublisher gyroDoublePublisher;
     private final Field2d field;
+    public final AprilTagFieldLayout aprilTagFieldLayout;
 
     private final DoublePublisher[] cancoderPubs;
     private final DoublePublisher[] anglePubs;
@@ -178,7 +187,7 @@ public class Swerve extends SubsystemBase {
             Robot.registerFastPeriodic(() -> updateOdom());
         }
     
-        final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
+        aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
         photonPoseEstimatorLeft = new PhotonPoseEstimator(
             aprilTagFieldLayout,
             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
@@ -291,9 +300,14 @@ public class Swerve extends SubsystemBase {
         }
     
         SmartDashboard.putData("Field", field);
-        SmartDashboard.putData("Align Center", defer(() -> runTrajectoryAlign(AlignmentPosition.CENTER)));
-        SmartDashboard.putData("Align Left", defer(() -> runTrajectoryAlign(AlignmentPosition.LEFT)));
-        SmartDashboard.putData("Align Right", defer(() -> runTrajectoryAlign(AlignmentPosition.RIGHT)));
+        SmartDashboard.putData("Align Center ODOM", defer(() -> runTrajectoryAlign(AlignmentPosition.CENTER)));
+        SmartDashboard.putData("Align Left ODOM", defer(() -> runTrajectoryAlign(AlignmentPosition.LEFT)));
+        SmartDashboard.putData("Align Right ODOM", defer(() -> runTrajectoryAlign(AlignmentPosition.RIGHT)));
+        SmartDashboard.putData("Align Center VISION", defer(() -> runVisionAlign(AlignmentPosition.CENTER)));
+        SmartDashboard.putData("Align Left VISION", defer(() -> runVisionAlign(AlignmentPosition.LEFT)));
+        SmartDashboard.putData("Align Right VISION", defer(() -> runVisionAlign(AlignmentPosition.RIGHT)));
+
+
         SmartDashboard.putData("Reset Position", defer(() -> resetPositionToFrontReef()));
         SmartDashboard.putData("Stop Drive", runOnce(() -> stop()));
 
@@ -570,9 +584,12 @@ public class Swerve extends SubsystemBase {
         else gyro.setYaw(0);
     }
 
-
     public Command runTrajectoryAlign(AlignmentPosition position) {
         return new TrajectoryAlign(this, field, position);
+    }
+
+    public Command runVisionAlign(AlignmentPosition position) {
+        return new VisionAlign(this, field, position, aprilTagFieldLayout);
     }
 
     @Override
