@@ -5,28 +5,22 @@ import frc.robot.commands.TrajectoryAlign;
 import frc.robot.commands.VisionAlign;
 
 import frc.robot.util.AllianceUtil;
-import frc.robot.util.ReefPositions;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
-import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Volts;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
-import org.photonvision.PhotonUtils;
-import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
-import org.photonvision.targeting.TargetCorner;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
@@ -42,23 +36,23 @@ import com.pathplanner.lib.path.Waypoint;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Alert;
@@ -82,26 +76,17 @@ public class Swerve extends SubsystemBase {
     private final SysIdRoutine steerSysIdRoutine;
 
     public final PhotonCamera leftCamera;
-    public List<PhotonPipelineResult> leftCameraResults = List.of();
     public final PhotonCamera rightCamera;
-    public List<PhotonPipelineResult> rightCameraResults = List.of();
-    private final Map<PhotonCamera, Map<AlignmentPosition, Double>> targetPositions;
 
     private final PhotonPoseEstimator photonPoseEstimatorLeft;
     private final PhotonPoseEstimator photonPoseEstimatorRight;
+    private Matrix<N3, N1> curStdDevs;
     private final PIDController alignmentPID;
 
     private AlignmentPosition currentAlignmentPosition = AlignmentPosition.CENTER;
-    private double lastValidCenterX = 0;
-    private double lastDesiredCenterX = 0;
-    private int noCamLoops = 0;
-    private static final double ALIGNMENT_TOLERANCE = 20; //pixels
     
     private final NetworkTable table;
     private final StringPublisher alignmentPositionPub;
-    private final BooleanPublisher isAlignedPub;
-    private final DoublePublisher targetCenterXPub;
-    private final DoublePublisher desiredXPub;
 
     private final DoublePublisher gyroDoublePublisher;
     private final Field2d field;
@@ -171,10 +156,6 @@ public class Swerve extends SubsystemBase {
         rightCameraAlert = new Alert(
             String.format("Right camera %s is not connected", Constants.VisionConstants.rightCameraName), 
             AlertType.kError);
-        targetPositions = Map.of(
-            leftCamera, Constants.VisionConstants.leftCameraOffsets,
-            rightCamera, Constants.VisionConstants.rightCameraOffsets
-        );
         
         poseEstimator = new SwerveDrivePoseEstimator(
             Constants.Swerve.swerveKinematics,
@@ -193,18 +174,17 @@ public class Swerve extends SubsystemBase {
             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
             Constants.VisionConstants.leftCamera 
         );
+        photonPoseEstimatorLeft.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
         photonPoseEstimatorRight = new PhotonPoseEstimator(
             aprilTagFieldLayout,
             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
             Constants.VisionConstants.rightCamera
         );
+        photonPoseEstimatorRight.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
         
         table = NetworkTableInstance.getDefault().getTable("Swerve");
         alignmentPositionPub = table.getStringTopic("Alignment/Position").publish();
-        isAlignedPub = table.getBooleanTopic("Alignment/IsAligned").publish();
-        targetCenterXPub = table.getDoubleTopic("Alignment/TargetCenterX").publish();
-        desiredXPub = table.getDoubleTopic("Alignment/DesiredX").publish();
         if(Constants.IS_SIM) {
             xPosEntry = table.getDoubleTopic("Simulation/SetOdom/X").getEntry(0);
             xPosEntry.set(0);
@@ -459,115 +439,6 @@ public class Swerve extends SubsystemBase {
         }
     }
 
-    private static double getCenterX(List<TargetCorner> corners) {
-        double centerX = 0;
-        for (var corner : corners) {
-            centerX += corner.x;
-
-        }
-        centerX /= corners.size();
-        return centerX;
-    }
-        
-    /*
-     * Aligns the robot to the target based on the given position
-     */
-    public Command runAutoAlign(AlignmentPosition position) {
-        return run(
-            () -> {
-                currentAlignmentPosition = position;
-                PhotonCamera firstCam = leftCamera;
-                PhotonCamera secondCam = rightCamera;
-                List<PhotonPipelineResult> firstCamResults = leftCameraResults;
-                List<PhotonPipelineResult> secondCamResults = rightCameraResults;
-
-                if(position == AlignmentPosition.RIGHT) {
-                    firstCam = rightCamera;
-                    secondCam = leftCamera;
-                    firstCamResults = rightCameraResults;
-                    secondCamResults = leftCameraResults;
-                }
-                
-                double actualCenterX = 0;
-                double desiredCenterX = 0;
-                double offset = 0;
-                if(!firstCamResults.isEmpty() && firstCamResults.get(firstCamResults.size()-1).hasTargets()) {
-                    var firstRes = firstCamResults.get(firstCamResults.size()-1);
-                    if(!secondCamResults.isEmpty() && secondCamResults.get(secondCamResults.size()-1).hasTargets()) {
-                        var secondRes = secondCamResults.get(secondCamResults.size()-1);
-                        // Both cameras see so choose the camera with the least pose ambiguity 
-                        if(secondRes.getBestTarget().getPoseAmbiguity() < firstRes.getBestTarget().getPoseAmbiguity()) {
-                            actualCenterX = getCenterX(secondRes.getBestTarget().detectedCorners);
-                            desiredCenterX = targetPositions.get(secondCam).get(position);
-                        } else {
-                            actualCenterX = getCenterX(firstRes.getBestTarget().detectedCorners);
-                            desiredCenterX = targetPositions.get(firstCam).get(position);
-                        }
-                    } else { // Only camera with priority sees
-                        actualCenterX = getCenterX(firstRes.getBestTarget().detectedCorners);
-                        desiredCenterX = targetPositions.get(firstCam).get(position);
-                    }
-                    lastValidCenterX = actualCenterX;
-                    lastDesiredCenterX = desiredCenterX;
-                    noCamLoops = 0;
-                } else if(!secondCamResults.isEmpty() && secondCamResults.get(secondCamResults.size()-1).hasTargets()) {
-                    // Only second camera sees
-                    var secondRes = secondCamResults.get(secondCamResults.size()-1);
-                    actualCenterX = getCenterX(secondRes.getBestTarget().detectedCorners);
-                    desiredCenterX = targetPositions.get(secondCam).get(position);
-                    lastValidCenterX = actualCenterX;
-                    lastDesiredCenterX = desiredCenterX;
-                    noCamLoops = 0;
-                } else { 
-                    actualCenterX = lastValidCenterX; // No cameras see so use last valid center
-                    desiredCenterX = lastDesiredCenterX;
-                    noCamLoops++;
-                }
-
-                offset = desiredCenterX - actualCenterX;
-                targetCenterXPub.set(actualCenterX);
-                desiredXPub.set(desiredCenterX);
-
-                double correction = alignmentPID.calculate(actualCenterX, desiredCenterX);
-                double maxSpeed = 0.4;
-                correction = Math.max(-maxSpeed, Math.min(maxSpeed, correction));
-                if (Math.abs(offset) < ALIGNMENT_TOLERANCE) { //deadband so it doesn't keep correcting
-                    correction = 0;
-                }
-            
-                if (noCamLoops <= 5) {
-                    drive(
-                        new Translation2d(0, correction),
-                        0,
-                        false,
-                        false
-                    );
-                } else {
-                    drive(new Translation2d(), 0, false, false);
-                }
-            }
-        ).until(() -> isAligned(position)).withTimeout(5);
-    }
-
-    /*
-     * Checks if robot is aligned with the target and switches cameras if no targets in view.
-     */
-    private boolean isAligned(AlignmentPosition position) {
-        final PhotonCamera cam = position == AlignmentPosition.RIGHT
-            ? rightCamera
-            : leftCamera;
-        final List<PhotonPipelineResult> results = position == AlignmentPosition.RIGHT
-            ? rightCameraResults
-            : leftCameraResults;
-        final double targetAprilTagX = targetPositions.get(cam).get(position);
-        if(results.isEmpty()) return false;
-        var last = results.get(results.size() - 1);
-        if(last.hasTargets()) {
-            return Math.abs(getCenterX(last.getBestTarget().detectedCorners) - targetAprilTagX) < ALIGNMENT_TOLERANCE;
-        }
-        return false;
-    }
-
     public Command resetPositionToFrontReef() {
         Waypoint bluePoint = new Waypoint(null, new Translation2d(3.171, 4.024), null);
         return Commands.sequence(
@@ -591,6 +462,64 @@ public class Swerve extends SubsystemBase {
     public Command runVisionAlign(AlignmentPosition position) {
         return new VisionAlign(this, field, position, aprilTagFieldLayout);
     }
+    
+    /**
+     * The latest estimated robot pose on the field from vision data. This may be empty. This should
+     * only be called once per loop.
+     *
+     * <p>Also includes updates for the standard deviations, which can (optionally) be retrieved with
+     * {@link getEstimationStdDevs}
+     *
+     * @return An {@link EstimatedRobotPose} with an estimated pose, estimate timestamp, and targets
+     *     used for estimation.
+     */
+    private Optional<EstimatedRobotPose> getEstimatedGlobalPose(PhotonCamera camera, PhotonPoseEstimator photonEstimator) {
+        Optional<EstimatedRobotPose> visionEst = Optional.empty();
+        for (var change : camera.getAllUnreadResults()) {
+            visionEst = photonEstimator.update(change);
+            updateEstimationStdDevs(photonEstimator, visionEst, change.getTargets());
+        }
+        return visionEst;
+    }
+
+    private void updateEstimationStdDevs(PhotonPoseEstimator photonEstimator, Optional<EstimatedRobotPose> estimatedPose, List<PhotonTrackedTarget> targets) {
+        if (estimatedPose.isEmpty()) {
+            // No pose input. Default to single-tag std devs
+            curStdDevs = Constants.VisionConstants.SINGLE_TAG_STD_DEVS;
+        } else {
+            // Pose present. Start running Heuristic
+            var estStdDevs = Constants.VisionConstants.SINGLE_TAG_STD_DEVS;
+            int numTags = 0;
+            double avgDist = 0;
+
+            // Precalculation - see how many tags we found, and calculate an average-distance metric
+            for (var tgt : targets) {
+                var tagPose = photonEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
+                if (tagPose.isEmpty()) continue;
+                numTags++;
+                avgDist += tagPose
+                    .get()
+                    .toPose2d()
+                    .getTranslation()
+                    .getDistance(estimatedPose.get().estimatedPose.toPose2d().getTranslation());
+            }
+
+            if (numTags == 0) {
+                // No tags visible. Default to single-tag std devs
+                curStdDevs = Constants.VisionConstants.SINGLE_TAG_STD_DEVS;
+            } else {
+                // One or more tags visible, run the full heuristic.
+                avgDist /= numTags;
+                // Decrease std devs if multiple targets are visible
+                if (numTags > 1) estStdDevs = Constants.VisionConstants.MULTI_TAG_STD_DEVS;
+                // Increase std devs based on (average) distance
+                if (numTags == 1 && avgDist > 4)
+                    estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+                else estStdDevs = estStdDevs.times(1 + (avgDist * avgDist / 30));
+                curStdDevs = estStdDevs;
+            }
+        }
+    }
 
     @Override
     public void periodic(){
@@ -602,49 +531,38 @@ public class Swerve extends SubsystemBase {
             velocityPubs[mod.moduleNumber].set(modState.speedMetersPerSecond);
         }
 
+        updateOdom(); 
+
+        var leftGotPose = false;
         if(leftCamera.isConnected()) {
-            leftCameraResults = leftCamera.getAllUnreadResults();
+            var estOpt = getEstimatedGlobalPose(leftCamera, photonPoseEstimatorLeft);
+            if(estOpt.isPresent()) {
+                var est = estOpt.get();
+                poseEstimator.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, curStdDevs);
+                leftGotPose = true;
+            }
             leftCameraAlert.set(false);
         } else {
             leftCameraAlert.set(true);
         }
         if(rightCamera.isConnected()) {
-            rightCameraResults = rightCamera.getAllUnreadResults();
+            if(!leftGotPose) {
+                var estOpt = getEstimatedGlobalPose(rightCamera, photonPoseEstimatorLeft);
+                if(estOpt.isPresent()) {
+                    var est = estOpt.get();
+                    poseEstimator.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, curStdDevs);
+                }
+            }
             rightCameraAlert.set(false);
         } else {
             rightCameraAlert.set(true);
         }
 
         Pose2d currentPose = getPose();
-        updateOdom(); 
-        
-        if (!rightCameraResults.isEmpty()) {
-            var lastCameraResult = rightCameraResults.get(rightCameraResults.size() - 1);
-            var photonRightUpdate = photonPoseEstimatorLeft.update(lastCameraResult);
-            if (photonRightUpdate.isPresent() && lastCameraResult.getBestTarget().getPoseAmbiguity() < 0.2) {
-                EstimatedRobotPose visionPose = photonRightUpdate.get();
-                if (currentPose.getTranslation().getDistance(visionPose.estimatedPose.getTranslation().toTranslation2d()) < 1.0){
-                    poseEstimator.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
-                }
-            }
-        }
-
-        if (!leftCameraResults.isEmpty()) {
-            var lastCameraResult = leftCameraResults.get(leftCameraResults.size() - 1);
-            var photonLeftUpdate = photonPoseEstimatorLeft.update(lastCameraResult);
-            if (photonLeftUpdate.isPresent() && lastCameraResult.getBestTarget().getPoseAmbiguity() < 0.2) {
-                EstimatedRobotPose visionPose = photonLeftUpdate.get();
-                if (currentPose.getTranslation().getDistance(visionPose.estimatedPose.getTranslation().toTranslation2d()) < 1.0){
-                    poseEstimator.addVisionMeasurement(visionPose.estimatedPose.toPose2d(), visionPose.timestampSeconds);
-                }
-            }
-        }
-
         currentPose = getPose();
         field.setRobotPose(currentPose);
         gyroDoublePublisher.set(getGyroYaw().getDegrees());
         alignmentPositionPub.set(currentAlignmentPosition.toString());
-        isAlignedPub.set(isAligned(currentAlignmentPosition));
     }
 
     @Override
