@@ -20,6 +20,7 @@ import frc.robot.commands.TeleopSwerve;
 import frc.robot.subsystems.CoralManipulator;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.Swerve.AlignmentPosition;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -40,9 +41,9 @@ public class RobotContainer {
     private final Swerve swerve = new Swerve();
     private final Elevator elevator = new Elevator();
     private final CoralManipulator manipulator = new CoralManipulator();
-    private final Intake intake = new Intake();
+    private final Shooter shooter = new Shooter();
 
-    private final StateMachine stateMachine = new StateMachine(intake, manipulator, elevator);
+    private final StateMachine stateMachine = new StateMachine(shooter, manipulator, elevator);
     private final AutoCommands autos = new AutoCommands(swerve, elevator, manipulator, stateMachine);
     private Command[] scoreCommands = {
         stateMachine.changeState(RobotState.SCORE_L1),
@@ -58,7 +59,7 @@ public class RobotContainer {
         configureButtonBindings();
 
         elevator.setDefaultCommand(elevator.resetElevator().andThen(() -> elevator.removeDefaultCommand()));
-        intake.setDefaultCommand(intake.reset(true).andThen(() -> intake.removeDefaultCommand()));
+      //  intake.setDefaultCommand(intake.reset(true).andThen(() -> intake.removeDefaultCommand()));
     }
 
     /**
@@ -81,13 +82,14 @@ public class RobotContainer {
         
         // Driver handles robot positioning, alignment, and algae
         driverController.y().onTrue(swerve.resetHeading());
-        driverController.a().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL)).onFalse(idle);
+      driverController.a().onTrue(stateMachine.changeState(RobotState.IDLE)).onFalse(idle);
         driverController.b().whileTrue(swerve.runAutoAlign(AlignmentPosition.CENTER));
         driverController.leftTrigger().whileTrue(swerve.runAutoAlign(AlignmentPosition.LEFT));
         driverController.rightTrigger().whileTrue(swerve.runAutoAlign(AlignmentPosition.RIGHT));
 
-        driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_ALGAE)).onFalse(idle);  // intake wheels rolled in regular direction
-        driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.SCORE_ALGAE)).onFalse(idle); // intake wheels rolled in reverse
+        // TODO: Changed these for nnow, change these later
+        driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.IDLE)).onFalse(idle);  // intake wheels rolled in regular direction
+        driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.IDLE)).onFalse(idle); // intake wheels rolled in reverse
 
         // Operator controls coral scoring
         operatorController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL)).onFalse(idle);
@@ -104,7 +106,7 @@ public class RobotContainer {
         
         // special state => override and resetting to idle, and knocking algae
         operatorController.back().onTrue(idle);
-        operatorController.leftTrigger().onTrue(stateMachine.changeState(RobotState.KNOCK_ALGAE)).onFalse(idle);
+     //  operatorController.leftTrigger().onTrue(stateMachine.changeState(RobotState.KNOCK_ALGAE)).onFalse(idle);
 
         // odometry autoalign testing
         operatorController.povUp().whileTrue(swerve.runTrajectoryOdomAlign());

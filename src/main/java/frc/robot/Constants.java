@@ -291,7 +291,24 @@ public class Constants {
             .withMotorOutput(MOTOR_OUTPUT_CCW)
             .withSlot0(new Slot0Configs().withKP(0.2));
     }
-    
+    public static class AlgaeShooter{
+        public static final Angle LOWERED_POS = Degrees.of(0.0);
+        public static final Angle PROCESSOR_POS = Degrees.of(0.0);
+        public static final Angle BARGE_POS = Degrees.of(0.0);
+
+        public static final TalonFXConfiguration MOTOR_CONFIG = new TalonFXConfiguration()
+            .withCurrentLimits(BASIC_CURRENT_LIMIT)
+            .withMotorOutput(MOTOR_OUTPUT_CCW);
+
+        public static final double ROLLER_SPEED = 0.0;
+        public static final int KICKER_SPEED = 0;
+
+        //TODO: Add a max error value
+        public static final Angle MAX_ERROR = Degrees.of(0.0);
+        public static final long REV_UP_TIME = 100;
+        public static final Angle UPRIGHT = Degrees.of(0.0);
+    }
+
     public static final class AutoConstants { //TODO: Need to tune constants!
         public static final double kMaxSpeedMetersPerSecond = 3;
         public static final double kMaxAccelerationMetersPerSecondSquared = 3;
