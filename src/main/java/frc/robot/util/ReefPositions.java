@@ -40,7 +40,7 @@ public class ReefPositions {
     }
     
     private static void initializeScorePositions() {
-        Distance distanceAway = Inches.of(16.5);
+        Distance distanceAway = Inches.of(18);
         ArrayList<Pose2d> scorePositionsList = new ArrayList<>();
         Map<Pose2d, ReefScorePosition> locations = new HashMap<>();
         

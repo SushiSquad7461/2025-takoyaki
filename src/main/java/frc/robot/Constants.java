@@ -335,7 +335,7 @@ public class Constants {
         public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
     
         public static final double kPTranslationController = IS_SIM ? 15 : 1;
-        public static final double kPThetaController = 1;
+        public static final double kPThetaController = 2;
     }
 
     public static final class VisionConstants { //TODO: only tell pipeline to give pose when multiple tags detected
@@ -344,11 +344,6 @@ public class Constants {
 
         public static final Transform3d rightCamera = new Transform3d(new Translation3d(0.220726, -0.27351736, 0.1913255), new Rotation3d(0, -0.30543261909, 0.59));
         public static final Transform2d rightCamera2d = new Transform2d(new Translation2d(rightCamera.getX(), rightCamera.getY()), new Rotation2d(rightCamera.getRotation().getZ()));
-
-        /* Constraint for the motion profilied robot angle controller */
-        public static final TrapezoidProfile.Constraints kThetaControllerConstraints =
-            new TrapezoidProfile.Constraints(
-                AutoConstants.kMaxAngularSpeedRadiansPerSecond, AutoConstants.kMaxAngularSpeedRadiansPerSecondSquared);
 
         public static final String leftCameraName = "Arducam_OV9782_USB_Camera";
         public static final Map<AlignmentPosition, Double> leftCameraOffsets = Map.of( 
