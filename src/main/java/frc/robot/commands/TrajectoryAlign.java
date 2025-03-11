@@ -89,7 +89,11 @@ public class TrajectoryAlign extends Command {
         field.getObject("path").setPoses(path.getPathPoses());
         
         cmd = AutoBuilder.followPath(path);
-        cmd.initialize();
+        try {
+            cmd.initialize();
+        } catch(IndexOutOfBoundsException ex) {
+            cmd = Commands.none();
+        }
     }
 
     @Override
@@ -104,7 +108,10 @@ public class TrajectoryAlign extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        CommandScheduler.getInstance().cancel(cmd);
+        field.getObject("target").setPose(new Pose2d(-100, 100, new Rotation2d()));
+        field.getObject("path").setPoses(List.of());
+
+        cmd.end(interrupted);
         cmd = Commands.none();
     }
 

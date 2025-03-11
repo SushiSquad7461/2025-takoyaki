@@ -27,6 +27,7 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.ctre.phoenix6.jni.CANBusJNI;
 import com.ctre.phoenix6.sim.Pigeon2SimState;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -476,8 +477,10 @@ public class Swerve extends SubsystemBase {
     private Optional<EstimatedRobotPose> getEstimatedGlobalPose(PhotonCamera camera, PhotonPoseEstimator photonEstimator) {
         Optional<EstimatedRobotPose> visionEst = Optional.empty();
         for (var change : camera.getAllUnreadResults()) {
-            visionEst = photonEstimator.update(change);
-            updateEstimationStdDevs(photonEstimator, visionEst, change.getTargets());
+            if(change.multitagResult.isPresent() || (change.getBestTarget() != null && change.getBestTarget().poseAmbiguity < 0.15)) {
+                visionEst = photonEstimator.update(change);
+                updateEstimationStdDevs(photonEstimator, visionEst, change.getTargets());
+            }
         }
         return visionEst;
     }
@@ -513,7 +516,7 @@ public class Swerve extends SubsystemBase {
                 // Decrease std devs if multiple targets are visible
                 if (numTags > 1) estStdDevs = Constants.VisionConstants.MULTI_TAG_STD_DEVS;
                 // Increase std devs based on (average) distance
-                if (numTags == 1 && avgDist > 4)
+                if (numTags == 1 && avgDist > 3)
                     estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
                 else estStdDevs = estStdDevs.times(1 + (avgDist * avgDist / 30));
                 curStdDevs = estStdDevs;
@@ -547,7 +550,7 @@ public class Swerve extends SubsystemBase {
         }
         if(rightCamera.isConnected()) {
             if(!leftGotPose) {
-                var estOpt = getEstimatedGlobalPose(rightCamera, photonPoseEstimatorLeft);
+                var estOpt = getEstimatedGlobalPose(rightCamera, photonPoseEstimatorRight);
                 if(estOpt.isPresent()) {
                     var est = estOpt.get();
                     poseEstimator.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, curStdDevs);
