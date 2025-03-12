@@ -41,7 +41,6 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import frc.lib.util.COTSTalonFXSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
@@ -340,10 +339,10 @@ public class Constants {
     }
 
     public static final class VisionConstants { //TODO: only tell pipeline to give pose when multiple tags detected
-        public static final Transform3d leftCamera = new Transform3d(new Translation3d(0.2921, 0.2159, 0.1913255), new Rotation3d(0, -0.30543261909, -0.680678));
+        public static final Transform3d leftCamera = new Transform3d(new Translation3d(0.273304, 0.220726, 0.18622264), new Rotation3d(0, -0.30543261909, -0.680678));
         public static final Transform2d leftCamera2d = new Transform2d(new Translation2d(leftCamera.getX(), leftCamera.getY()), new Rotation2d(leftCamera.getRotation().getZ()));
 
-        public static final Transform3d rightCamera = new Transform3d(new Translation3d(0.2921, -0.2159, 0.1913255), new Rotation3d(0, -0.30543261909, 0.680678));
+        public static final Transform3d rightCamera = new Transform3d(new Translation3d(-0.273304, -0.220726, 0.18622264), new Rotation3d(0, -0.30543261909, 0.680678));
         public static final Transform2d rightCamera2d = new Transform2d(new Translation2d(rightCamera.getX(), rightCamera.getY()), new Rotation2d(rightCamera.getRotation().getZ()));
 
         public static final String leftCameraName = "Arducam_OV9782_USB_Camera";

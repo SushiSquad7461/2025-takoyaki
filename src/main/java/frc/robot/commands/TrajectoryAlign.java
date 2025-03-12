@@ -12,7 +12,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.subsystems.Swerve;
@@ -117,8 +116,8 @@ public class TrajectoryAlign extends Command {
 
     private double getHorizontalOffset(boolean isRedAlliance, double offsetDistance) {
         return switch (alignmentPosition) {
-            case LEFT -> isRedAlliance ? offsetDistance : -offsetDistance;
-            case RIGHT -> isRedAlliance ? -offsetDistance : offsetDistance;
+            case LEFT -> isRedAlliance ? -offsetDistance : offsetDistance;
+            case RIGHT -> isRedAlliance ? offsetDistance : -offsetDistance;
             case CENTER -> 0.0;
         };
     }
