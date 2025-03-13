@@ -70,6 +70,11 @@ public class AutoCommands {
         NamedCommands.registerCommand("scoreL4", 
             stateMachine.changeState(RobotState.SCORE_L4)
         );
+        
+        NamedCommands.registerCommand("intakeCoral", 
+            stateMachine.changeState(RobotState.INTAKE_CORAL)
+        );
+    
     
         // reset state
         NamedCommands.registerCommand("resetToIdle",
@@ -89,6 +94,7 @@ public class AutoCommands {
         // }
 
         autoChooser.addOption("B1_Score_L2", makeAuto("B1_Score_L2"));
+        autoChooser.addOption("B1_two_piece_L2", makeAuto("B1_two_piece_L2"));
 
         autoChooser.addOption("Leaving_B2", makeAuto("Leaving_B2"));
         autoChooser.addOption("B2_Score_L2", makeAuto("B2_Score_L2"));

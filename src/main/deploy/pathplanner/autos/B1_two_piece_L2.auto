@@ -11,6 +11,18 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "scoreL2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetToIdle"
+          }
+        },
+        {
           "type": "wait",
           "data": {
             "waitTime": 1.0
@@ -23,6 +35,12 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "intakeCoral"
+          }
+        },
+        {
           "type": "wait",
           "data": {
             "waitTime": 1.0
@@ -32,6 +50,18 @@
           "type": "path",
           "data": {
             "pathName": "two_piece_L2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreL3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetToIdle"
           }
         }
       ]
