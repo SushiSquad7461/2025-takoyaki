@@ -13,7 +13,7 @@
         {
           "type": "named",
           "data": {
-            "name": "scoreL4"
+            "name": "scoreL2"
           }
         },
         {
@@ -25,7 +25,7 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 1.0
+            "waitTime": 0.5
           }
         },
         {
@@ -43,7 +43,7 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 1.0
+            "waitTime": 0.5
           }
         },
         {
@@ -55,7 +55,43 @@
         {
           "type": "named",
           "data": {
-            "name": "scoreL4"
+            "name": "scoreL3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetToIdle"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "reef to coral three piece"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeCoral"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.5
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "three_piece_L2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreL3"
           }
         },
         {

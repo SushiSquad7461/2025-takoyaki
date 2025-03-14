@@ -82,12 +82,12 @@ public class RobotContainer {
         
         // Driver handles robot positioning, alignment, and algae
         driverController.y().onTrue(swerve.resetHeading());
-        driverController.a().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL)).onFalse(idle);
+        driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL)).onFalse(idle);
         driverController.b().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.CENTER).repeatedly());
         driverController.leftTrigger().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.LEFT).repeatedly());
         driverController.rightTrigger().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.RIGHT).repeatedly());
 
-        driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_ALGAE)).onFalse(idle);  
+        driverController.a().onTrue(stateMachine.changeState(RobotState.INTAKE_ALGAE)).onFalse(idle);  
         // intake wheels rolled in regular direction
         driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.SCORE_ALGAE)).onFalse(idle); 
         // intake wheels rolled in reverse

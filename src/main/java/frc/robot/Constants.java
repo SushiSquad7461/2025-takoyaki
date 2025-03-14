@@ -47,6 +47,7 @@ import frc.lib.util.SwerveModuleConstants;
 
 public class Constants {
     public static final boolean IS_SIM = Robot.isSimulation();
+    public static boolean IS_AUTO = false;
     public static final double stickDeadband = 0.1;
     public static final double LOOP_TIME_SECONDS = 0.02;
     public static final double FAST_LOOP_TIME_SECONDS = 0.01;
@@ -342,7 +343,7 @@ public class Constants {
         public static final Transform3d leftCamera = new Transform3d(new Translation3d(0.273304, 0.220726, 0.18622264), new Rotation3d(0, -0.30543261909, -0.680678));
         public static final Transform2d leftCamera2d = new Transform2d(new Translation2d(leftCamera.getX(), leftCamera.getY()), new Rotation2d(leftCamera.getRotation().getZ()));
 
-        public static final Transform3d rightCamera = new Transform3d(new Translation3d(-0.273304, -0.220726, 0.18622264), new Rotation3d(0, -0.30543261909, 0.680678));
+        public static final Transform3d rightCamera = new Transform3d(new Translation3d(0.273304, -0.220726, 0.18622264), new Rotation3d(0, -0.30543261909, 0.680678));
         public static final Transform2d rightCamera2d = new Transform2d(new Translation2d(rightCamera.getX(), rightCamera.getY()), new Rotation2d(rightCamera.getRotation().getZ()));
 
         public static final String leftCameraName = "Arducam_OV9782_USB_Camera";

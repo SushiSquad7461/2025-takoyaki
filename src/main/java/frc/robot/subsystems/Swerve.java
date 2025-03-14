@@ -535,6 +535,7 @@ public class Swerve extends SubsystemBase {
 
         updateOdom(); 
 
+
         var leftGotPose = false;
         if(leftCamera.isConnected()) {
             var estOpt = getEstimatedGlobalPose(leftCamera, photonPoseEstimatorLeft);
@@ -558,7 +559,7 @@ public class Swerve extends SubsystemBase {
             rightCameraAlert.set(false);
         } else {
             rightCameraAlert.set(true);
-        }
+        }    
 
         Pose2d currentPose = getPose();
         currentPose = getPose();
