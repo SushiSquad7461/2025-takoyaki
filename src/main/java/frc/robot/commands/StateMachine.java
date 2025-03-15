@@ -39,7 +39,8 @@ public class StateMachine extends SubsystemBase {
         SCORE_L4(IntakeState.IDLE, ManipulatorState.SCORE_L4, ElevatorState.L4),
         
         // special state
-        KNOCK_ALGAE(IntakeState.IDLE, ManipulatorState.KNOCK, ElevatorState.L3_KNOCK);
+        HOLD_ALGAE(IntakeState.HOLD, ManipulatorState.IDLE, ElevatorState.IDLE);
+        //KNOCK_ALGAE(IntakeState.IDLE, ManipulatorState.KNOCK, ElevatorState.L3_KNOCK);
 
         public final IntakeState intakeState;
         public final ManipulatorState manipulatorState;

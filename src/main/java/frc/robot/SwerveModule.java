@@ -131,6 +131,9 @@ public class SwerveModule {
         System.out.println(String.format("Module%d.resetToAbsolute: %s", moduleNumber, res.getName()));
     }
 
+    public Rotation2d getCANcoderWithOffset(){
+        return Rotation2d.fromRotations(getCANcoder().getRotations() - angleOffset.getRotations());
+    }
     /** Use this to obtain the drive position status signal of this module to be refreshed along with the signal from getAnglePosition every loop before using getState or getPosition */
     public BaseStatusSignal getDrivePosition() {
         return drivePosition;

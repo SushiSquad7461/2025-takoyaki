@@ -435,7 +435,8 @@ public class Swerve extends SubsystemBase {
 
     public void resetModulesToAbsolute(){
         for(SwerveModule mod : mSwerveMods){
-            mod.resetToAbsolute();
+            if (Math.abs(mod.getCANcoderWithOffset().getDegrees() - mod.getState().angle.getDegrees()) > 10)
+                mod.resetToAbsolute();
         }
     }
 
@@ -524,6 +525,7 @@ public class Swerve extends SubsystemBase {
             }
         }
     }
+
 
     @Override
     public void periodic(){
