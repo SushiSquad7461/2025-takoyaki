@@ -476,9 +476,11 @@ public class Swerve extends SubsystemBase {
     private Optional<EstimatedRobotPose> getEstimatedGlobalPose(PhotonCamera camera, PhotonPoseEstimator photonEstimator) {
         Optional<EstimatedRobotPose> visionEst = Optional.empty();
         for (var change : camera.getAllUnreadResults()) {
-            if(change.multitagResult.isPresent() || (change.getBestTarget() != null && change.getBestTarget().poseAmbiguity < 0.15)) {
-                visionEst = photonEstimator.update(change);
-                updateEstimationStdDevs(photonEstimator, visionEst, change.getTargets());
+            if (change.hasTargets()) {
+                if (change.multitagResult.isPresent() || change.getBestTarget() != null && change.getBestTarget().poseAmbiguity < 0.15) {
+                    visionEst = photonEstimator.update(change);
+                    updateEstimationStdDevs(photonEstimator, visionEst, change.getTargets());
+                }
             }
         }
         return visionEst;
@@ -537,9 +539,9 @@ public class Swerve extends SubsystemBase {
 
 
         var leftGotPose = false;
-        if(leftCamera.isConnected()) {
+        if (leftCamera.isConnected()) {
             var estOpt = getEstimatedGlobalPose(leftCamera, photonPoseEstimatorLeft);
-            if(estOpt.isPresent()) {
+            if (estOpt.isPresent()) {
                 var est = estOpt.get();
                 poseEstimator.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, curStdDevs);
                 leftGotPose = true;
@@ -548,8 +550,8 @@ public class Swerve extends SubsystemBase {
         } else {
             leftCameraAlert.set(true);
         }
-        if(rightCamera.isConnected()) {
-            if(!leftGotPose) {
+        if (rightCamera.isConnected()) {
+            if (!leftGotPose) {
                 var estOpt = getEstimatedGlobalPose(rightCamera, photonPoseEstimatorRight);
                 if(estOpt.isPresent()) {
                     var est = estOpt.get();
