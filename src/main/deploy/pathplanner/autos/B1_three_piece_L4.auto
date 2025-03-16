@@ -1,0 +1,91 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "B1_Score_L2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreL4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetToIdle"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "reef to coral station"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeCoral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "two_piece_L2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreL4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetToIdle"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "reef to coral three piece"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeCoral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "three_piece_L2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreL4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetToIdle"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

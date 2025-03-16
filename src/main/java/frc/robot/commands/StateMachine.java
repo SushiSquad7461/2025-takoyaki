@@ -85,7 +85,6 @@ public class StateMachine extends SubsystemBase {
             return Commands.sequence(
                 Commands.runOnce(() -> {
                     state = newState;
-                    System.out.println(newState.toString() + " scheduled");
                 }),
                 Commands.parallel(
                     elevator.changeState(newState.elevatorState),
@@ -93,15 +92,13 @@ public class StateMachine extends SubsystemBase {
                     state.intakeState != IntakeState.INTAKE) ? 
                        intake.changeState(newState.intakeState) : 
                        Commands.none()
-                   ), Commands.sequence(
-                    manipulator.changeState(newState.manipulatorState)
-                )
+                ),
+                manipulator.changeState(newState.manipulatorState)
             );   
         } 
         return Commands.sequence(
             Commands.runOnce(() -> {
                 state = newState;
-                System.out.println(newState.toString() + " scheduled");
             }),
             Commands.parallel(
                 elevator.changeState(newState.elevatorState),

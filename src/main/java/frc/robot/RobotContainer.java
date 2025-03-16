@@ -84,11 +84,11 @@ public class RobotContainer {
         driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL)).onFalse(idle);
         driverController.b().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.CENTER).repeatedly());
 
-        driverController.povUp().whileTrue(swerve.runRoyalAlign(AlignmentPosition.LEFT));
-        driverController.povDown().whileTrue(swerve.runRoyalAlign(AlignmentPosition.RIGHT));
+        driverController.leftTrigger().whileTrue(swerve.runRoyalAlign(AlignmentPosition.LEFT));
+        driverController.rightTrigger().whileTrue(swerve.runRoyalAlign(AlignmentPosition.RIGHT));
 
-        driverController.leftTrigger().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.LEFT).repeatedly());
-        driverController.rightTrigger().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.RIGHT).repeatedly());
+        driverController.povUp().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.LEFT).repeatedly());
+        driverController.povDown().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.RIGHT).repeatedly());
 
         driverController.a().onTrue(stateMachine.changeState(RobotState.INTAKE_ALGAE)).onFalse(stateMachine.changeState(RobotState.HOLD_ALGAE));  
         driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.SCORE_ALGAE)).onFalse(idle); 

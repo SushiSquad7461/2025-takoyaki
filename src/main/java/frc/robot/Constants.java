@@ -275,7 +275,7 @@ public class Constants {
 
         public static final AngularVelocity MOTION_MAGIC_VELOCITY = RotationsPerSecond.of(80);
         public static final AngularAcceleration MOTION_MAGIC_ACCELERATION = RotationsPerSecondPerSecond.of(160);
-        public static final double CURRENT_LIMIT_AMPS = Constants.IS_SIM ? 4 : 5;
+        public static final double CURRENT_LIMIT_AMPS = Constants.IS_SIM ? 4 : 4.5;
 
         public static final TalonFXConfiguration ELEVATOR_LEFT = new TalonFXConfiguration()
             .withMotorOutput(MOTOR_OUTPUT_CW);

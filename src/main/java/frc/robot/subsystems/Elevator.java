@@ -25,6 +25,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
@@ -173,14 +174,12 @@ public class Elevator extends SubsystemBase {
   // uses limit switch to zero elevator
   public Command resetElevator() {
     return runOnce(() -> {
-      System.out.print("resetElevator triggered");
       rightMotor.set(-0.1);
     }).andThen(Commands.waitUntil(this::elevatorAtBottom))
       .andThen(runOnce(() -> {
         rightMotor.set(0.0);
         rightMotor.setPosition(0.0); //zeroes
         reset = true;
-        System.out.print("elevator reached bottom ");
       })
     );
   }

@@ -89,7 +89,6 @@ public class CoralManipulator extends SubsystemBase {
 
 
     public boolean coralInputted(){
-        System.out.printf("coral inputted: %b", !elevBeambreak.get());
         return !elevBeambreak.get();
     }
 
