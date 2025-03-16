@@ -7,31 +7,79 @@
         {
           "type": "path",
           "data": {
-            "pathName": "B3_Score_L4"
+            "pathName": "B3_Score"
           }
         },
         {
-          "type": "wait",
+          "type": "named",
           "data": {
-            "waitTime": 1.0
+            "name": "scoreL4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetToIdle"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Copy of reef to coral station"
+            "pathName": "side reef to coral"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeCoral"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "two_piece_L4"
+            "pathName": "side station to reef"
           }
         },
         {
-          "type": "wait",
+          "type": "named",
           "data": {
-            "waitTime": 1.0
+            "name": "scoreL4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetToIdle"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "side reef to coral three piece"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeCoral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "side three_piece_L2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreL4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetToIdle"
           }
         }
       ]
