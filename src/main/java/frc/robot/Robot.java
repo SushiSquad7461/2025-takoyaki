@@ -4,8 +4,14 @@
 
 package frc.robot;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.simulation.BatterySim;
+import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -22,6 +28,11 @@ public class Robot extends TimedRobot {
 
   private RobotContainer m_robotContainer;
 
+  private static List<Runnable> fastPeriodics = new ArrayList<>();
+  public static void registerFastPeriodic(Runnable func) {
+    fastPeriodics.add(func);
+  }
+
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -31,6 +42,11 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
+    addPeriodic(() -> {
+      for(var func : fastPeriodics) {
+        func.run();
+      }
+    }, Constants.FAST_LOOP_TIME_SECONDS, 0.005);
   }
 
   /**
@@ -52,16 +68,20 @@ public class Robot extends TimedRobot {
 
   /** This function is called once each time the robot enters Disabled mode. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    // m_robotContainer.swerve.resetModulesToAbsolute();
+  }
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    m_robotContainer.resetModulesToAbsolute();
+  }
 
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-
+    Constants.isAuto = true;
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
@@ -74,6 +94,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
+    Constants.isAuto = false;
     // This makes sure that the autonomous stops running when
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
@@ -85,7 +106,9 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+    SmartDashboard.putNumber("Battery Voltage", RobotController.getBatteryVoltage());
+  }
 
   @Override
   public void testInit() {
@@ -96,4 +119,10 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during test mode. */
   @Override
   public void testPeriodic() {}
+
+  @Override
+  public void simulationPeriodic() {
+    RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(m_robotContainer.getSimulatedSubsytemCurrentDrawAmps()));
+    SmartDashboard.putNumber("Battery Voltage", RobotController.getBatteryVoltage());
+  }
 }

@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 
@@ -12,14 +13,25 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.sim.ChassisReference;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -39,12 +51,31 @@ public class Elevator extends SubsystemBase {
 
   private final NetworkTable elevatorTable;
   private final BooleanPublisher limitSwitchPub;
+  private final DoublePublisher setpointPub;
   public SysIdRoutine routine;
   private boolean reset = false;
 
-  private static final double CURRENT_LIMIT_AMPS = 5;
 
   private final VoltageOut voltReq = new VoltageOut(0);
+
+  private double simCurrentDrawAmps = 0;
+  private final TalonFXSimState leftMotorSim;
+  private final TalonFXSimState rightMotorSim;
+  private final ElevatorSim sim = new ElevatorSim(
+      DCMotor.getKrakenX60(2), 
+      Constants.Elevator.GEAR_RATIO,
+      10, 
+      Constants.Elevator.ELEVATOR_EXTENSION_PER_ROTATION.div(2.*Math.PI).in(Meters),
+      0.,
+      Constants.Elevator.maxSimHeightMeters,
+      true,
+      0.);
+  private final Mechanism2d mech2d = new Mechanism2d(1, Constants.Elevator.maxSimHeightMeters);
+  private final MechanismRoot2d mech2dRoot = mech2d.getRoot("Elevator Root", 0, 0);
+  private final MechanismLigament2d elevMech2d = mech2dRoot.append(new MechanismLigament2d(
+    "Elevator", 
+    sim.getPositionMeters(), 
+    90));
 
   public Elevator() {
     limitSwitch = new DigitalInput(Constants.Ports.LIMIT_SWITCH_PORT);
@@ -57,9 +88,22 @@ public class Elevator extends SubsystemBase {
     statusSignals = new StatusSignal[]{rightMotorCurrent, rightMotorPosition};
     motionMagic = new MotionMagicVoltage(0);
 
+    if(Constants.IS_SIM) SmartDashboard.putData("Elevator2d", mech2d);
+    SmartDashboard.putData("Elev L4", changeState(ElevatorState.L4));
+    SmartDashboard.putData("Elev L3", changeState(ElevatorState.L3));
+    SmartDashboard.putData("Elev L2", changeState(ElevatorState.L2));
+    SmartDashboard.putData("Elev L1", changeState(ElevatorState.L1));
+    SmartDashboard.putData("Elev Idle", changeState(ElevatorState.IDLE));
+    SmartDashboard.putData("Elev Stop", stopElevator());
+    leftMotorSim = leftMotor.getSimState();
+    rightMotorSim = rightMotor.getSimState();
+    leftMotorSim.Orientation = ChassisReference.Clockwise_Positive;
+    rightMotorSim.Orientation = ChassisReference.CounterClockwise_Positive;
+
     // network table variables
     elevatorTable = NetworkTableInstance.getDefault().getTable("Elevator");
     limitSwitchPub = elevatorTable.getBooleanTopic("LimitSwitch").publish();
+    setpointPub = elevatorTable.getDoubleTopic("Setpoint").publish();
 
     // setting follower
     leftMotor.setControl(new Follower(
@@ -83,6 +127,10 @@ public class Elevator extends SubsystemBase {
         this
       )
     );
+    SmartDashboard.putData("ElevSysIdQuasiFwd", sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    SmartDashboard.putData("ElevSysIdQuasiRev", sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    SmartDashboard.putData("ElevSysIdDynFwd", sysIdDynamic(SysIdRoutine.Direction.kForward));
+    SmartDashboard.putData("ElevSysIdDynRev", sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
   }
 
@@ -97,12 +145,17 @@ public class Elevator extends SubsystemBase {
   // moves elevator to defined ElevatorState position *last year specifically
   // checked for elevator idle state
   public Command changeState(ElevatorState state) {
-    return run(() -> {
-      // elevatorTable.getDoubleTopic("Setpoint").publish().set(state.position.in(Inches));
+    return runOnce(() -> {
+      setpointPub.set(state.position.in(Inches));
       rightMotor.setControl(motionMagic.withPosition(state.targetMotorRotations));
       if(state != ElevatorState.IDLE) reset = false;
-    }).until(() -> elevatorInPosition(state))
-        .andThen(state == ElevatorState.IDLE && !reset ? resetElevator() : Commands.none());
+    })
+    .andThen(Commands.waitUntil(() -> elevatorInPosition(state)))
+    .andThen(Commands.either(
+      resetElevator(), 
+      Commands.none(), 
+      () -> state == ElevatorState.IDLE && !reset
+    ));
   }
 
   // checks if elevator has reached target position
@@ -121,14 +174,12 @@ public class Elevator extends SubsystemBase {
   // uses limit switch to zero elevator
   public Command resetElevator() {
     return runOnce(() -> {
-      System.out.print("resetElevator triggered");
       rightMotor.set(-0.1);
     }).andThen(Commands.waitUntil(this::elevatorAtBottom))
       .andThen(runOnce(() -> {
         rightMotor.set(0.0);
         rightMotor.setPosition(0.0); //zeroes
         reset = true;
-        System.out.print("elevator reached bottom ");
       })
     );
   }
@@ -151,7 +202,7 @@ public class Elevator extends SubsystemBase {
   }
 
   private boolean currentSpike() {
-    return rightMotorCurrent.getValueAsDouble() > CURRENT_LIMIT_AMPS;
+    return rightMotorCurrent.getValueAsDouble() > Constants.Elevator.CURRENT_LIMIT_AMPS;
   }
 
   public Command goUp() {
@@ -167,5 +218,35 @@ public class Elevator extends SubsystemBase {
   public void periodic() {
     BaseStatusSignal.refreshAll(statusSignals);
     limitSwitchPub.set(limitSwitch.get());
+  }
+
+  private static double heightMetersToMotorRotations(double heightMeters) {
+    return heightMeters 
+      * Constants.Elevator.GEAR_RATIO
+      / Constants.Elevator.ELEVATOR_EXTENSION_PER_ROTATION.in(Meters);
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    var supplyVoltage = RobotController.getBatteryVoltage();
+    leftMotorSim.setSupplyVoltage(supplyVoltage);
+    rightMotorSim.setSupplyVoltage(supplyVoltage);
+    sim.setInputVoltage(rightMotorSim.getMotorVoltage());
+    sim.update(Constants.LOOP_TIME_SECONDS);
+    
+    var elevExtension = sim.getPositionMeters();
+    var motorRot = heightMetersToMotorRotations(elevExtension);
+    leftMotorSim.setRawRotorPosition(motorRot);
+    rightMotorSim.setRawRotorPosition(motorRot);
+    var motorRotPerSec = heightMetersToMotorRotations(sim.getVelocityMetersPerSecond());
+    leftMotorSim.setRotorVelocity(motorRotPerSec);
+    rightMotorSim.setRotorVelocity(motorRotPerSec);
+    
+    elevMech2d.setLength(elevExtension);
+    simCurrentDrawAmps = Math.abs(sim.getCurrentDrawAmps());
+  }
+
+  public double getSimulatedCurrentDrawAmps() {
+    return simCurrentDrawAmps;
   }
 }

@@ -23,12 +23,6 @@
           }
         },
         {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "reef to coral station"
@@ -41,15 +35,39 @@
           }
         },
         {
-          "type": "wait",
+          "type": "path",
           "data": {
-            "waitTime": 1.0
+            "pathName": "two_piece_L2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "scoreL4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "resetToIdle"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "two_piece_L2"
+            "pathName": "reef to coral three piece"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeCoral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "three_piece_L2"
           }
         },
         {

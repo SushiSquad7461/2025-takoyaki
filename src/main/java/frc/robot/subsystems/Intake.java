@@ -8,9 +8,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
-import edu.wpi.first.networktables.DoublePublisher;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 
@@ -34,8 +31,6 @@ public class Intake extends SubsystemBase {
     private SysIdRoutine routine;
     private final VoltageOut m_voltReq = new VoltageOut(0.0);
     private final PositionDutyCycle positionDutyCycle = new PositionDutyCycle(0);
-    private final NetworkTable coralManipulator;
-    private final DoublePublisher pivotPos;
 
     public Intake() {
         pivotMotor = new TalonFX(Constants.Ports.INTAKE_PIVOT_ID);
@@ -44,8 +39,6 @@ public class Intake extends SubsystemBase {
         pivotMotorCurrent = pivotMotor.getSupplyCurrent();
         wheelMotor = new TalonFX(Constants.Ports.ALGAE_INTAKE_ROLLER_ID);
         wheelMotor.getConfigurator().apply(Constants.AlgaeIntake.INTAKE_CONFIG);
-        coralManipulator = NetworkTableInstance.getDefault().getTable("Manipulator");
-        pivotPos = coralManipulator.getDoubleTopic("pivotPos").publish();
     
         routine = new SysIdRoutine(
             new SysIdRoutine.Config(

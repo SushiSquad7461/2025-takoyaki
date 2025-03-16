@@ -129,7 +129,7 @@
             "title": "Auto Chooser",
             "x": 0.0,
             "y": 384.0,
-            "width": 384.0,
+            "width": 256.0,
             "height": 128.0,
             "type": "ComboBox Chooser",
             "properties": {
@@ -148,6 +148,20 @@
             "properties": {
               "topic": "/SmartDashboard/Alerts",
               "period": 0.06
+            }
+          },
+          {
+            "title": "Battery Voltage",
+            "x": 256.0,
+            "y": 384.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/Battery Voltage",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
             }
           }
         ]
@@ -465,19 +479,650 @@
               "topic": "/SmartDashboard/Alerts",
               "period": 0.06
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Control",
+      "grid_layout": {
+        "layouts": [
+          {
+            "title": "Elevator Commands",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 384.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "HIDDEN"
+            },
+            "children": [
+              {
+                "title": "Elev Idle",
+                "x": 384.0,
+                "y": 128.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Elev Idle",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "Elev L1",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Elev L1",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "Elev L2",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Elev L2",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "Elev L3",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Elev L3",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "Elev L4",
+                "x": 384.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Elev L4",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "Elev Stop",
+                "x": 0.0,
+                "y": 128.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Elev Stop",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              }
+            ]
           },
           {
-            "title": "pivotPos",
-            "x": 768.0,
-            "y": 512.0,
+            "title": "SysId Commands",
+            "x": 256.0,
+            "y": 0.0,
             "width": 256.0,
+            "height": 384.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "HIDDEN"
+            },
+            "children": [
+              {
+                "title": "SignalLogger::start",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/SignalLogger::start",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "SignalLogger::stop",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/SignalLogger::stop",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "ElevSysIdQuasiFwd",
+                "x": 384.0,
+                "y": 256.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/ElevSysIdQuasiFwd",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "ElevSysIdQuasiRev",
+                "x": 384.0,
+                "y": 384.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/ElevSysIdQuasiRev",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "ElevSysIdDynFwd",
+                "x": 384.0,
+                "y": 384.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/ElevSysIdDynFwd",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "ElevSysIdDynRev",
+                "x": 384.0,
+                "y": 384.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/ElevSysIdDynRev",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "DriveSysIdQuasiFwd",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/DriveSysIdQuasiFwd",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "DriveSysIdQuasiRev",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/DriveSysIdQuasiRev",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "DriveSysIdDynRev",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/DriveSysIdDynRev",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "DriveSysIdDynFwd",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/DriveSysIdDynFwd",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              }
+            ]
+          },
+          {
+            "title": "Drive Commands",
+            "x": 512.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 384.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "HIDDEN"
+            },
+            "children": [
+              {
+                "title": "Stop Drive",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Stop Drive",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "Align Center",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Align Center",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "Align Left",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Align Left",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "Align Right",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Align Right",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              }
+            ]
+          }
+        ],
+        "containers": [
+          {
+            "title": "Battery Voltage",
+            "x": 768.0,
+            "y": 128.0,
+            "width": 128.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
-              "topic": "/Manipulator/pivotPos",
+              "topic": "/SmartDashboard/Battery Voltage",
               "period": 0.06,
               "data_type": "double",
               "show_submit_button": false
+            }
+          },
+          {
+            "title": "SignalLogger Active",
+            "x": 768.0,
+            "y": 0.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/SignalLogger Active",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Field",
+            "x": 0.0,
+            "y": 384.0,
+            "width": 512.0,
+            "height": 256.0,
+            "type": "Field",
+            "properties": {
+              "topic": "/SmartDashboard/Field",
+              "period": 0.06,
+              "field_game": "Reefscape",
+              "robot_width": 0.85,
+              "robot_length": 0.85,
+              "show_other_objects": true,
+              "show_trajectories": true,
+              "field_rotation": 0.0,
+              "robot_color": 4294198070,
+              "trajectory_color": 4294967295
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sim",
+      "grid_layout": {
+        "layouts": [
+          {
+            "title": "SetOdom",
+            "x": 0.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "X (m)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Swerve/Simulation/SetOdom/X",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": true
+                }
+              },
+              {
+                "title": "Y (m)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Swerve/Simulation/SetOdom/Y",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": true
+                }
+              },
+              {
+                "title": "Rotation (deg)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Swerve/Simulation/SetOdom/Rotation",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": true
+                }
+              }
+            ]
+          },
+          {
+            "title": "List Layout",
+            "x": 0.0,
+            "y": 512.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "Elev Idle",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Elev Idle",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "Elev L1",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Elev L1",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "Elev L2",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Elev L2",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "Elev L3",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Elev L3",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "Elev L4",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Elev L4",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              }
+            ]
+          },
+          {
+            "title": "Module2",
+            "x": 1152.0,
+            "y": 128.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "Pos (rot)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Module2/Pos (rot)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "Velo (rps)",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Module2/Velo (rps)",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              }
+            ]
+          },
+          {
+            "title": "List Layout",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "Align Center",
+                "x": 256.0,
+                "y": 512.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Align Center",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "Align Left",
+                "x": 256.0,
+                "y": 512.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Align Left",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              },
+              {
+                "title": "Align Right",
+                "x": 256.0,
+                "y": 512.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Command",
+                "properties": {
+                  "topic": "/SmartDashboard/Align Right",
+                  "period": 0.06,
+                  "show_type": true
+                }
+              }
+            ]
+          }
+        ],
+        "containers": [
+          {
+            "title": "Field",
+            "x": 256.0,
+            "y": 0.0,
+            "width": 896.0,
+            "height": 384.0,
+            "type": "Field",
+            "properties": {
+              "topic": "/SmartDashboard/Field",
+              "period": 0.06,
+              "field_game": "Reefscape",
+              "robot_width": 0.85,
+              "robot_length": 0.85,
+              "show_other_objects": true,
+              "show_trajectories": true,
+              "field_rotation": 0.0,
+              "robot_color": 4294198070,
+              "trajectory_color": 4294967295
+            }
+          },
+          {
+            "title": "IsRedAlliance",
+            "x": 256.0,
+            "y": 640.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/FMSInfo/IsRedAlliance",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Swerve Drive",
+            "x": 256.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "SwerveDrive",
+            "properties": {
+              "topic": "/SmartDashboard/Swerve Drive",
+              "period": 0.06,
+              "show_robot_rotation": true,
+              "rotation_unit": "Radians"
             }
           }
         ]
