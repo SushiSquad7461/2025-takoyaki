@@ -19,6 +19,9 @@ public class RoyalCommand extends Command {
   ProfiledPIDController xController;
   ProfiledPIDController yController;
   Swerve swerve;
+  Pose2d currentPose;
+  Pose2d targetPose;
+
   ReefPositions.ReefPositionsMap scorePositions;
 
   /** Creates a new RoyalCommand. */
@@ -70,5 +73,7 @@ public class RoyalCommand extends Command {
   @Override
   public boolean isFinished() {
     return false;
+    // return currentPose.getTranslation().minus(targetPose.getTranslation()).getNorm() < 0.0125 
+    // && Math.abs(currentPose.getRotation().getDegrees() - targetPose.getRotation().getDegrees()) < 5;
   }
 }

@@ -47,7 +47,7 @@ import frc.lib.util.SwerveModuleConstants;
 
 public class Constants {
     public static final boolean IS_SIM = Robot.isSimulation();
-    public static boolean IS_AUTO = false;
+    public static boolean isAuto = false;
     public static final double stickDeadband = 0.1;
     public static final double LOOP_TIME_SECONDS = 0.02;
     public static final double FAST_LOOP_TIME_SECONDS = 0.01;

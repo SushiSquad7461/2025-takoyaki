@@ -558,31 +558,33 @@ public class Swerve extends SubsystemBase {
         updateOdom(); 
 
 
-        var leftGotPose = false;
-        if (leftCamera.isConnected()) {
-            var estOpt = getEstimatedGlobalPose(leftCamera, photonPoseEstimatorLeft);
-            if (estOpt.isPresent()) {
-                var est = estOpt.get();
-                poseEstimator.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, curStdDevs);
-                leftGotPose = true;
-            }
-            leftCameraAlert.set(false);
-        } else {
-            leftCameraAlert.set(true);
-        }
-        if (rightCamera.isConnected()) {
-            if (!leftGotPose) {
-                var estOpt = getEstimatedGlobalPose(rightCamera, photonPoseEstimatorRight);
-                if(estOpt.isPresent()) {
+        if (!Constants.isAuto) {
+            var leftGotPose = false;
+            if (leftCamera.isConnected()) {
+                var estOpt = getEstimatedGlobalPose(leftCamera, photonPoseEstimatorLeft);
+                if (estOpt.isPresent()) {
                     var est = estOpt.get();
                     poseEstimator.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, curStdDevs);
+                    leftGotPose = true;
                 }
+                leftCameraAlert.set(false);
+            } else {
+                leftCameraAlert.set(true);
             }
-            rightCameraAlert.set(false);
-        } else {
-            rightCameraAlert.set(true);
-        }    
-
+            if (rightCamera.isConnected()) {
+                if (!leftGotPose) {
+                    var estOpt = getEstimatedGlobalPose(rightCamera, photonPoseEstimatorRight);
+                    if(estOpt.isPresent()) {
+                        var est = estOpt.get();
+                        poseEstimator.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, curStdDevs);
+                    }
+                }
+                rightCameraAlert.set(false);
+            } else {
+                rightCameraAlert.set(true);
+            }   
+        }
+        
         Pose2d currentPose = getPose();
         currentPose = getPose();
         field.setRobotPose(currentPose);
