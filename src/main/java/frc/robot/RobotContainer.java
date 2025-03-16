@@ -21,7 +21,6 @@ import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.Swerve.AlignmentPosition;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -84,13 +83,15 @@ public class RobotContainer {
         driverController.y().onTrue(swerve.resetHeading());
         driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL)).onFalse(idle);
         driverController.b().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.CENTER).repeatedly());
+
+        driverController.povUp().whileTrue(swerve.runRoyalAlign(AlignmentPosition.LEFT));
+        driverController.povDown().whileTrue(swerve.runRoyalAlign(AlignmentPosition.RIGHT));
+
         driverController.leftTrigger().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.LEFT).repeatedly());
         driverController.rightTrigger().whileTrue(swerve.runTrajectoryAlign(AlignmentPosition.RIGHT).repeatedly());
 
         driverController.a().onTrue(stateMachine.changeState(RobotState.INTAKE_ALGAE)).onFalse(stateMachine.changeState(RobotState.HOLD_ALGAE));  
-        // intake wheels rolled in regular direction
         driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.SCORE_ALGAE)).onFalse(idle); 
-        // intake wheels rolled in reverse
 
         // Operator controls coral scoring
         operatorController.leftBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_CORAL)).onFalse(idle);

@@ -283,6 +283,11 @@ public class Swerve extends SubsystemBase {
         SmartDashboard.putData("Align Center ODOM", defer(() -> runTrajectoryAlign(AlignmentPosition.CENTER)));
         SmartDashboard.putData("Align Left ODOM", defer(() -> runTrajectoryAlign(AlignmentPosition.LEFT)));
         SmartDashboard.putData("Align Right ODOM", defer(() -> runTrajectoryAlign(AlignmentPosition.RIGHT)));
+
+        SmartDashboard.putData("Align Center ROYAL", defer(() -> runRoyalAlign(AlignmentPosition.CENTER)));
+        SmartDashboard.putData("Align Left ROYAL", defer(() -> runRoyalAlign(AlignmentPosition.LEFT)));
+        SmartDashboard.putData("Align Right ROYAL", defer(() -> runRoyalAlign(AlignmentPosition.RIGHT)));
+
         SmartDashboard.putData("Align Center VISION", defer(() -> runVisionAlign(AlignmentPosition.CENTER)));
         SmartDashboard.putData("Align Left VISION", defer(() -> runVisionAlign(AlignmentPosition.LEFT)));
         SmartDashboard.putData("Align Right VISION", defer(() -> runVisionAlign(AlignmentPosition.RIGHT)));
@@ -459,6 +464,10 @@ public class Swerve extends SubsystemBase {
     public Command runTrajectoryAlign(AlignmentPosition position) {
         return new TrajectoryAlign(this, field, position);
     }
+    
+    public Command runRoyalAlign(AlignmentPosition position) {
+        return new TrajectoryAlign(this, field, position);
+    }
 
     public Command runVisionAlign(AlignmentPosition position) {
         return new VisionAlign(this, field, position, aprilTagFieldLayout);
@@ -526,6 +535,15 @@ public class Swerve extends SubsystemBase {
         }
     }
 
+
+    
+    private boolean poseIsValid(EstimatedRobotPose pose) {
+        return pose.estimatedPose.getZ() < 0.75 &&
+            pose.estimatedPose.getX() > 0.0 &&
+            pose.estimatedPose.getX() < aprilTagFieldLayout.getFieldLength() &&
+            pose.estimatedPose.getY() > 0.0 &&
+            pose.estimatedPose.getY() < aprilTagFieldLayout.getFieldWidth();
+    }
 
     @Override
     public void periodic(){

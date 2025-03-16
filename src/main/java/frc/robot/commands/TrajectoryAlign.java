@@ -88,12 +88,14 @@ public class TrajectoryAlign extends Command {
         field.getObject("path").setPoses(path.getPathPoses());
         
         cmd = AutoBuilder.followPath(path);
+        
         try {
             cmd.initialize();
         } catch(IndexOutOfBoundsException ex) {
             cmd = Commands.none();
         }
     }
+
 
     @Override
     public void execute() {
