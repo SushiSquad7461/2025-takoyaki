@@ -72,8 +72,7 @@ public class RoyalCommand extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return false;
-    // return currentPose.getTranslation().minus(targetPose.getTranslation()).getNorm() < 0.0125 
-    // && Math.abs(currentPose.getRotation().getDegrees() - targetPose.getRotation().getDegrees()) < 5;
+    return currentPose.getTranslation().minus(targetPose.getTranslation()).getNorm() < 0.0125 
+    && Math.abs(currentPose.getRotation().getDegrees() - targetPose.getRotation().getDegrees()) < 5;
   }
 }

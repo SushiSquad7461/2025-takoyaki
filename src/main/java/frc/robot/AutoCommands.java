@@ -84,7 +84,6 @@ public class AutoCommands {
             swerve.runRoyalAlign(AlignmentPosition.LEFT)
         );
     
-    
         // reset state
         NamedCommands.registerCommand("resetToIdle",
             stateMachine.changeState(RobotState.IDLE)
@@ -109,7 +108,7 @@ public class AutoCommands {
 
         autoChooser.addOption("Leaving_B2", makeAuto("Leaving_B2"));
         autoChooser.addOption("B2_Score_L2", makeAuto("B2_Score_L2"));
-        //autoChooser.addOption("Leaving_Center", makeAuto("Leaving_Center"));
+        autoChooser.addOption("Leaving_Center", makeAuto("Leaving_Center"));
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
     }
