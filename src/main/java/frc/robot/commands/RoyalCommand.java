@@ -27,9 +27,9 @@ public class RoyalCommand extends Command {
   /** Creates a new RoyalCommand. */
   public RoyalCommand(Swerve swerve) {
     this.swerve = swerve;
-    xController = new ProfiledPIDController(6, 0, 0, new Constraints(1, 3));
-    yController = new ProfiledPIDController(6, 0, 0, new Constraints(1, 3));
-    thetaController = new ProfiledPIDController(4, 0, 0, new Constraints(Math.PI, Math.PI));
+    xController = new ProfiledPIDController(10, 0, 0, new Constraints(1, 3));
+    yController = new ProfiledPIDController(10, 0, 0, new Constraints(1, 3));
+    thetaController = new ProfiledPIDController(8, 0, 0, new Constraints(Math.PI, Math.PI));
 
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
     addRequirements(swerve);

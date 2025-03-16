@@ -86,12 +86,15 @@ public class StateMachine extends SubsystemBase {
                 Commands.runOnce(() -> {
                     state = newState;
                 }),
-                Commands.parallel(
-                    elevator.changeState(newState.elevatorState),
-                    (state.intakeState != IntakeState.REVERSE && 
-                    state.intakeState != IntakeState.INTAKE) ? 
-                       intake.changeState(newState.intakeState) : 
-                       Commands.none()
+                Commands.race(
+                    Commands.waitSeconds(2),
+                    Commands.parallel(
+                        elevator.changeState(newState.elevatorState),
+                        (state.intakeState != IntakeState.REVERSE && 
+                        state.intakeState != IntakeState.INTAKE) ? 
+                        intake.changeState(newState.intakeState) : 
+                        Commands.none()
+                    )
                 ),
                 manipulator.changeState(newState.manipulatorState)
             );   
