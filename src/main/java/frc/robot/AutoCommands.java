@@ -15,6 +15,7 @@ import frc.robot.commands.StateMachine.RobotState;
 import frc.robot.subsystems.CoralManipulator;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.Swerve.AlignmentPosition;
 
 /* Notes for Auto Maker:
  * Start at B1/B2/B3 position with preloaded game piece
@@ -73,6 +74,14 @@ public class AutoCommands {
         
         NamedCommands.registerCommand("intakeCoral", 
             stateMachine.changeState(RobotState.INTAKE_CORAL)
+        );
+
+        NamedCommands.registerCommand("alignLeft", 
+            swerve.runRoyalAlign(AlignmentPosition.LEFT)
+        );
+    
+        NamedCommands.registerCommand("alignRight", 
+            swerve.runRoyalAlign(AlignmentPosition.LEFT)
         );
     
     
